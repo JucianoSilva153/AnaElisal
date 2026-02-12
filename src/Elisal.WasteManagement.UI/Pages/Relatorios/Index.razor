@@ -1,0 +1,196 @@
+@page "/relatorios"
+@attribute [Authorize(Roles = "Admin,Manager")]
+@using Elisal.WasteManagement.Domain.Entities
+@inject HttpClient Http
+@inject NavigationManager Navigation
+
+<PageTitle>SGR Elisal - Relatórios</PageTitle>
+
+<div class="p-8 space-y-8">
+    <div>
+        <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Relatórios</h1>
+        <p class="text-slate-500 dark:text-slate-400 text-sm">Gere relatórios personalizados do sistema</p>
+    </div>
+
+    <!-- Report Types Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        @foreach (var tipo in tiposRelatorio)
+        {
+            <button @onclick="() => SelecionarTipo(tipo)" 
+                    class="bg-white dark:bg-slate-900 rounded-xl border-2 @(tipoSelecionado == tipo ? "border-primary" : "border-slate-200 dark:border-slate-800") p-6 text-left hover:shadow-lg transition-all group">
+                <div class="flex items-start gap-4">
+                    <div class="p-3 rounded-lg bg-@tipo.Color-50 dark:bg-@tipo.Color-900/20 text-@tipo.Color-600 dark:text-@tipo.Color-400 group-hover:scale-110 transition-transform">
+                        <span class="material-symbols-outlined text-3xl">@tipo.Icon</span>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="font-bold text-slate-900 dark:text-white mb-1">@tipo.Nome</h3>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">@tipo.Descricao</p>
+                    </div>
+                    @if (tipoSelecionado == tipo)
+                    {
+                        <span class="material-symbols-outlined text-primary">check_circle</span>
+                    }
+                </div>
+            </button>
+        }
+    </div>
+
+    <!-- Configuration Form -->
+    @if (tipoSelecionado != null)
+    {
+        <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
+            <h2 class="text-lg font-bold text-slate-900 dark:text-white mb-6">Configurar Relatório</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Data Início</label>
+                    <input type="date" @bind="dataInicio" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white" />
+                </div>
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Data Fim</label>
+                    <input type="date" @bind="dataFim" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white" />
+                </div>
+
+                @if (tipoSelecionado.Id == "transacoes")
+                {
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Cooperativa (Opcional)</label>
+                        <select @bind="cooperativaId" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white p-2">
+                            <option value="">Todas</option>
+                            @foreach (var coop in cooperativas)
+                            {
+                                <option value="@coop.Id">@coop.Name</option>
+                            }
+                        </select>
+                    </div>
+                }
+            </div>
+
+            <div class="space-y-2 mb-6">
+                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Formato de Saída</label>
+                <div class="flex gap-4">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="formato" value="pdf" @onchange='() => formato = "pdf"' checked="@(formato == "pdf")" class="text-primary focus:ring-primary" />
+                        <span class="flex items-center gap-1 text-sm text-slate-700 dark:text-slate-300">
+                            <span class="material-symbols-outlined text-red-600">picture_as_pdf</span> PDF
+                        </span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="formato" value="excel" @onchange='() => formato = "excel"'' checked="@(formato == "excel")" class="text-primary focus:ring-primary" />
+                        <span class="flex items-center gap-1 text-sm text-slate-700 dark:text-slate-300">
+                            <span class="material-symbols-outlined text-green-600">table_view</span> Excel
+                        </span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
+                <button @onclick="GerarRelatorio" disabled="@isGenerating" 
+                        class="px-6 py-2 rounded-lg bg-primary hover:bg-primary/90 text-white font-medium flex items-center gap-2 disabled:opacity-50">
+                    @if (isGenerating)
+                    {
+                        <span class="animate-spin material-symbols-outlined">progress_activity</span>
+                        <span>Gerando...</span>
+                    }
+                    else
+                    {
+                        <span class="material-symbols-outlined">download</span>
+                        <span>Gerar Relatório</span>
+                    }
+                </button>
+            </div>
+
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <div class="mt-4 p-4 rounded-lg bg-red-50 border border-red-200 text-red-700 flex items-center gap-3">
+                    <span class="material-symbols-outlined">error</span>
+                    <span>@errorMessage</span>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private TipoRelatorio tipoSelecionado;
+    private DateTime dataInicio = DateTime.Now.AddDays(-30);
+    private DateTime dataFim = DateTime.Now;
+    private string formato = "pdf";
+    private int? cooperativaId;
+    private bool isGenerating = false;
+    private string errorMessage = "";
+
+    private List<TipoRelatorio> tiposRelatorio = new()
+    {
+        new() { Id = "producao", Nome = "Produção de Resíduos", Descricao = "Quantidade total coletada por período", Icon = "delete_sweep", Color = "blue" },
+        new() { Id = "desempenho", Nome = "Desempenho por Ponto", Descricao = "Análise de performance dos ecopontos", Icon = "analytics", Color = "purple" },
+        new() { Id = "reciclagem", Nome = "Taxa de Reciclagem", Descricao = "Percentual de resíduos reciclados", Icon = "recycling", Color = "green" },
+        new() { Id = "transacoes", Nome = "Transações com Cooperativas", Descricao = "Histórico financeiro e parcerias", Icon = "payments", Color = "yellow" },
+        new() { Id = "indicadores", Nome = "Indicadores Ambientais", Descricao = "Métricas de impacto ambiental", Icon = "eco", Color = "teal" }
+    };
+
+    private void SelecionarTipo(TipoRelatorio tipo)
+    {
+        tipoSelecionado = tipo;
+        errorMessage = "";
+    }
+
+    private async Task GerarRelatorio()
+    {
+        isGenerating = true;
+        errorMessage = "";
+        
+        try
+        {
+            var queryParams = $"inicio={dataInicio:yyyy-MM-dd}&fim={dataFim:yyyy-MM-dd}";
+            if (cooperativaId.HasValue) queryParams += $"&coopId={cooperativaId}";
+
+            var url = formato == "pdf" 
+                ? $"api/relatorios/pdf/{tipoSelecionado.Id}?{queryParams}"
+                : $"api/relatorios/excel/{tipoSelecionado.Id}?{queryParams}";
+
+            var response = await Http.GetAsync(url);
+            if (response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsByteArrayAsync();
+                var fileName = $"relatorio_{tipoSelecionado.Id}_{DateTime.Now:yyyyMMdd}.{(formato == "pdf" ? "pdf" : "xlsx")}";
+                var contentType = formato == "pdf" ? "application/pdf" : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+                
+                await JS.InvokeVoidAsync("dashboardCharts.downloadFile", fileName, contentType, content);
+            }
+            else
+            {
+                errorMessage = "Erro no servidor ao gerar o relatório.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Erro técnico: {ex.Message}";
+        }
+        finally
+        {
+            isGenerating = false;
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var coops = await Http.GetFromJsonAsync<List<Cooperative>>("api/cooperativas");
+            if (coops != null) cooperativas = coops;
+        }
+        catch { /* Fallback */ }
+    }
+
+    private List<Cooperative> cooperativas = new();
+
+    public class TipoRelatorio
+    {
+        public string Id { get; set; } = "";
+        public string Nome { get; set; } = "";
+        public string Descricao { get; set; } = "";
+        public string Icon { get; set; } = "";
+        public string Color { get; set; } = "";
+    }
+}

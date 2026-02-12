@@ -1,0 +1,40 @@
+using System.Collections.Generic;
+
+namespace Elisal.WasteManagement.Application.DTOs;
+
+public class DashboardStatsDto
+{
+    public double TotalResiduosMensal { get; set; }
+    public double VariacaoTotalResiduos { get; set; }
+    public double TaxaReaproveitamento { get; set; }
+    public double VariacaoTaxaReaproveitamento { get; set; }
+    public int PontosAtivos { get; set; }
+    public int VariacaoPontosAtivos { get; set; }
+    public int AlertasOperacionais { get; set; }
+    
+    public List<ChartSeriesDto> VolumeMensal { get; set; } = new();
+    public List<PieChartDto> DistribuicaoPorTipo { get; set; } = new();
+    public List<RecentCollectionDto> ColetasRecentes { get; set; } = new();
+}
+
+public class ChartSeriesDto
+{
+    public string Label { get; set; } = string.Empty;
+    public double Value { get; set; }
+}
+
+public class PieChartDto
+{
+    public string Category { get; set; } = string.Empty;
+    public double Percentage { get; set; }
+    public string Color { get; set; } = string.Empty;
+}
+
+public class RecentCollectionDto
+{
+    public string DataHora { get; set; } = string.Empty;
+    public string Localizacao { get; set; } = string.Empty;
+    public string Tipo { get; set; } = string.Empty;
+    public string Peso { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
+}

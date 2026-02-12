@@ -1,0 +1,165 @@
+﻿@page "/"
+@inject HttpClient Http
+@inject IJSRuntime JS
+@using Elisal.WasteManagement.Application.DTOs
+
+<PageTitle>SGR Elisal - Dashboard</PageTitle>
+
+@if (stats == null)
+{
+    <div class="flex items-center justify-center h-full">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+    </div>
+}
+else
+{
+    <div class="p-8 space-y-8">
+        <!-- Section: KPIs -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 flex flex-col gap-2">
+                <div class="flex justify-between items-start">
+                    <span class="text-slate-500 dark:text-slate-400 text-sm font-medium leading-normal">Total Resíduos</span>
+                    <span class="@(stats.VariacaoTotalResiduos >= 0 ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400") text-xs px-2 py-0.5 rounded-full font-bold">
+                        @(stats.VariacaoTotalResiduos >= 0 ? "+" : "")@stats.VariacaoTotalResiduos%
+                    </span>
+                </div>
+                <p class="text-3xl font-bold text-slate-900 dark:text-white">@stats.TotalResiduosMensal <span class="text-lg font-normal">Ton</span></p>
+                <p class="text-xs text-slate-400">Dados do mês atual</p>
+            </div>
+            
+            <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 flex flex-col gap-2">
+                <div class="flex justify-between items-start">
+                    <span class="text-slate-500 dark:text-slate-400 text-sm font-medium leading-normal">Taxa Reaproveitamento</span>
+                    <span class="@(stats.VariacaoTaxaReaproveitamento >= 0 ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400") text-xs px-2 py-0.5 rounded-full font-bold">
+                        @(stats.VariacaoTaxaReaproveitamento >= 0 ? "+" : "")@stats.VariacaoTaxaReaproveitamento%
+                    </span>
+                </div>
+                <p class="text-3xl font-bold text-slate-900 dark:text-white">@stats.TaxaReaproveitamento%</p>
+                <p class="text-xs text-slate-400">Meta: 50% anual</p>
+            </div>
+
+            <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 flex flex-col gap-2">
+                <div class="flex justify-between items-start">
+                    <span class="text-slate-500 dark:text-slate-400 text-sm font-medium leading-normal">Pontos Ativos</span>
+                </div>
+                <p class="text-3xl font-bold text-slate-900 dark:text-white">@stats.PontosAtivos</p>
+                <p class="text-xs text-slate-400">Monitoramento em tempo real</p>
+            </div>
+
+            <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 flex flex-col gap-2">
+                <div class="flex justify-between items-start">
+                    <span class="text-slate-500 dark:text-slate-400 text-sm font-medium leading-normal">Alertas Operacionais</span>
+                    <span class="bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 text-xs px-2 py-0.5 rounded-full font-bold">@stats.AlertasOperacionais Ativos</span>
+                </div>
+                <p class="text-3xl font-bold text-slate-900 dark:text-white">@stats.AlertasOperacionais</p>
+                <p class="text-xs text-slate-400">Exige atenção imediata</p>
+            </div>
+        </div>
+
+        <!-- Section: Charts -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <!-- Distribution Chart -->
+            <div class="lg:col-span-5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 flex flex-col">
+                <h2 class="text-lg font-bold text-slate-900 dark:text-white mb-6">Distribuição por Tipo</h2>
+                <div class="flex-1 flex flex-col justify-center gap-6">
+                    @foreach (var item in stats.DistribuicaoPorTipo)
+                    {
+                        <div class="space-y-2">
+                            <div class="flex justify-between text-sm">
+                                <span class="text-slate-600 dark:text-slate-400">@item.Category</span>
+                                <span class="font-bold">@item.Percentage%</span>
+                            </div>
+                            <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2.5 overflow-hidden">
+                                <div class="h-full rounded-full" style="width: @(item.Percentage)%; background-color: @item.Color;"></div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Line Chart: Volume Trends -->
+            <div class="lg:col-span-7 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-lg font-bold text-slate-900 dark:text-white">Volume Mensal (Toneladas)</h2>
+                </div>
+                <div class="relative h-64 w-full mt-4">
+                    <canvas id="volumeChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section: Tables & Map -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Table: Coletas Recentes -->
+            <div class="lg:col-span-2 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+                <div class="p-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
+                    <h2 class="text-lg font-bold text-slate-900 dark:text-white">Coletas Recentes</h2>
+                    <a href="/residuos" class="text-primary text-sm font-semibold hover:underline">Ver todas</a>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">
+                            <tr>
+                                <th class="px-6 py-4">Data/Hora</th>
+                                <th class="px-6 py-4">Localização</th>
+                                <th class="px-6 py-4">Tipo</th>
+                                <th class="px-6 py-4">Peso</th>
+                                <th class="px-6 py-4">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
+                            @foreach (var record in stats.ColetasRecentes)
+                            {
+                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                    <td class="px-6 py-4 whitespace-nowrap">@record.DataHora</td>
+                                    <td class="px-6 py-4 font-medium">@record.Localizacao</td>
+                                    <td class="px-6 py-4">@record.Tipo</td>
+                                    <td class="px-6 py-4">@record.Peso</td>
+                                    <td class="px-6 py-4">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">@record.Status</span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Mini Map: Luanda Points -->
+            <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 flex flex-col overflow-hidden">
+                <div class="p-6 border-b border-slate-200 dark:border-slate-800">
+                    <h2 class="text-lg font-bold text-slate-900 dark:text-white">Pontos de Monitoramento</h2>
+                </div>
+                <div class="flex-1 relative bg-slate-100 dark:bg-slate-800 min-h-[300px]">
+                    <MapComponent MapId="miniMap" InitialLat="-8.8390" InitialLng="13.2894" InitialZoom="11" />
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private DashboardStatsDto? stats;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            stats = await Http.GetFromJsonAsync<DashboardStatsDto>("api/dashboard/stats");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erro ao carregar dashboard: {ex.Message}");
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (stats != null)
+        {
+            var labels = stats.VolumeMensal.Select(s => s.Label).ToArray();
+            var values = stats.VolumeMensal.Select(s => s.Value).ToArray();
+            await JS.InvokeVoidAsync("dashboardCharts.renderLineChart", "volumeChart", labels, values);
+        }
+    }
+}

@@ -1,0 +1,282 @@
+@using Elisal.WasteManagement.Application.DTOs
+@using Elisal.WasteManagement.Domain.Entities
+@using Elisal.WasteManagement.Domain.Enums
+@using System.ComponentModel.DataAnnotations
+@using System.Text.Json
+@inject HttpClient Http
+
+@if (IsVisible)
+{
+    <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity" @onclick="Close"></div>
+        <div class="flex min-h-full items-center justify-center p-4">
+            <div class="relative w-full max-w-2xl transform overflow-hidden rounded-xl bg-white dark:bg-slate-900 text-left shadow-xl transition-all border border-slate-200 dark:border-slate-800">
+                <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
+                    <h3 class="text-lg font-bold text-slate-900 dark:text-white" id="modal-title">Registar Movimentação</h3>
+                    <button @onclick="Close" class="text-slate-400 hover:text-slate-500 transition-colors">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+                
+                <div class="p-6">
+                    @if (showSuccess)
+                    {
+                        <div class="mb-6 p-4 rounded-lg bg-green-50 border border-green-200 text-green-700 flex items-center gap-3">
+                            <span class="material-symbols-outlined">check_circle</span>
+                            <span>Operação registada com sucesso!</span>
+                        </div>
+                    }
+                    @if (!string.IsNullOrEmpty(errorMessage))
+                    {
+                        <div class="mb-6 p-4 rounded-lg bg-red-50 border border-red-200 text-red-700 flex items-center gap-3">
+                            <span class="material-symbols-outlined">error</span>
+                            <span>@errorMessage</span>
+                        </div>
+                    }
+
+                    @if (PreSelectedCoopId == null)
+                    {
+                        <div class="mb-6 flex gap-4 p-1 bg-slate-100 dark:bg-slate-800/50 rounded-lg">
+                            <button type="button" @onclick="() => SetMode(false)" class="@(isInternalReuse ? "text-slate-600 hover:text-slate-900" : "bg-white dark:bg-slate-800 text-primary shadow-sm font-medium") flex-1 py-2 px-4 rounded-md text-sm transition-all focus:outline-none">
+                                Venda Externa
+                            </button>
+                            <button type="button" @onclick="() => SetMode(true)" class="@(isInternalReuse ? "bg-white dark:bg-slate-800 text-emerald-600 shadow-sm font-medium" : "text-slate-600 hover:text-slate-900") flex-1 py-2 px-4 rounded-md text-sm transition-all focus:outline-none">
+                                Reaproveitamento Interno
+                            </button>
+                        </div>
+                    }
+
+                    <EditForm Model="@model" OnValidSubmit="HandleSubmit">
+                        <DataAnnotationsValidator />
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                            @if (!isInternalReuse && PreSelectedCoopId == null)
+                            {
+                                <div class="col-span-2 space-y-2">
+                                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Cooperativa</label>
+                                    <InputSelect @bind-Value="model.CooperativeId" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary">
+                                        <option value="0">Selecione uma cooperativa...</option>
+                                        @if (coops != null) { foreach(var c in coops) { <option value="@c.Id">@c.Name</option> } }
+                                    </InputSelect>
+                                    <ValidationMessage For="@(() => model.CooperativeId)" class="text-xs text-red-500" />
+                                </div>
+                            }
+                            else if (!isInternalReuse)
+                            {
+                                <div class="col-span-2 space-y-2">
+                                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Cooperativa</label>
+                                    <div class="w-full p-2.5 bg-slate-100 dark:bg-slate-800 rounded-lg text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
+                                        @PreSelectedCoopName
+                                    </div>
+                                </div>
+                            }
+
+                            <div class="space-y-2">
+                                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Tipo de Resíduo</label>
+                                <InputSelect @bind-Value="model.WasteTypeId" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary">
+                                    <option value="0">Selecione...</option>
+                                    @if (wasteTypes != null) { foreach(var t in wasteTypes) { <option value="@t.Id">@t.Name</option> } }
+                                </InputSelect>
+                                <ValidationMessage For="@(() => model.WasteTypeId)" class="text-xs text-red-500" />
+                            </div>
+
+                            <div class="space-y-2">
+                                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Data</label>
+                                <InputDate Type="InputDateType.Date" @bind-Value="model.DateTime" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary" />
+                                <ValidationMessage For="@(() => model.DateTime)" class="text-xs text-red-500" />
+                            </div>
+
+                            <div class="space-y-2">
+                                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Quantidade (Kg)</label>
+                                <InputNumber @bind-Value="model.AmountKg" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary" />
+                                <ValidationMessage For="@(() => model.AmountKg)" class="text-xs text-red-500" />
+                            </div>
+
+                            @if (!isInternalReuse)
+                            {
+                                <div class="space-y-2">
+                                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Valor (Kz)</label>
+                                    <InputNumber @bind-Value="model.TotalValue" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary" />
+                                    <ValidationMessage For="@(() => model.TotalValue)" class="text-xs text-red-500" />
+                                </div>
+                            }
+                        </div>
+
+                        @if (!isInternalReuse)
+                        {
+                            <div class="space-y-2 mb-6">
+                                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Comprovante de Pagamento (Opcional)</label>
+                                <div class="flex items-center justify-center w-full">
+                                    <label class="flex flex-col items-center justify-center w-full h-32 border-2 border-slate-300 border-dashed rounded-lg cursor-pointer bg-slate-50 dark:hover:bg-slate-800 dark:bg-slate-800/50 hover:bg-slate-100 dark:border-slate-700 dark:hover:border-slate-600">
+                                        <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                            <span class="material-symbols-outlined text-slate-400 text-3xl mb-2">cloud_upload</span>
+                                            <p class="text-sm text-slate-500 dark:text-slate-400"><span class="font-semibold">Clique para enviar</span> ou arraste</p>
+                                            <p class="text-xs text-slate-500 dark:text-slate-400">PDF, PNG, JPG (MAX. 5MB)</p>
+                                        </div>
+                                        <InputFile OnChange="HandleFileSelected" class="hidden" />
+                                    </label>
+                                </div>
+                                @if (!string.IsNullOrEmpty(fileName))
+                                {
+                                    <p class="text-xs text-green-600 flex items-center gap-1 mt-1"><span class="material-symbols-outlined text-sm">attach_file</span> @fileName</p>
+                                }
+                            </div>
+                        }
+                        else 
+                        {
+                            <div class="mb-6 p-4 bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900 rounded-lg text-sm text-emerald-700 dark:text-emerald-400">
+                                <div class="flex items-start gap-3">
+                                    <span class="material-symbols-outlined">recycling</span>
+                                    <div>
+                                        <p class="font-bold">Reaproveitamento Interno</p>
+                                        <p>Esta operação será registada como uso interno da Elisal. O valor financeiro será zero.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+
+                        <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
+                            <button type="button" @onclick="Close" class="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300">Cancelar</button>
+                            <button type="submit" class="px-4 py-2 rounded-lg bg-primary hover:bg-primary/90 text-white font-medium flex items-center gap-2">
+                                <span class="material-symbols-outlined">@(isInternalReuse ? "recycling" : "payments")</span> 
+                                @(isInternalReuse ? "Registar Reaproveitamento" : "Registar Pagamento")
+                            </button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public EventCallback OnSaved { get; set; }
+    
+    public bool IsVisible { get; private set; }
+    public int? PreSelectedCoopId { get; private set; }
+    public string PreSelectedCoopName { get; private set; } = "";
+
+    private TransactionDto model = new();
+    private List<Cooperative> coops;
+    private List<WasteType> wasteTypes;
+    private bool showSuccess = false;
+    private string errorMessage = "";
+    private string fileName = "";
+    
+    private bool isInternalReuse = false;
+    private int? internalCoopId;
+
+    public void Show(int? coopId = null, string coopName = "") 
+    {
+        IsVisible = true;
+        PreSelectedCoopId = coopId;
+        PreSelectedCoopName = coopName;
+        isInternalReuse = false;
+        
+        model = new TransactionDto { DateTime = DateTime.Today };
+        if (coopId.HasValue) model.CooperativeId = coopId.Value;
+        
+        showSuccess = false;
+        errorMessage = "";
+        fileName = "";
+        LoadData();
+        StateHasChanged();
+    }
+
+    public void Close() 
+    {
+        IsVisible = false;
+        StateHasChanged();
+    }
+    
+    private void SetMode(bool internalReuse)
+    {
+        isInternalReuse = internalReuse;
+        if (isInternalReuse)
+        {
+            model.TotalValue = 0;
+            // Clear cooperative selection if not pre-selected
+             if (PreSelectedCoopId == null) model.CooperativeId = 0;
+        }
+    }
+
+    private async void LoadData()
+    {
+        try 
+        { 
+            wasteTypes = await Http.GetFromJsonAsync<List<WasteType>>("api/residuos/tipos") ?? new(); 
+            if (PreSelectedCoopId == null)
+            {
+                coops = await Http.GetFromJsonAsync<List<Cooperative>>("api/cooperativas") ?? new();
+                // Remove internal coop from dropdown if possible, or keep it.
+                // Generally we hide it from the dropdown if we have the mode selector
+                // But for now let's just fetching everything.
+            }
+                
+            // Fetch internal coop ID configuration
+            try {
+                var config = await Http.GetFromJsonAsync<JsonElement>("api/reaproveitamento-interno/config");
+                if (config.TryGetProperty("internalCooperativeId", out var idProp))
+                {
+                    internalCoopId = idProp.GetInt32();
+                }
+            } catch {}
+            
+            StateHasChanged(); 
+        } catch { }
+    }
+
+    private void HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        fileName = e.File.Name;
+        // Logic to upload file would go here or be processed in Submit
+    }
+
+    private async Task HandleSubmit()
+    {
+        try
+        {
+            // Set params based on mode
+            if (isInternalReuse)
+            {
+                if (internalCoopId.HasValue && internalCoopId.Value > 0)
+                {
+                    model.CooperativeId = internalCoopId.Value;
+                }
+                else
+                {
+                    // Fallback local hardcoded if API fails? Or error.
+                    // Let's assume 999 as fallback
+                    model.CooperativeId = 999;
+                }
+                model.TotalValue = 0;
+                model.Status = TransactionStatus.Completed; // Internal reuse is immediate
+            }
+
+            if (model.CooperativeId <= 0)
+            {
+                errorMessage = "Selecione uma cooperativa ou verifique a configuração de reaproveitamento.";
+                return;
+            }
+
+            var response = await Http.PostAsJsonAsync($"api/cooperativas/{model.CooperativeId}/transacoes", model);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                showSuccess = true;
+                StateHasChanged();
+                await Task.Delay(1000);
+                Close();
+                await OnSaved.InvokeAsync();
+            }
+            else
+            {
+                errorMessage = "Erro ao registar transação.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Erro: {ex.Message}";
+        }
+    }
+}

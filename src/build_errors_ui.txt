@@ -1,0 +1,8 @@
+
+Compilação com êxito.
+    44 Aviso(s)
+    0 Erro(s)
+
+Tempo Decorrido 00:00:15.08
+
+As atualizações de carga de trabalho estão disponíveis. Execute `dotnet workload list` para obter mais informações.

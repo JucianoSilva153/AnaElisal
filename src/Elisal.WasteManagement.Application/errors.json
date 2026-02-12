@@ -1,0 +1,572 @@
+{
+  "$schema": "http://json.schemastore.org/sarif-1.0.0",
+  "version": "1.0.0",
+  "runs": [
+    {
+      "tool": {
+        "name": "Compilador do Microsoft (R) Visual C#",
+        "version": "4.14.0.0",
+        "fileVersion": "4.14.0-3.25262.10 (8edf7bcd)",
+        "semanticVersion": "4.14.0",
+        "language": "pt-BR"
+      },
+      "results": [
+        {
+          "ruleId": "CS8603",
+          "level": "warning",
+          "message": "Possível retorno de referência nula.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/AnaElisal/src/Elisal.WasteManagement.Application/DTOs/DtoExtensions.cs",
+                "region": {
+                  "startLine": 9,
+                  "startColumn": 45,
+                  "endLine": 9,
+                  "endColumn": 49
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8603",
+          "level": "warning",
+          "message": "Possível retorno de referência nula.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/AnaElisal/src/Elisal.WasteManagement.Application/DTOs/DtoExtensions.cs",
+                "region": {
+                  "startLine": 26,
+                  "startColumn": 36,
+                  "endLine": 26,
+                  "endColumn": 40
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8603",
+          "level": "warning",
+          "message": "Possível retorno de referência nula.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/AnaElisal/src/Elisal.WasteManagement.Application/DTOs/DtoExtensions.cs",
+                "region": {
+                  "startLine": 44,
+                  "startColumn": 34,
+                  "endLine": 44,
+                  "endColumn": 38
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8603",
+          "level": "warning",
+          "message": "Possível retorno de referência nula.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/AnaElisal/src/Elisal.WasteManagement.Application/DTOs/DtoExtensions.cs",
+                "region": {
+                  "startLine": 57,
+                  "startColumn": 34,
+                  "endLine": 57,
+                  "endColumn": 38
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8603",
+          "level": "warning",
+          "message": "Possível retorno de referência nula.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/AnaElisal/src/Elisal.WasteManagement.Application/DTOs/DtoExtensions.cs",
+                "region": {
+                  "startLine": 70,
+                  "startColumn": 34,
+                  "endLine": 70,
+                  "endColumn": 38
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8603",
+          "level": "warning",
+          "message": "Possível retorno de referência nula.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/AnaElisal/src/Elisal.WasteManagement.Application/DTOs/DtoExtensions.cs",
+                "region": {
+                  "startLine": 84,
+                  "startColumn": 35,
+                  "endLine": 84,
+                  "endColumn": 39
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS1061",
+          "level": "error",
+          "message": "‘RoutePoint’ não contém uma definição para \"Id\" e não foi possível encontrar nenhum método de extensão \"Id\" que aceite um primeiro argumento do tipo ‘RoutePoint’ (você está se esquecendo de usar uma diretiva ou uma referência de assembly?)",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/AnaElisal/src/Elisal.WasteManagement.Application/DTOs/DtoExtensions.cs",
+                "region": {
+                  "startLine": 103,
+                  "startColumn": 21,
+                  "endLine": 103,
+                  "endColumn": 23
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CS8603",
+          "level": "warning",
+          "message": "Possível retorno de referência nula.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/AnaElisal/src/Elisal.WasteManagement.Application/DTOs/DtoExtensions.cs",
+                "region": {
+                  "startLine": 100,
+                  "startColumn": 32,
+                  "endLine": 100,
+                  "endColumn": 36
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8603",
+          "level": "warning",
+          "message": "Possível retorno de referência nula.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/AnaElisal/src/Elisal.WasteManagement.Application/DTOs/DtoExtensions.cs",
+                "region": {
+                  "startLine": 112,
+                  "startColumn": 41,
+                  "endLine": 112,
+                  "endColumn": 45
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS1998",
+          "level": "warning",
+          "message": "Este método assíncrono não possui operadores 'await' e será executado de modo síncrono. É recomendável o uso do operador 'await' para aguardar chamadas à API desbloqueadas ou do operador 'await Task.Run(...)' para realizar um trabalho associado à CPU em um thread em segundo plano.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/AnaElisal/src/Elisal.WasteManagement.Application/Services/RotaService.cs",
+                "region": {
+                  "startLine": 50,
+                  "startColumn": 31,
+                  "endLine": 50,
+                  "endColumn": 53
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS1998",
+          "level": "warning",
+          "message": "Este método assíncrono não possui operadores 'await' e será executado de modo síncrono. É recomendável o uso do operador 'await' para aguardar chamadas à API desbloqueadas ou do operador 'await Task.Run(...)' para realizar um trabalho associado à CPU em um thread em segundo plano.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/AnaElisal/src/Elisal.WasteManagement.Application/Services/RelatorioService.cs",
+                "region": {
+                  "startLine": 40,
+                  "startColumn": 31,
+                  "endLine": 40,
+                  "endColumn": 53
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CA1050",
+          "level": "note",
+          "message": "Declarar tipos em namespaces",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/AnaElisal/src/Elisal.WasteManagement.Application/DTOs/DtoExtensions.cs",
+                "region": {
+                  "startLine": 5,
+                  "startColumn": 21,
+                  "endLine": 5,
+                  "endColumn": 34
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CA1822",
+          "level": "note",
+          "message": "O membro 'GerarSenhaAleatoria' não acessa os dados da instância e pode ser marcado como estático",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/AnaElisal/src/Elisal.WasteManagement.Application/Services/UsuarioService.cs",
+                "region": {
+                  "startLine": 132,
+                  "startColumn": 20,
+                  "endLine": 132,
+                  "endColumn": 39
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CA1860",
+          "level": "note",
+          "message": "Prefira comparar 'Count' com 0 em vez de usar 'Any()', tanto para clareza quanto para desempenho",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/AnaElisal/src/Elisal.WasteManagement.Application/Services/RotaService.cs",
+                "region": {
+                  "startLine": 36,
+                  "startColumn": 16,
+                  "endLine": 36,
+                  "endColumn": 31
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1,
+            "customProperties": {
+              "DiagnosticPropertyKey": "Count"
+            }
+          }
+        },
+        {
+          "ruleId": "CA1862",
+          "level": "note",
+          "message": "Prefira usar 'string.Equals(string, StringComparison)' para realizar uma comparação que não diferencia maiúsculas de minúsculas, mas lembre-se de que isso pode causar mudanças sutis no comportamento, portanto, certifique-se de realizar testes completos após aplicar a sugestão, ou se for uma comparação culturalmente sensível não é obrigatório, considere usar 'StringComparison.OrdinalIgnoreCase'",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/AnaElisal/src/Elisal.WasteManagement.Application/Services/RelatorioService.cs",
+                "region": {
+                  "startLine": 59,
+                  "startColumn": 29,
+                  "endLine": 59,
+                  "endColumn": 66
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1,
+            "customProperties": {
+              "LeftOffendingMethod": "ToLower",
+              "RightOffendingMethod": null
+            }
+          }
+        },
+        {
+          "ruleId": "CA1862",
+          "level": "note",
+          "message": "Prefira usar 'string.Equals(string, StringComparison)' para realizar uma comparação que não diferencia maiúsculas de minúsculas, mas lembre-se de que isso pode causar mudanças sutis no comportamento, portanto, certifique-se de realizar testes completos após aplicar a sugestão, ou se for uma comparação culturalmente sensível não é obrigatório, considere usar 'StringComparison.OrdinalIgnoreCase'",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/AnaElisal/src/Elisal.WasteManagement.Application/Services/RelatorioService.cs",
+                "region": {
+                  "startLine": 66,
+                  "startColumn": 34,
+                  "endLine": 66,
+                  "endColumn": 73
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1,
+            "customProperties": {
+              "LeftOffendingMethod": "ToLower",
+              "RightOffendingMethod": null
+            }
+          }
+        },
+        {
+          "ruleId": "CA1822",
+          "level": "note",
+          "message": "O membro 'ToRadians' não acessa os dados da instância e pode ser marcado como estático",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/AnaElisal/src/Elisal.WasteManagement.Application/Services/RotaService.cs",
+                "region": {
+                  "startLine": 82,
+                  "startColumn": 20,
+                  "endLine": 82,
+                  "endColumn": 29
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CA1822",
+          "level": "note",
+          "message": "O membro 'ComposeProducaoSync' não acessa os dados da instância e pode ser marcado como estático",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/AnaElisal/src/Elisal.WasteManagement.Application/Services/RelatorioService.cs",
+                "region": {
+                  "startLine": 129,
+                  "startColumn": 18,
+                  "endLine": 129,
+                  "endColumn": 37
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CA1822",
+          "level": "note",
+          "message": "O membro 'ComposeTransacoesSync' não acessa os dados da instância e pode ser marcado como estático",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/AnaElisal/src/Elisal.WasteManagement.Application/Services/RelatorioService.cs",
+                "region": {
+                  "startLine": 159,
+                  "startColumn": 18,
+                  "endLine": 159,
+                  "endColumn": 39
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CA1822",
+          "level": "note",
+          "message": "O membro 'ToRadians' não acessa os dados da instância e pode ser marcado como estático",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/AnaElisal/src/Elisal.WasteManagement.Application/Services/PontoRecolhaService.cs",
+                "region": {
+                  "startLine": 88,
+                  "startColumn": 20,
+                  "endLine": 88,
+                  "endColumn": 29
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CA1822",
+          "level": "note",
+          "message": "O membro 'GetColorForWasteType' não acessa os dados da instância e pode ser marcado como estático",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/AnaElisal/src/Elisal.WasteManagement.Application/Services/DashboardService.cs",
+                "region": {
+                  "startLine": 120,
+                  "startColumn": 20,
+                  "endLine": 120,
+                  "endColumn": 40
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        }
+      ],
+      "rules": {
+        "CA1050": {
+          "id": "CA1050",
+          "shortDescription": "Declarar tipos em namespaces",
+          "fullDescription": "Os tipos são declarados em namespaces para impedir colisões de nomes e como uma forma de organizar tipos relacionados em uma hierarquia de objetos.",
+          "defaultLevel": "note",
+          "helpUri": "https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1050",
+          "properties": {
+            "category": "Design",
+            "isEnabledByDefault": true,
+            "tags": [
+              "PortedFromFxCop",
+              "Telemetry",
+              "EnabledRuleInAggressiveMode"
+            ]
+          }
+        },
+        "CA1822": {
+          "id": "CA1822",
+          "shortDescription": "Marcar membros como estáticos",
+          "fullDescription": "Os membros que não acessam os dados da instância nem chamam os métodos da instância podem ser marcados como estáticos. Depois que você marcar os métodos como estáticos, o compilador emitirá os sites de chamada não virtuais para esses membros. Isso pode oferecer um ganho de desempenho mensurável para códigos sensíveis ao desempenho.",
+          "defaultLevel": "note",
+          "helpUri": "https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1822",
+          "properties": {
+            "category": "Performance",
+            "isEnabledByDefault": true,
+            "tags": [
+              "PortedFromFxCop",
+              "Telemetry",
+              "EnabledRuleInAggressiveMode"
+            ]
+          }
+        },
+        "CA1860": {
+          "id": "CA1860",
+          "shortDescription": "Evite usar o método de extensão 'Enumerable.Any()'",
+          "fullDescription": "Prefira usar as propriedades 'IsEmpty', 'Count' ou 'Length', conforme disponível, em vez de chamar 'Enumerable.Any()'. A intenção é mais clara e tem mais desempenho do que usar o método de extensão 'Enumerable.Any()'.",
+          "defaultLevel": "note",
+          "helpUri": "https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1860",
+          "properties": {
+            "category": "Performance",
+            "isEnabledByDefault": true,
+            "tags": [
+              "Telemetry",
+              "EnabledRuleInAggressiveMode"
+            ]
+          }
+        },
+        "CA1862": {
+          "id": "CA1862",
+          "shortDescription": "Use as sobrecargas do método 'StringComparison' para realizar comparações de strings que não diferenciam maiúsculas de minúsculas",
+          "fullDescription": "Evite chamar 'ToLower', 'ToUpper', 'ToLowerInvariant' e 'ToUpperInvariant' para realizar comparações de strings que não diferenciam maiúsculas de minúsculas, como em 'string.ToLower() == string.ToLower()', porque elas levam a uma alocação. Em vez disso, use 'string.Equals(string, StringComparison)' para realizar comparações que não diferenciam maiúsculas de minúsculas. Mudar para uma sobrecarga que utiliza um 'StringComparison' pode causar mudanças sutis no comportamento, por isso é importante realizar testes completos após aplicar a sugestão. Além disso, se uma comparação culturalmente sensível não for necessária, considere usar 'StringComparison.OrdinalIgnoreCase'.",
+          "defaultLevel": "note",
+          "helpUri": "https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1862",
+          "properties": {
+            "category": "Performance",
+            "isEnabledByDefault": true,
+            "tags": [
+              "Telemetry",
+              "EnabledRuleInAggressiveMode"
+            ]
+          }
+        },
+        "CS1061": {
+          "id": "CS1061",
+          "defaultLevel": "error",
+          "helpUri": "https://msdn.microsoft.com/query/roslyn.query?appId=roslyn&k=k(CS1061)",
+          "properties": {
+            "category": "Compiler",
+            "isEnabledByDefault": true,
+            "tags": [
+              "Compiler",
+              "Telemetry",
+              "NotConfigurable"
+            ]
+          }
+        },
+        "CS1998": {
+          "id": "CS1998",
+          "shortDescription": "O método assíncrono não possui operadores 'await' e será executado de forma síncrona",
+          "defaultLevel": "warning",
+          "helpUri": "https://msdn.microsoft.com/query/roslyn.query?appId=roslyn&k=k(CS1998)",
+          "properties": {
+            "category": "Compiler",
+            "isEnabledByDefault": true,
+            "tags": [
+              "Compiler",
+              "Telemetry"
+            ]
+          }
+        },
+        "CS8603": {
+          "id": "CS8603",
+          "shortDescription": "Possível retorno de referência nula.",
+          "defaultLevel": "warning",
+          "helpUri": "https://msdn.microsoft.com/query/roslyn.query?appId=roslyn&k=k(CS8603)",
+          "properties": {
+            "category": "Compiler",
+            "isEnabledByDefault": true,
+            "tags": [
+              "Compiler",
+              "Telemetry"
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

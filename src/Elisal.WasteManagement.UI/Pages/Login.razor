@@ -1,0 +1,127 @@
+@page "/login"
+@layout Elisal.WasteManagement.UI.Layout.NoLayout
+@attribute [AllowAnonymous]
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@inject Elisal.WasteManagement.UI.Services.LocalStorageService LocalStorage
+@inject AuthenticationStateProvider AuthStateProvider
+@using System.ComponentModel.DataAnnotations
+
+<div class="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900 px-4">
+    <div class="max-w-md w-full space-y-8 bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700">
+        <div class="text-center">
+            <h2 class="text-3xl font-extrabold text-primary">SGR ELISAL</h2>
+            <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">Sistema de Gestão de Resíduos - Luanda</p>
+        </div>
+        
+        <EditForm Model="@loginModel" OnValidSubmit="HandleLogin" class="mt-8 space-y-6">
+            <DataAnnotationsValidator />
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Email</label>
+                    <InputText @bind-Value="loginModel.Email" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md text-sm shadow-sm placeholder-slate-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" placeholder="seu@email.com" />
+                    <ValidationMessage For="@(() => loginModel.Email)" class="text-red-500 text-xs mt-1" />
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Senha</label>
+                    <InputText @bind-Value="loginModel.Password" type="password" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md text-sm shadow-sm placeholder-slate-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" placeholder="••••••••" />
+                    <ValidationMessage For="@(() => loginModel.Password)" class="text-red-500 text-xs mt-1" />
+                </div>
+            </div>
+
+            @if (isLoading)
+            {
+                <button disabled class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary opacity-70 cursor-not-allowed">
+                    <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Autenticando...
+                </button>
+            }
+            else
+            {
+                <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors">
+                    Aceder ao Sistema
+                </button>
+            }
+        </EditForm>
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-md text-sm">
+                @errorMessage
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private LoginModel loginModel = new LoginModel();
+    private string errorMessage = string.Empty;
+    private bool isLoading = false;
+
+    private async Task HandleLogin()
+    {
+        errorMessage = string.Empty;
+        isLoading = true;
+
+        try
+        {
+            var response = await Http.PostAsJsonAsync("api/auth/login", new { Email = loginModel.Email, Senha = loginModel.Password });
+            
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<LoginResult>();
+                if (result != null)
+                {
+                    await LocalStorage.SetItemAsync("authToken", result.Token);
+                    await LocalStorage.SetItemAsync("refreshToken", result.RefreshToken);
+                    await LocalStorage.SetItemAsync("user", result.User);
+                    
+                    ((Services.ApiAuthenticationStateProvider)AuthStateProvider).MarkUserAsAuthenticated(result.User.Email);
+                    Navigation.NavigateTo("/");
+                }
+            }
+            else
+            {
+                errorMessage = "Credenciais inválidas ou erro no servidor.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Erro na ligação: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    public class LoginModel
+    {
+        [Required(ErrorMessage = "O email é obrigatório")]
+        [EmailAddress(ErrorMessage = "Email inválido")]
+        public string Email { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "A senha é obrigatória")]
+        public string Password { get; set; } = string.Empty;
+    }
+
+    public class LoginResult
+    {
+        public string Token { get; set; } = string.Empty;
+        public string RefreshToken { get; set; } = string.Empty;
+        public UserDetails User { get; set; } = new();
+    }
+
+    public class UserDetails
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string Role { get; set; } = string.Empty;
+    }
+}

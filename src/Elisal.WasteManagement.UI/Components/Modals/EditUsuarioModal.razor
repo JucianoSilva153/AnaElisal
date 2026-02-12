@@ -1,0 +1,96 @@
+@using Elisal.WasteManagement.Domain.Entities
+@using Elisal.WasteManagement.Domain.Enums
+@inject HttpClient Http
+
+@if (IsVisible)
+{
+    <div class="fixed inset-0 z-50 overflow-y-auto">
+        <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm" @onclick="Close"></div>
+        <div class="flex min-h-full items-center justify-center p-4">
+            <div class="relative w-full max-w-md transform overflow-hidden rounded-xl bg-white dark:bg-slate-900 shadow-xl border border-slate-200 dark:border-slate-800">
+                <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
+                    <h3 class="text-lg font-bold text-slate-900 dark:text-white">Editar Utilizador</h3>
+                    <button @onclick="Close" class="text-slate-400 hover:text-slate-500">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+
+                <div class="p-6">
+                    @if (currentUser != null)
+                    {
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Nome</label>
+                                <input type="text" @bind="currentUser.Name" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white p-2" />
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email</label>
+                                <input type="email" @bind="currentUser.Email" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white p-2" />
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Perfil</label>
+                                <select @bind="currentUser.Role" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white p-2">
+                                    <option value="@UserRole.Admin">Administrador</option>
+                                    <option value="@UserRole.Manager">Gestor</option>
+                                    <option value="@UserRole.Driver">Operador</option>
+                                    <option value="@UserRole.Citizen">Coordenador</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-200 dark:border-slate-800">
+                            <button @onclick="Close" class="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300">Cancelar</button>
+                            <button @onclick="Save" class="px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary/90 flex items-center gap-2">
+                                <span class="material-symbols-outlined">save</span> Salvar
+                            </button>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public EventCallback OnSaved { get; set; }
+    public bool IsVisible { get; private set; }
+    private User currentUser;
+
+    public void Show(User user)
+    {
+        currentUser = new User
+        {
+            Id = user.Id,
+            Name = user.Name,
+            Email = user.Email,
+            Role = user.Role,
+            IsActive = user.IsActive,
+            CreatedAt = user.CreatedAt
+        };
+        IsVisible = true;
+        StateHasChanged();
+    }
+
+    public void Close()
+    {
+        IsVisible = false;
+        StateHasChanged();
+    }
+
+    private async Task Save()
+    {
+        try
+        {
+            var dto = new { Nome = currentUser.Name };
+            await Http.PutAsJsonAsync($"api/usuarios/{currentUser.Id}", dto);
+            Close();
+            await OnSaved.InvokeAsync();
+        }
+        catch
+        {
+            // Handle error
+        }
+    }
+}

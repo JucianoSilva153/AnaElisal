@@ -1,0 +1,177 @@
+@page "/rotas/{Id:int}/executar"
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+@using Elisal.WasteManagement.Domain.Entities
+@using Elisal.WasteManagement.Application.DTOs
+
+<PageTitle>SGR Elisal - Executar Rota</PageTitle>
+
+<div class="max-w-6xl mx-auto p-8 space-y-6">
+    <div class="flex items-center gap-4">
+        <button @onclick='() => Navigation.NavigateTo("rotas")' class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+            <span class="material-symbols-outlined">arrow_back</span>
+        </button>
+        <div class="flex-1">
+            <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Executar Rota: @route?.Name</h1>
+            <p class="text-slate-500 dark:text-slate-400 text-sm">@route?.WeekDay - Horário: @route?.StartTime.ToString("hh\\:mm")</p>
+        </div>
+        @if (executionId > 0)
+        {
+            <div class="text-right">
+                <p class="text-sm text-slate-500">Progresso</p>
+                <p class="text-2xl font-bold text-primary">@completedCount/@pointStatuses.Count</p>
+            </div>
+        }
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Route Map -->
+        <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 flex flex-col shadow-sm">
+            <h2 class="text-lg font-bold text-slate-900 dark:text-white mb-4">Rota no Mapa</h2>
+            <div class="flex-1 min-h-[400px]">
+                @if (collectionPoints != null && collectionPoints.Any())
+                {
+                    <MapComponent MapId="executionMap" Points="collectionPoints" />
+                }
+                else
+                {
+                    <div class="w-full h-full bg-slate-100 animate-pulse rounded-lg"></div>
+                }
+            </div>
+        </div>
+
+        <!-- Route Points Checklist -->
+        <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-bold text-slate-900 dark:text-white">Pontos de Recolha</h2>
+                @if (executionId == 0)
+                {
+                    <button @onclick="StartRoute" class="px-4 py-2 bg-primary text-white rounded-lg text-sm font-bold">Iniciar Jornada</button>
+                }
+            </div>
+
+            <div class="space-y-3 max-h-[500px] overflow-y-auto pr-2">
+                @if (pointStatuses == null || !pointStatuses.Any())
+                {
+                    <p class="text-slate-500 italic text-center py-8">Carregando pontos da rota...</p>
+                }
+                else
+                {
+                    @foreach (var ps in pointStatuses)
+                    {
+                        var cp = ps.CollectionPoint;
+                        <div class="flex items-start gap-3 p-4 rounded-lg @(ps.IsCompleted ? "bg-green-50 dark:bg-green-900/20" : "bg-slate-50 dark:bg-slate-800") border @(ps.IsCompleted ? "border-green-200 dark:border-green-800" : "border-slate-200 dark:border-slate-700")">
+                            <div class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center @(ps.IsCompleted ? "bg-green-500 text-white" : "bg-slate-300 dark:bg-slate-600 text-slate-700 dark:text-slate-300") font-bold">
+                                @(pointStatuses.IndexOf(ps) + 1)
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="font-semibold text-slate-900 dark:text-white">@cp?.Name</h3>
+                                <p class="text-sm text-slate-500 dark:text-slate-400">@cp?.Address</p>
+                            </div>
+                            <label class="flex items-center cursor-pointer">
+                                <input type="checkbox" checked="@ps.IsCompleted" @onchange="@(e => TogglePoint(ps, (bool)e.Value))" 
+                                       disabled="@(executionId == 0)"
+                                       class="w-5 h-5 text-primary rounded focus:ring-primary disabled:opacity-50" />
+                            </label>
+                        </div>
+                    }
+                }
+            </div>
+
+            @if (executionId > 0 && pointStatuses.All(ps => ps.IsCompleted))
+            {
+                <button @onclick="FinishRoute" class="w-full mt-6 px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 flex items-center justify-center gap-2">
+                    <span class="material-symbols-outlined">check_circle</span> Finalizar Rota
+                </button>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public int Id { get; set; }
+    
+    private Route? route;
+    private List<RoutePointExecutionStatus> pointStatuses = new();
+    private List<CollectionPoint> collectionPoints = new();
+    private int executionId = 0;
+    private int completedCount => pointStatuses.Count(ps => ps.IsCompleted);
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            route = await Http.GetFromJsonAsync<Route>($"api/rotas/{Id}");
+            
+            // Tentar recuperar execução ativa
+            try 
+            {
+                var active = await Http.GetFromJsonAsync<ActiveExecutionResponse>($"api/routeexecution/active/{Id}");
+                if (active != null)
+                {
+                    executionId = active.Execution.Id;
+                    pointStatuses = active.Points;
+                }
+            }
+            catch 
+            {
+                // Se não houver ativa, carregar lista inicial do modelo da rota
+                var points = await Http.GetFromJsonAsync<List<RoutePoint>>($"api/rotas/{Id}/pontos");
+                pointStatuses = points.Select(p => new RoutePointExecutionStatus 
+                { 
+                    CollectionPointId = p.CollectionPointId,
+                    CollectionPoint = p.CollectionPoint,
+                    IsCompleted = false
+                }).ToList();
+            }
+
+            collectionPoints = pointStatuses.Select(ps => ps.CollectionPoint).ToList();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erro ao carregar rota: {ex.Message}");
+        }
+    }
+
+    private async Task StartRoute()
+    {
+        var response = await Http.PostAsync($"api/routeexecution/start/{Id}", null);
+        if (response.IsSuccessStatusCode)
+        {
+            var data = await response.Content.ReadFromJsonAsync<RouteExecutionResponseDto>();
+            executionId = data.ExecutionId;
+            await LoadData();
+        }
+    }
+
+    private async Task TogglePoint(RoutePointExecutionStatus ps, bool completed)
+    {
+        ps.IsCompleted = completed;
+        await Http.PutAsJsonAsync($"api/routeexecution/{executionId}/point", new UpdatePointStatusDto 
+        { 
+            CollectionPointId = ps.CollectionPointId, 
+            IsCompleted = completed 
+        });
+    }
+
+    private async Task FinishRoute()
+    {
+        var response = await Http.PostAsync($"api/routeexecution/{executionId}/finish", null);
+        if (response.IsSuccessStatusCode)
+        {
+            Navigation.NavigateTo("/rotas");
+        }
+    }
+
+    private class ActiveExecutionResponse
+    {
+        public RouteExecution Execution { get; set; } = null!;
+        public List<RoutePointExecutionStatus> Points { get; set; } = new();
+    }
+}

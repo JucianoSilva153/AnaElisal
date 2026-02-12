@@ -1,0 +1,10 @@
+C:\AnaElisal\src\Elisal.WasteManagement.Application\Services\RelatorioService.cs(138,21): error CS0103: O nome "ComposeProducaoContent" não existe no contexto atual [C:\AnaElisal\src\Elisal.WasteManagement.Application\Elisal.WasteManagement.Application.csproj]
+C:\AnaElisal\src\Elisal.WasteManagement.Application\Services\RelatorioService.cs(141,21): error CS0103: O nome "ComposeTransacoesContent" não existe no contexto atual [C:\AnaElisal\src\Elisal.WasteManagement.Application\Elisal.WasteManagement.Application.csproj]
+
+FALHA da compilação.
+    2 Aviso(s)
+    2 Erro(s)
+
+Tempo Decorrido 00:00:03.28
+
+As atualizações de carga de trabalho estão disponíveis. Execute `dotnet workload list` para obter mais informações.

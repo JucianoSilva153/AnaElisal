@@ -1,0 +1,178 @@
+@page "/rotas/nova"
+@page "/rotas/{Id:int}/editar"
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@using Elisal.WasteManagement.Domain.Entities
+
+<PageTitle>SGR Elisal - @(Id.HasValue ? "Editar" : "Nova") Rota</PageTitle>
+
+<div class="max-w-6xl mx-auto p-8 space-y-6">
+    <div class="flex items-center gap-4">
+        <button @onclick='() => Navigation.NavigateTo("rotas")' class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+            <span class="material-symbols-outlined">arrow_back</span>
+        </button>
+        <h1 class="text-2xl font-bold text-slate-900 dark:text-white">@(Id.HasValue ? "Editar" : "Nova") Rota</h1>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Route Details -->
+        <div class="lg:col-span-1 space-y-6">
+            <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
+                <h2 class="text-lg font-bold text-slate-900 dark:text-white mb-4">Detalhes da Rota</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Nome</label>
+                        <input type="text" @bind="routeName" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white p-2" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Dia da Semana</label>
+                        <input type="text" @bind="weekDay" placeholder="Ex: Segunda-Feira" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white p-2" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Horário Início</label>
+                        <input type="time" @bind-value="startTime" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white p-2" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Selected Points -->
+            <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-bold text-slate-900 dark:text-white">Pontos Selecion (@selectedPoints.Count)</h2>
+                    <button @onclick="OptimizeRoute" class="px-3 py-1 bg-blue-500 text-white rounded-lg text-xs hover:bg-blue-600 flex items-center gap-1">
+                        <span class="material-symbols-outlined text-sm">route</span> Otimizar
+                    </button>
+                </div>
+                <div class="space-y-2 max-h-96 overflow-y-auto">
+                    @foreach (var (point, index) in selectedPoints.Select((p, i) => (p, i)))
+                    {
+                        <div class="flex items-center gap-2 p-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                            <span class="text-lg font-bold text-slate-400">@(index + 1)</span>
+                            <div class="flex-1">
+                                <p class="text-sm font-medium text-slate-900 dark:text-white">@point.Name</p>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">@point.Municipality</p>
+                            </div>
+                            <button @onclick="() => RemovePoint(point)" class="text-red-500 hover:text-red-700">
+                                <span class="material-symbols-outlined text-lg">close</span>
+                            </button>
+                        </div>
+                    }
+                </div>
+                @if (totalDistance > 0)
+                {
+                    <div class="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                        <p class="text-sm font-medium text-blue-900 dark:text-blue-300">Distância Total: @totalDistance.ToString("N2") km</p>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Map -->
+        <div class="lg:col-span-2 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
+            <h2 class="text-lg font-bold text-slate-900 dark:text-white mb-4">Mapa Interativo</h2>
+            <p class="text-sm text-slate-500 mb-4">Clique nos marcadores para adicionar/remover pontos da rota</p>
+            <div id="route-map" class="h-96 rounded-lg bg-slate-100 dark:bg-slate-800"></div>
+            <p class="text-xs text-slate-400 mt-2 text-center">*Integração completa do mapa em desenvolvimento</p>
+        </div>
+    </div>
+
+    <div class="flex justify-end gap-3">
+        <button @onclick='() => Navigation.NavigateTo("rotas")' class="px-6 py-2 rounded-lg border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300">Cancelar</button>
+        <button @onclick="SaveRoute" class="px-6 py-2 rounded-lg bg-primary text-white hover:bg-primary/90 flex items-center gap-2">
+            <span class="material-symbols-outlined">save</span> Salvar Rota
+        </button>
+    </div>
+</div>
+
+@code {
+    [Parameter] public int? Id { get; set; }
+    
+    private string routeName = "";
+    private string weekDay = "";
+    private DateTime startTime;
+    private List<CollectionPoint> allPoints = new();
+    private List<CollectionPoint> selectedPoints = new();
+    private double totalDistance = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            allPoints = await Http.GetFromJsonAsync<List<CollectionPoint>>("api/pontosrecolha") ?? new();
+        }
+        catch
+        {
+            allPoints = new();
+        }
+    }
+
+    private void AddPoint(CollectionPoint point)
+    {
+        if (!selectedPoints.Contains(point))
+        {
+            selectedPoints.Add(point);
+        }
+    }
+
+    private void RemovePoint(CollectionPoint point)
+    {
+        selectedPoints.Remove(point);
+    }
+
+    private async Task OptimizeRoute()
+    {
+        if (selectedPoints.Count < 2) return;
+
+        try
+        {
+            var pontoIds = selectedPoints.Select(p => p.Id).ToArray();
+            var response = await Http.PostAsJsonAsync("api/rotas/otimizar", pontoIds);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<OptimizationResult>();
+                totalDistance = result.DistanciaTotal;
+                // Reorder selectedPoints based on optimization
+            }
+        }
+        catch
+        {
+            // Handle error
+        }
+    }
+
+    private async Task SaveRoute()
+    {
+        try
+        {
+            var dto = new
+            {
+                Nome = routeName,
+                Descricao = "",
+                DiaSemana = weekDay,
+                HorarioInicio = TimeSpan.Parse(startTime.Hour.ToString()),
+                PontoIds = selectedPoints.Select(p => p.Id).ToArray()
+            };
+
+            if (Id.HasValue)
+            {
+                await Http.PutAsJsonAsync($"api/rotas/{Id}", dto);
+            }
+            else
+            {
+                await Http.PostAsJsonAsync("api/rotas", dto);
+            }
+
+            Navigation.NavigateTo("/rotas");
+        }
+        catch
+        {
+            // Handle error
+        }
+    }
+
+    public class OptimizationResult
+    {
+        public double DistanciaTotal { get; set; }
+    }
+}

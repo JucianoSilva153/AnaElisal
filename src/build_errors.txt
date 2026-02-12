@@ -1,0 +1,14 @@
+C:\AnaElisal\src\Elisal.WasteManagement.Application\Services\UsuarioService.cs(64,25): error CS1061: ‘IUserRepository’ não contém uma definição para "Update" e não foi possível encontrar nenhum método de extensão "Update" que aceite um primeiro argumento do tipo ‘IUserRepository’ (você está se esquecendo de usar uma diretiva ou uma referência de assembly?) [C:\AnaElisal\src\Elisal.WasteManagement.Application\Elisal.WasteManagement.Application.csproj]
+C:\AnaElisal\src\Elisal.WasteManagement.Application\Services\UsuarioService.cs(77,25): error CS1061: ‘IUserRepository’ não contém uma definição para "Update" e não foi possível encontrar nenhum método de extensão "Update" que aceite um primeiro argumento do tipo ‘IUserRepository’ (você está se esquecendo de usar uma diretiva ou uma referência de assembly?) [C:\AnaElisal\src\Elisal.WasteManagement.Application\Elisal.WasteManagement.Application.csproj]
+C:\AnaElisal\src\Elisal.WasteManagement.Application\Services\PontoRecolhaService.cs(38,36): error CS1061: ‘ICollectionPointRepository’ não contém uma definição para "Update" e não foi possível encontrar nenhum método de extensão "Update" que aceite um primeiro argumento do tipo ‘ICollectionPointRepository’ (você está se esquecendo de usar uma diretiva ou uma referência de assembly?) [C:\AnaElisal\src\Elisal.WasteManagement.Application\Elisal.WasteManagement.Application.csproj]
+C:\AnaElisal\src\Elisal.WasteManagement.Application\Services\UsuarioService.cs(90,25): error CS1061: ‘IUserRepository’ não contém uma definição para "Update" e não foi possível encontrar nenhum método de extensão "Update" que aceite um primeiro argumento do tipo ‘IUserRepository’ (você está se esquecendo de usar uma diretiva ou uma referência de assembly?) [C:\AnaElisal\src\Elisal.WasteManagement.Application\Elisal.WasteManagement.Application.csproj]
+C:\AnaElisal\src\Elisal.WasteManagement.Application\Services\UsuarioService.cs(104,25): error CS1061: ‘IUserRepository’ não contém uma definição para "Update" e não foi possível encontrar nenhum método de extensão "Update" que aceite um primeiro argumento do tipo ‘IUserRepository’ (você está se esquecendo de usar uma diretiva ou uma referência de assembly?) [C:\AnaElisal\src\Elisal.WasteManagement.Application\Elisal.WasteManagement.Application.csproj]
+C:\AnaElisal\src\Elisal.WasteManagement.Application\Services\UsuarioService.cs(121,25): error CS1061: ‘IUserRepository’ não contém uma definição para "Update" e não foi possível encontrar nenhum método de extensão "Update" que aceite um primeiro argumento do tipo ‘IUserRepository’ (você está se esquecendo de usar uma diretiva ou uma referência de assembly?) [C:\AnaElisal\src\Elisal.WasteManagement.Application\Elisal.WasteManagement.Application.csproj]
+
+FALHA da compilação.
+    4 Aviso(s)
+    6 Erro(s)
+
+Tempo Decorrido 00:00:03.32
+
+As atualizações de carga de trabalho estão disponíveis. Execute `dotnet workload list` para obter mais informações.

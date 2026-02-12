@@ -1,0 +1,10 @@
+C:\AnaElisal\src\Elisal.WasteManagement.Api\Controllers\RouteExecutionController.cs(20,34): error CS0104: "Route" é uma referência ambígua entre "Elisal.WasteManagement.Domain.Entities.Route" e "Microsoft.AspNetCore.Routing.Route" [C:\AnaElisal\src\Elisal.WasteManagement.Api\Elisal.WasteManagement.Api.csproj]
+C:\AnaElisal\src\Elisal.WasteManagement.Api\Controllers\RouteExecutionController.cs(25,21): error CS0104: "Route" é uma referência ambígua entre "Elisal.WasteManagement.Domain.Entities.Route" e "Microsoft.AspNetCore.Routing.Route" [C:\AnaElisal\src\Elisal.WasteManagement.Api\Elisal.WasteManagement.Api.csproj]
+
+FALHA da compilação.
+    11 Aviso(s)
+    2 Erro(s)
+
+Tempo Decorrido 00:00:07.81
+
+As atualizações de carga de trabalho estão disponíveis. Execute `dotnet workload list` para obter mais informações.

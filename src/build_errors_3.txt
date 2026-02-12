@@ -1,0 +1,9 @@
+C:\AnaElisal\src\Elisal.WasteManagement.Api\Controllers\RouteExecutionController.cs(49,13): error CS0815: Não é possível atribuir void a uma variável de tipo implícito [C:\AnaElisal\src\Elisal.WasteManagement.Api\Elisal.WasteManagement.Api.csproj]
+
+FALHA da compilação.
+    12 Aviso(s)
+    1 Erro(s)
+
+Tempo Decorrido 00:00:04.82
+
+As atualizações de carga de trabalho estão disponíveis. Execute `dotnet workload list` para obter mais informações.

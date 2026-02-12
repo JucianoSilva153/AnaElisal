@@ -1,0 +1,182 @@
+@page "/perfil"
+@inject HttpClient Http
+@inject AuthenticationStateProvider AuthStateProvider
+@using Elisal.WasteManagement.Domain.Entities
+@using Elisal.WasteManagement.Domain.Enums
+@using System.Security.Claims
+
+<PageTitle>SGR Elisal - Meu Perfil</PageTitle>
+
+<div class="max-w-4xl mx-auto p-8 space-y-6">
+    <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Meu Perfil</h1>
+
+    @if (currentUser != null)
+    {
+        <!-- Profile Info Card -->
+        <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
+            <h2 class="text-lg font-bold text-slate-900 dark:text-white mb-4">Informações Pessoais</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="text-sm text-slate-500 dark:text-slate-400">Nome Completo</label>
+                    <p class="font-medium text-slate-900 dark:text-white">@currentUser.Name</p>
+                </div>
+                <div>
+                    <label class="text-sm text-slate-500 dark:text-slate-400">Email</label>
+                    <p class="font-medium text-slate-900 dark:text-white">@currentUser.Email</p>
+                </div>
+                <div>
+                    <label class="text-sm text-slate-500 dark:text-slate-400">Perfil</label>
+                    <p class="font-medium text-slate-900 dark:text-white">@GetRoleName(currentUser.Role)</p>
+                </div>
+                <div>
+                    <label class="text-sm text-slate-500 dark:text-slate-400">Membro Desde</label>
+                    <p class="font-medium text-slate-900 dark:text-white">@currentUser.CreatedAt.ToString("dd/MM/yyyy")</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Change Password Card -->
+        <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
+            <h2 class="text-lg font-bold text-slate-900 dark:text-white mb-4">Alterar Senha</h2>
+            <div class="space-y-4 max-w-md">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Senha Atual</label>
+                    <input type="password" @bind="senhaAtual" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white p-2" />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Nova Senha</label>
+                    <input type="password" @bind="novaSenha" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white p-2" />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Confirmar Nova Senha</label>
+                    <input type="password" @bind="confirmarSenha" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white p-2" />
+                </div>
+                <button @onclick="AlterarSenha" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90">
+                    Alterar Senha
+                </button>
+                @if (!string.IsNullOrEmpty(passwordMessage))
+                {
+                    <p class="text-sm @(passwordSuccess ? "text-green-600" : "text-red-600")">@passwordMessage</p>
+                }
+            </div>
+        </div>
+
+        <!-- Activity History Card -->
+        <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
+            <h2 class="text-lg font-bold text-slate-900 dark:text-white mb-4">Histórico de Atividades</h2>
+            <div class="space-y-2">
+                @if (logs == null)
+                {
+                    <p class="text-sm text-slate-500 italic">Carregando histórico...</p>
+                }
+                else if (!logs.Any())
+                {
+                    <p class="text-sm text-slate-500 italic">Nenhuma atividade registrada.</p>
+                }
+                else
+                {
+                    @foreach (var log in logs)
+                    {
+                        <div class="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                            <div class="flex items-center gap-3">
+                                <span class="material-symbols-outlined text-slate-400">history</span>
+                                <div>
+                                    <p class="text-sm font-medium text-slate-900 dark:text-white">@log.Action</p>
+                                    <p class="text-xs text-slate-500 dark:text-slate-400">@log.Details</p>
+                                </div>
+                            </div>
+                            <span class="text-xs text-slate-400">@log.Timestamp.ToLocalTime().ToString("dd/MM HH:mm")</span>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="flex items-center justify-center p-12">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        </div>
+    }
+</div>
+
+@code {
+    private User? currentUser;
+    private List<AuditLog>? logs;
+    private string senhaAtual = "";
+    private string novaSenha = "";
+    private string confirmarSenha = "";
+    private string passwordMessage = "";
+    private bool passwordSuccess = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            var email = user.FindFirst(ClaimTypes.Email)?.Value 
+                        ?? user.FindFirst(ClaimTypes.Name)?.Value;
+            
+            if (!string.IsNullOrEmpty(email))
+            {
+                var users = await Http.GetFromJsonAsync<List<User>>("api/usuarios");
+                currentUser = users?.FirstOrDefault(u => u.Email == email);
+                
+                if (currentUser != null)
+                {
+                    logs = await Http.GetFromJsonAsync<List<AuditLog>>($"api/usuarios/{currentUser.Id}/historico");
+                }
+            }
+        }
+    }
+
+    private async Task AlterarSenha()
+    {
+        if (string.IsNullOrEmpty(senhaAtual) || string.IsNullOrEmpty(novaSenha))
+        {
+            passwordMessage = "Preencha todos os campos.";
+            return;
+        }
+
+        if (novaSenha != confirmarSenha)
+        {
+            passwordMessage = "As senhas não coincidem.";
+            passwordSuccess = false;
+            return;
+        }
+
+        try
+        {
+            var dto = new { SenhaAtual = senhaAtual, NovaSenha = novaSenha };
+            var response = await Http.PostAsJsonAsync($"api/usuarios/{currentUser.Id}/alterar-senha", dto);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                passwordMessage = "Senha alterada com sucesso!";
+                passwordSuccess = true;
+                senhaAtual = novaSenha = confirmarSenha = "";
+            }
+            else
+            {
+                passwordMessage = "Erro ao alterar senha. Verifique a senha atual.";
+                passwordSuccess = false;
+            }
+        }
+        catch
+        {
+            passwordMessage = "Erro ao processar requisição.";
+            passwordSuccess = false;
+        }
+    }
+
+    private string GetRoleName(UserRole role) => role switch
+    {
+        UserRole.Admin => "Administrador",
+        UserRole.Manager => "Gestor",
+        UserRole.Driver => "Operador",
+        UserRole.Citizen => "Coordenador",
+        _ => role.ToString()
+    };
+}

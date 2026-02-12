@@ -1,0 +1,127 @@
+@using Elisal.WasteManagement.Domain.Enums
+@using System.ComponentModel.DataAnnotations
+@inject HttpClient Http
+
+@if (IsVisible)
+{
+    <div class="fixed inset-0 z-50 overflow-y-auto">
+        <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm" @onclick="Close"></div>
+        <div class="flex min-h-full items-center justify-center p-4">
+            <div class="relative w-full max-w-md transform overflow-hidden rounded-xl bg-white dark:bg-slate-900 shadow-xl border border-slate-200 dark:border-slate-800">
+                <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
+                    <h3 class="text-lg font-bold text-slate-900 dark:text-white">Novo Utilizador</h3>
+                    <button @onclick="Close" class="text-slate-400 hover:text-slate-500">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+
+                <div class="p-6">
+                    @if (showSuccess)
+                    {
+                        <div class="mb-4 p-4 rounded-lg bg-green-50 border border-green-200 text-green-700">
+                            <p class="font-semibold">Utilizador criado com sucesso!</p>
+                            <p class="text-sm mt-1">Senha temporária: <code class="bg-green-100 px-2 py-1 rounded">@senhaTemporaria</code></p>
+                            <p class="text-xs mt-2">*Esta senha foi enviada para o email do utilizador</p>
+                        </div>
+                    }
+
+                    <EditForm Model="@model" OnValidSubmit="HandleSubmit">
+                        <DataAnnotationsValidator />
+
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Nome Completo</label>
+                                <InputText @bind-Value="model.Nome" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white" />
+                                <ValidationMessage For="@(() => model.Nome)" class="text-xs text-red-500" />
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email</label>
+                                <InputText @bind-Value="model.Email" type="email" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white" />
+                                <ValidationMessage For="@(() => model.Email)" class="text-xs text-red-500" />
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Perfil</label>
+                                <InputSelect @bind-Value="model.Perfil" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white p-2">
+                                    <option value="@UserRole.Admin">Administrador</option>
+                                    <option value="@UserRole.Manager">Gestor</option>
+                                    <option value="@UserRole.Driver">Operador</option>
+                                    <option value="@UserRole.Citizen">Coordenador</option>
+                                </InputSelect>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-200 dark:border-slate-800">
+                            <button type="button" @onclick="Close" class="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300">Cancelar</button>
+                            <button type="submit" class="px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary/90 flex items-center gap-2">
+                                <span class="material-symbols-outlined">save</span> Criar Utilizador
+                            </button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public EventCallback OnSaved { get; set; }
+    public bool IsVisible { get; private set; }
+    
+    private CreateUserModel model = new();
+    private bool showSuccess = false;
+    private string senhaTemporaria = "";
+
+    public void Show()
+    {
+        IsVisible = true;
+        model = new CreateUserModel();
+        showSuccess = false;
+        senhaTemporaria = "";
+        StateHasChanged();
+    }
+
+    public void Close()
+    {
+        IsVisible = false;
+        StateHasChanged();
+    }
+
+    private async Task HandleSubmit()
+    {
+        try
+        {
+            model.Senha = GerarSenhaAleatoria();
+            var response = await Http.PostAsJsonAsync("api/usuarios/registar", model);
+            if (response.IsSuccessStatusCode)
+            {
+                senhaTemporaria = model.Senha;
+                showSuccess = true;
+                StateHasChanged();
+                @* await Task.Delay(3000);
+                Close(); *@
+                await OnSaved.InvokeAsync();
+            }
+        }
+        catch
+        {
+            // Handle error
+        }
+    }
+
+    private string GerarSenhaAleatoria()
+    {
+        const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        var random = new Random();
+        return new string(Enumerable.Repeat(chars, 8).Select(s => s[random.Next(s.Length)]).ToArray());
+    }
+
+    public class CreateUserModel
+    {
+        [Required] public string Nome { get; set; } = "";
+        [Required][EmailAddress] public string Email { get; set; } = "";
+        public UserRole Perfil { get; set; } = UserRole.Driver;
+        public string Senha { get; set; } = "";
+    }
+}

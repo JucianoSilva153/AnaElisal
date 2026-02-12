@@ -1,0 +1,136 @@
+@using Elisal.WasteManagement.Application.DTOs
+@using Elisal.WasteManagement.Domain.Entities
+@using Elisal.WasteManagement.UI.Services
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.JSInterop
+@inject HttpClient Http
+@inject IJSRuntime JS
+@inject NotificationService NotificationService
+
+@if (IsVisible)
+{
+    <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity" @onclick="Close"></div>
+        <div class="flex min-h-full items-center justify-center p-4">
+            <div class="relative w-full max-w-2xl transform overflow-hidden rounded-xl bg-white dark:bg-slate-900 text-left shadow-xl transition-all border border-slate-200 dark:border-slate-800">
+                <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
+                    <h3 class="text-lg font-bold text-slate-900 dark:text-white" id="modal-title">Novo Ponto de Recolha</h3>
+                    <button @onclick="Close" class="text-slate-400 hover:text-slate-500 transition-colors">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+                
+                <div class="p-6">
+                    <EditForm Model="@model" OnValidSubmit="HandleSubmit">
+                        <DataAnnotationsValidator />
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                            <div class="space-y-2 col-span-2 md:col-span-1">
+                                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Nome do Ponto</label>
+                                <InputText @bind-Value="model.Nome" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary" placeholder="Ex: Ponto Mercado São Paulo" />
+                                <ValidationMessage For="@(() => model.Nome)" class="text-xs text-red-500" />
+                            </div>
+
+                            <div class="space-y-2 col-span-2 md:col-span-1">
+                                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Município/Bairro</label>
+                                <InputText @bind-Value="model.Municipio" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary" />
+                                <ValidationMessage For="@(() => model.Municipio)" class="text-xs text-red-500" />
+                            </div>
+
+                            <div class="col-span-2 space-y-2">
+                                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Endereço Completo</label>
+                                <InputText @bind-Value="model.Endereco" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary" />
+                                <ValidationMessage For="@(() => model.Endereco)" class="text-xs text-red-500" />
+                            </div>
+
+                             <div class="space-y-2">
+                                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Latitude</label>
+                                <InputNumber @bind-Value="model.Latitude" @bind-Value:format="F6" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary" />
+                            </div>
+                            <div class="space-y-2">
+                                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Longitude</label>
+                                <InputNumber @bind-Value="model.Longitude" @bind-Value:format="F6" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary" />
+                            </div>
+                            
+                            <div class="col-span-2 space-y-2">
+                                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Selecione no Mapa</label>
+                                <div class="h-48 border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden">
+                                    <MapComponent MapId="modalMap" OnMapClick="HandleMapClick" InitialLat="-8.83833" InitialLng="13.2344" />
+                                </div>
+                                <p class="text-[10px] text-slate-500 italic">* Clique no mapa para capturar as coordenadas exatas.</p>
+                            </div>
+
+                            <div class="space-y-2 col-span-2">
+                                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Capacidade Total (Kg)</label>
+                                <InputNumber @bind-Value="model.Capacidade" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary" />
+                                <ValidationMessage For="@(() => model.Capacidade)" class="text-xs text-red-500" />
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
+                            <button type="button" @onclick="Close" class="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300">Cancelar</button>
+                            <button type="submit" class="px-4 py-2 rounded-lg bg-primary hover:bg-primary/90 text-white font-medium flex items-center gap-2">
+                                <span class="material-symbols-outlined">save</span> Salvar Ponto
+                            </button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public EventCallback OnSaved { get; set; }
+    public bool IsVisible { get; private set; }
+    
+    private CreateCollectionPointDto model = new();
+
+    public void Show() 
+    {
+        IsVisible = true;
+        model = new CreateCollectionPointDto 
+        { 
+            Latitude = -8.83833, 
+            Longitude = 13.2344, 
+            Capacidade = 1000 
+        };
+        StateHasChanged();
+    }
+
+    public void Close() 
+    {
+        IsVisible = false;
+        StateHasChanged();
+    }
+    
+    private void HandleMapClick(double[] coords)
+    {
+        model.Latitude = Math.Round(coords[0], 6);
+        model.Longitude = Math.Round(coords[1], 6);
+        StateHasChanged();
+    }
+
+    private async Task HandleSubmit()
+    {
+        try
+        {
+            var response = await Http.PostAsJsonAsync("api/pontosrecolha", model);
+            if (response.IsSuccessStatusCode)
+            {
+                NotificationService.ShowSuccess("Ponto de recolha criado com sucesso!");
+                Close();
+                await OnSaved.InvokeAsync();
+            }
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                NotificationService.ShowError($"Erro ao criar ponto: {error}");
+            }
+        }
+        catch (Exception ex)
+        {
+            NotificationService.ShowError("Erro ao processar a requisição.");
+        }
+    }
+}

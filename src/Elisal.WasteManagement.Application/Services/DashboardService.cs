@@ -1,0 +1,131 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Elisal.WasteManagement.Application.DTOs;
+using Elisal.WasteManagement.Application.Interfaces;
+using Elisal.WasteManagement.Domain.Entities;
+using Elisal.WasteManagement.Domain.Interfaces;
+
+namespace Elisal.WasteManagement.Application.Services;
+
+public class DashboardService : IDashboardService
+{
+    private readonly ICollectionRecordRepository _collectionRecordRepository;
+    private readonly IRepository<CollectionPoint> _collectionPointRepository;
+    private readonly IRepository<WasteType> _wasteTypeRepository;
+    private readonly IRepository<AuditLog> _auditLogRepository;
+
+    public DashboardService(
+        ICollectionRecordRepository collectionRecordRepository,
+        IRepository<CollectionPoint> collectionPointRepository,
+        IRepository<WasteType> wasteTypeRepository,
+        IRepository<AuditLog> auditLogRepository)
+    {
+        _collectionRecordRepository = collectionRecordRepository;
+        _collectionPointRepository = collectionPointRepository;
+        _wasteTypeRepository = wasteTypeRepository;
+        _auditLogRepository = auditLogRepository;
+    }
+
+    public async Task<DashboardStatsDto> GetStatsAsync()
+    {
+        var now = DateTime.UtcNow;
+        var startOfMonth = new DateTime(now.Year, now.Month, 1);
+        var startOfLastMonth = startOfMonth.AddMonths(-1);
+        var endOfLastMonth = startOfMonth.AddDays(-1);
+
+        var currentMonthRecords = (await _collectionRecordRepository.GetByPeriodAsync(startOfMonth, now)).ToList();
+        var lastMonthRecords = (await _collectionRecordRepository.GetByPeriodAsync(startOfLastMonth, endOfLastMonth)).ToList();
+
+        var totalResiduos = currentMonthRecords.Sum(r => r.AmountKg) / 1000.0; // Ton
+        var lastTotalResiduos = lastMonthRecords.Sum(r => r.AmountKg) / 1000.0;
+        var variacaoResiduos = lastTotalResiduos == 0 ? 0 : ((totalResiduos - lastTotalResiduos) / lastTotalResiduos) * 100;
+
+        var currentRecyclable = currentMonthRecords.Where(r => r.WasteType != null && r.WasteType.IsRecyclable).Sum(r => r.AmountKg);
+        var currentTotalKg = currentMonthRecords.Sum(r => r.AmountKg);
+        var taxaReaproveitamento = currentTotalKg == 0 ? 0 : (currentRecyclable / currentTotalKg) * 100;
+
+        var lastRecyclable = lastMonthRecords.Where(r => r.WasteType != null && r.WasteType.IsRecyclable).Sum(r => r.AmountKg);
+        var lastTotalKg = lastMonthRecords.Sum(r => r.AmountKg);
+        var lastTaxa = lastTotalKg == 0 ? 0 : (lastRecyclable / lastTotalKg) * 100;
+        var variacaoTaxa = taxaReaproveitamento - lastTaxa;
+
+        var pontos = (await _collectionPointRepository.GetAllAsync()).ToList();
+        var pontosAtivos = pontos.Count(p => p.IsActive);
+        
+        // Regra de Alertas Inteligentes: Pontos com > 90% de ocupação + Logs críticos
+        var pontosCheios = pontos.Count(p => p.Capacity > 0 && (p.CurrentOccupancy / (double)p.Capacity) > 0.9);
+        var logsCriticos = (await _auditLogRepository.GetAllAsync())
+            .Count(l => l.Timestamp >= now.AddDays(-1) && (l.Action.Contains("Error", StringComparison.OrdinalIgnoreCase) || l.Details.Contains("Importante", StringComparison.OrdinalIgnoreCase)));
+
+        var stats = new DashboardStatsDto
+        {
+            TotalResiduosMensal = Math.Round(totalResiduos, 1),
+            VariacaoTotalResiduos = Math.Round(variacaoResiduos, 1),
+            TaxaReaproveitamento = Math.Round(taxaReaproveitamento, 1),
+            VariacaoTaxaReaproveitamento = Math.Round(variacaoTaxa, 1),
+            PontosAtivos = pontosAtivos,
+            AlertasOperacionais = pontosCheios + logsCriticos
+        };
+
+        // Charts data
+        var last6Months = Enumerable.Range(0, 6).Select(i => startOfMonth.AddMonths(-i)).Reverse();
+        foreach (var month in last6Months)
+        {
+            var endOfMonth = month.AddMonths(1).AddDays(-1);
+            var monthRecords = await _collectionRecordRepository.GetByPeriodAsync(month, endOfMonth);
+            stats.VolumeMensal.Add(new ChartSeriesDto 
+            { 
+                Label = month.ToString("MMM"), 
+                Value = Math.Round(monthRecords.Sum(r => r.AmountKg) / 1000.0, 1) 
+            });
+        }
+
+        var wasteTypes = await _wasteTypeRepository.GetAllAsync();
+        foreach (var wt in wasteTypes)
+        {
+            var wtWeight = currentMonthRecords.Where(r => r.WasteTypeId == wt.Id).Sum(r => r.AmountKg);
+            if (currentTotalKg > 0)
+            {
+                stats.DistribuicaoPorTipo.Add(new PieChartDto
+                {
+                    Category = wt.Name,
+                    Percentage = Math.Round((wtWeight / currentTotalKg) * 100, 1),
+                    Color = GetColorForWasteType(wt.Name)
+                });
+            }
+        }
+
+        // Recent Collections
+        var allRecords = (await _collectionRecordRepository.GetAllAsync())
+            .OrderByDescending(r => r.DateTime)
+            .Take(5);
+
+        foreach (var r in allRecords)
+        {
+            stats.ColetasRecentes.Add(new RecentCollectionDto
+            {
+                DataHora = r.DateTime.ToString("dd MMM, HH:mm"),
+                Localizacao = r.CollectionPoint?.Name ?? "N/A",
+                Tipo = r.WasteType?.Name ?? "N/A",
+                Peso = $"{r.AmountKg / 1000.0:F1} Ton",
+                Status = "Concluído"
+            });
+        }
+
+        return stats;
+    }
+
+    private string GetColorForWasteType(string name)
+    {
+        return name.ToLower() switch
+        {
+            "orgânico" => "#2f7f34",
+            "plástico" => "#F97316",
+            "papel" => "#EAB308",
+            "vidro" => "#10B981",
+            _ => "#64748B"
+        };
+    }
+}
