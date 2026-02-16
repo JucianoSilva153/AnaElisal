@@ -12,6 +12,7 @@ public class CollectionRecordDto
     public string WasteTypeName { get; set; } = string.Empty;
     public int CollectionPointId { get; set; }
     public string CollectionPointName { get; set; } = string.Empty;
+    public string Municipality { get; set; } = string.Empty;
     public int UserId { get; set; }
     public string UserName { get; set; } = string.Empty;
 }

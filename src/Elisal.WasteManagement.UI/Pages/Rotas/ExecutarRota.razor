@@ -32,7 +32,7 @@
             <div class="flex-1 min-h-[400px]">
                 @if (collectionPoints != null && collectionPoints.Any())
                 {
-                    <MapComponent MapId="executionMap" Points="collectionPoints" />
+                    <MapComponent MapId="executionMap" Points="collectionPoints" ShowRoute="true"/>
                 }
                 else
                 {
@@ -70,9 +70,9 @@
                                 <p class="text-sm text-slate-500 dark:text-slate-400">@cp?.Address</p>
                             </div>
                             <label class="flex items-center cursor-pointer">
-                                <input type="checkbox" checked="@ps.IsCompleted" @onchange="@(e => TogglePoint(ps, (bool)e.Value))" 
+                                <input type="checkbox" checked="@ps.IsCompleted" @onchange="@(e => TogglePoint(ps, (bool)e.Value!))"
                                        disabled="@(executionId == 0)"
-                                       class="w-5 h-5 text-primary rounded focus:ring-primary disabled:opacity-50" />
+                                       class="w-5 h-5 text-primary rounded focus:ring-primary disabled:opacity-50"/>
                             </label>
                         </div>
                     }
@@ -91,7 +91,7 @@
 
 @code {
     [Parameter] public int Id { get; set; }
-    
+
     private Route? route;
     private List<RoutePointExecutionStatus> pointStatuses = new();
     private List<CollectionPoint> collectionPoints = new();
@@ -108,30 +108,48 @@
         try
         {
             route = await Http.GetFromJsonAsync<Route>($"api/rotas/{Id}");
-            
+
             // Tentar recuperar execução ativa
-            try 
+            try
             {
-                var active = await Http.GetFromJsonAsync<ActiveExecutionResponse>($"api/routeexecution/active/{Id}");
-                if (active != null)
+                var response = await Http.GetAsync($"api/routeexecution/active/{Id}");
+                if (response.IsSuccessStatusCode)
                 {
-                    executionId = active.Execution.Id;
-                    pointStatuses = active.Points;
+                    var active = await response.Content.ReadFromJsonAsync<ActiveExecutionResponse>();
+                    if (active != null)
+                    {
+                        executionId = active.Execution.Id;
+                        pointStatuses = active.Points;
+                    }
+                }
+                else
+                {
+                    // Se não houver ativa, carregar lista inicial do modelo da rota
+                    var points = await Http.GetFromJsonAsync<List<RoutePoint>>($"api/rotas/{Id}/pontos");
+                    if (points != null)
+                    {
+                        pointStatuses = points.OrderBy(p => p.SequenceOrder).Select(p => new RoutePointExecutionStatus
+                        {
+                            CollectionPointId = p.CollectionPointId,
+                            CollectionPoint = p.CollectionPoint,
+                            IsCompleted = false
+                        }).ToList();
+                    }
                 }
             }
-            catch 
+            catch (Exception ex)
             {
-                // Se não houver ativa, carregar lista inicial do modelo da rota
-                var points = await Http.GetFromJsonAsync<List<RoutePoint>>($"api/rotas/{Id}/pontos");
-                pointStatuses = points.Select(p => new RoutePointExecutionStatus 
-                { 
-                    CollectionPointId = p.CollectionPointId,
-                    CollectionPoint = p.CollectionPoint,
-                    IsCompleted = false
-                }).ToList();
+                Console.WriteLine($"Erro ao carregar execução: {ex.Message}");
             }
 
-            collectionPoints = pointStatuses.Select(ps => ps.CollectionPoint).ToList();
+            if (pointStatuses != null)
+            {
+                collectionPoints = pointStatuses
+                    .OrderBy(ps => pointStatuses.IndexOf(ps))
+                    .Select(ps => ps.CollectionPoint)
+                    .Where(cp => cp != null)
+                    .ToList()!;
+            }
         }
         catch (Exception ex)
         {
@@ -153,10 +171,10 @@
     private async Task TogglePoint(RoutePointExecutionStatus ps, bool completed)
     {
         ps.IsCompleted = completed;
-        await Http.PutAsJsonAsync($"api/routeexecution/{executionId}/point", new UpdatePointStatusDto 
-        { 
-            CollectionPointId = ps.CollectionPointId, 
-            IsCompleted = completed 
+        await Http.PutAsJsonAsync($"api/routeexecution/{executionId}/point", new UpdatePointStatusDto
+        {
+            CollectionPointId = ps.CollectionPointId,
+            IsCompleted = completed
         });
     }
 
@@ -174,4 +192,5 @@
         public RouteExecution Execution { get; set; } = null!;
         public List<RoutePointExecutionStatus> Points { get; set; } = new();
     }
+
 }

@@ -35,6 +35,7 @@ public static class DtoExtensions
             WasteTypeName = record.WasteType?.Name ?? string.Empty,
             CollectionPointId = record.CollectionPointId,
             CollectionPointName = record.CollectionPoint?.Name ?? string.Empty,
+            Municipality = record.CollectionPoint?.Municipality ?? string.Empty,
             UserId = record.UserId,
             UserName = record.User?.Name ?? string.Empty
         };
@@ -107,20 +108,35 @@ public static class DtoExtensions
             CollectionPoint = rp.CollectionPoint?.ToDto()
         };
     }
-
-    public static TransactionDto ToDto(this Transaction transaction)
+    public static OperationalAlertDto ToDto(this OperationalAlert entity)
     {
-        if (transaction == null) return null;
+        if (entity == null) return null;
+        return new OperationalAlertDto
+        {
+            Id = entity.Id,
+            Title = entity.Title,
+            Message = entity.Message,
+            Type = entity.Type,
+            CreatedAt = entity.CreatedAt,
+            IsRead = entity.IsRead,
+            CollectionPointId = entity.CollectionPointId,
+            RouteId = entity.RouteId
+        };
+    }
+
+    public static TransactionDto ToDto(this Transaction entity)
+    {
+        if (entity == null) return null;
         return new TransactionDto
         {
-            Id = transaction.Id,
-            DateTime = transaction.Date,
-            CooperativeId = transaction.CooperativeId,
-            WasteTypeId = transaction.WasteTypeId,
-            AmountKg = transaction.AmountKg,
-            TotalValue = transaction.Value,
-            Status = transaction.Status,
-            PricePerKg = transaction.AmountKg > 0 ? transaction.Value / (decimal)transaction.AmountKg : 0
+            Id = entity.Id,
+            AmountKg = entity.AmountKg,
+            CooperativeId = entity.CooperativeId,
+            DateTime = entity.Date,
+            PricePerKg = entity.Value / (decimal) entity.AmountKg,
+            Status =  entity.Status,
+            TotalValue = entity.Value,
+            WasteTypeId = entity.WasteTypeId
         };
     }
 }

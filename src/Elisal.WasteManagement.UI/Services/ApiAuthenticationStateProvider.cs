@@ -25,20 +25,42 @@ public class ApiAuthenticationStateProvider : AuthenticationStateProvider
             return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
         }
 
+        // Check for token expiration
+        var claims = ParseClaimsFromJwt(savedToken);
+        var expiryClaim = claims.FirstOrDefault(c => c.Type == "exp")?.Value;
+
+        if (expiryClaim != null && long.TryParse(expiryClaim, out var expiryTime))
+        {
+            var expiryDateTime = DateTimeOffset.FromUnixTimeSeconds(expiryTime).UtcDateTime;
+            if (expiryDateTime < DateTime.UtcNow)
+            {
+                // Token expired
+                await MarkUserAsLoggedOut();
+                return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
+            }
+        }
+
         _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("bearer", savedToken);
 
-        return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity(ParseClaimsFromJwt(savedToken), "jwt")));
+        return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity(claims, "jwt")));
     }
 
-    public void MarkUserAsAuthenticated(string email)
+    public void MarkUserAsAuthenticated(string token)
     {
-        var authenticatedUser = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(ClaimTypes.Name, email) }, "via-api"));
+        // FIX: Parse JWT token to extract all claims including roles
+        // Previously only created a Name claim, causing AuthorizeView to not work until page reload
+        var claims = ParseClaimsFromJwt(token);
+        var authenticatedUser = new ClaimsPrincipal(new ClaimsIdentity(claims, "jwt"));
         var authState = Task.FromResult(new AuthenticationState(authenticatedUser));
         NotifyAuthenticationStateChanged(authState);
     }
 
     public async Task MarkUserAsLoggedOut()
     {
+        await _localStorage.RemoveItemAsync("authToken");
+        await _localStorage.RemoveItemAsync("refreshToken");
+        await _localStorage.RemoveItemAsync("user");
+
         var anonymousUser = new ClaimsPrincipal(new ClaimsIdentity());
         var authState = Task.FromResult(new AuthenticationState(anonymousUser));
         NotifyAuthenticationStateChanged(authState);
@@ -109,6 +131,7 @@ public class ApiAuthenticationStateProvider : AuthenticationStateProvider
             case 2: base64 += "=="; break;
             case 3: base64 += "="; break;
         }
+
         return Convert.FromBase64String(base64);
     }
 }

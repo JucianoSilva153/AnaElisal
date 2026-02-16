@@ -18,7 +18,8 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(); // Using SwaggerGen instead of OpenApi just for broader compatibility or standard use, but template used OpenApi. I'll stick to OpenAPI if preferred, but usually Swagger is standard. I'll stick to what was there or better yet, make it clean.
+builder.Services
+    .AddSwaggerGen(); // Using SwaggerGen instead of OpenApi just for broader compatibility or standard use, but template used OpenApi. I'll stick to OpenAPI if preferred, but usually Swagger is standard. I'll stick to what was there or better yet, make it clean.
 // Using standard Controllers approach since it's a layered architecture, usually Controllers are used in API layer.
 
 builder.Services.AddDbContext<ElisalDbContext>(options =>
@@ -32,14 +33,21 @@ builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ICollectionRecordRepository, CollectionRecordRepository>();
 builder.Services.AddScoped<ICollectionPointRepository, CollectionPointRepository>();
+builder.Services.AddScoped<IOperationalAlertRepository, OperationalAlertRepository>();
+
+// Configurations
+builder.Services.Configure<Elisal.WasteManagement.Application.Common.EmailSettings>(
+    builder.Configuration.GetSection("EmailSettings"));
 
 // Services
+builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 builder.Services.AddScoped<IResiduoService, ResiduoService>();
 builder.Services.AddScoped<IPontoRecolhaService, PontoRecolhaService>();
 builder.Services.AddScoped<ICooperativaService, CooperativaService>();
 builder.Services.AddScoped<IRelatorioService, RelatorioService>();
 builder.Services.AddScoped<IRotaService, RotaService>();
+builder.Services.AddScoped<IOperationalAlertService, OperationalAlertService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 
@@ -69,24 +77,24 @@ var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var key = Encoding.ASCII.GetBytes(jwtSettings.GetValue<string>("Secret")!);
 
 builder.Services.AddAuthentication(x =>
-{
-    x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(x =>
-{
-    x.RequireHttpsMetadata = false;
-    x.SaveToken = true;
-    x.TokenValidationParameters = new TokenValidationParameters
     {
-        ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(key),
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidIssuer = jwtSettings.GetValue<string>("Issuer"),
-        ValidAudience = jwtSettings.GetValue<string>("Audience")
-    };
-});
+        x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    })
+    .AddJwtBearer(x =>
+    {
+        x.RequireHttpsMetadata = false;
+        x.SaveToken = true;
+        x.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(key),
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidIssuer = jwtSettings.GetValue<string>("Issuer"),
+            ValidAudience = jwtSettings.GetValue<string>("Audience")
+        };
+    });
 
 // Swagger with JWT Support
 builder.Services.AddSwaggerGen(c =>

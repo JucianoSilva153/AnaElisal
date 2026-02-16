@@ -13,21 +13,21 @@
             <h2 class="text-3xl font-extrabold text-primary">SGR ELISAL</h2>
             <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">Sistema de Gestão de Resíduos - Luanda</p>
         </div>
-        
+
         <EditForm Model="@loginModel" OnValidSubmit="HandleLogin" class="mt-8 space-y-6">
-            <DataAnnotationsValidator />
-            
+            <DataAnnotationsValidator/>
+
             <div class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Email</label>
-                    <InputText @bind-Value="loginModel.Email" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md text-sm shadow-sm placeholder-slate-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" placeholder="seu@email.com" />
-                    <ValidationMessage For="@(() => loginModel.Email)" class="text-red-500 text-xs mt-1" />
+                    <InputText @bind-Value="loginModel.Email" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md text-sm shadow-sm placeholder-slate-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" placeholder="seu@email.com"/>
+                    <ValidationMessage For="@(() => loginModel.Email)" class="text-red-500 text-xs mt-1"/>
                 </div>
 
                 <div>
                     <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Senha</label>
-                    <InputText @bind-Value="loginModel.Password" type="password" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md text-sm shadow-sm placeholder-slate-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" placeholder="••••••••" />
-                    <ValidationMessage For="@(() => loginModel.Password)" class="text-red-500 text-xs mt-1" />
+                    <InputText @bind-Value="loginModel.Password" type="password" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md text-sm shadow-sm placeholder-slate-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" placeholder="••••••••"/>
+                    <ValidationMessage For="@(() => loginModel.Password)" class="text-red-500 text-xs mt-1"/>
                 </div>
             </div>
 
@@ -71,7 +71,7 @@
         try
         {
             var response = await Http.PostAsJsonAsync("api/auth/login", new { Email = loginModel.Email, Senha = loginModel.Password });
-            
+
             if (response.IsSuccessStatusCode)
             {
                 var result = await response.Content.ReadFromJsonAsync<LoginResult>();
@@ -80,8 +80,8 @@
                     await LocalStorage.SetItemAsync("authToken", result.Token);
                     await LocalStorage.SetItemAsync("refreshToken", result.RefreshToken);
                     await LocalStorage.SetItemAsync("user", result.User);
-                    
-                    ((Services.ApiAuthenticationStateProvider)AuthStateProvider).MarkUserAsAuthenticated(result.User.Email);
+
+                    ((Services.ApiAuthenticationStateProvider)AuthStateProvider).MarkUserAsAuthenticated(result.Token);
                     Navigation.NavigateTo("/");
                 }
             }
@@ -124,4 +124,5 @@
         public string Email { get; set; } = string.Empty;
         public string Role { get; set; } = string.Empty;
     }
+
 }

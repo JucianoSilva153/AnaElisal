@@ -21,23 +21,24 @@ public class ElisalDbContext : DbContext
     public DbSet<RoutePointExecutionStatus> RoutePointExecutionStatuses { get; set; }
     public DbSet<AuditLog> AuditLogs { get; set; }
     public DbSet<UserToken> UserTokens { get; set; }
+    public DbSet<OperationalAlert> OperationalAlerts { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-        
+
         modelBuilder.Entity<RoutePoint>()
             .HasKey(rp => new { rp.RouteId, rp.CollectionPointId });
 
         modelBuilder.Entity<Cooperative>().HasData(
-            new Cooperative 
-            { 
-                Id = 999, 
-                Name = "Elisal - Reaproveitamento Interno", 
-                Contact = "N/A", 
-                Email = "interno@elisal.co.ao", 
-                Address = "Elisal Sede", 
-                AcceptedWasteTypes = "Todos" 
+            new Cooperative
+            {
+                Id = 999,
+                Name = "Elisal - Reaproveitamento Interno",
+                Contact = "N/A",
+                Email = "interno@elisal.co.ao",
+                Address = "Elisal Sede",
+                AcceptedWasteTypes = "Todos"
             }
         );
 

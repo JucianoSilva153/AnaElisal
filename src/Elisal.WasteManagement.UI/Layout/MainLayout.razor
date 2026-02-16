@@ -20,12 +20,12 @@
             </div>
             <nav class="flex flex-col gap-1">
                 <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400 font-medium"
-                    href="/">
+                   href="/">
                     <span class="material-symbols-outlined">dashboard</span>
                     <span class="text-sm">Dashboard</span>
                 </a>
                 <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                    href="/residuos">
+                   href="/residuos">
                     <span class="material-symbols-outlined">delete_sweep</span>
                     <span class="text-sm">Recolhas</span>
                 </a>
@@ -35,39 +35,39 @@
                         <span>Tipos de Resíduos</span>
                     </button>
                     <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                        href="/cooperativas">
+                       href="/cooperativas">
                         <span class="material-symbols-outlined">storefront</span>
                         <span class="text-sm">Cooperativas</span>
                     </a>
                     <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                        href="/transacoes">
+                       href="/transacoes">
                         <span class="material-symbols-outlined">payments</span>
                         <span class="text-sm">Transações</span>
                     </a>
                 </AuthorizeView>
                 <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                    href="/pontos-recolha">
+                   href="/pontos-recolha">
                     <span class="material-symbols-outlined">location_on</span>
                     <span class="text-sm">Pontos de Coleta</span>
                 </a>
                 <AuthorizeView Roles="Admin,Manager">
                     <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                        href="/relatorios">
+                       href="/relatorios">
                         <span class="material-symbols-outlined">description</span>
                         <span class="text-sm">Relatórios</span>
                     </a>
                 </AuthorizeView>
                 <AuthorizeView Roles="Admin,Manager,Driver,Citizen">
                     <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                        href="/rotas">
+                       href="/rotas">
                         <span class="material-symbols-outlined">alt_route</span>
                         <span class="text-sm">Rotas</span>
                     </a>
                 </AuthorizeView>
-                
+
                 <AuthorizeView Roles="Admin">
                     <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                        href="/usuarios">
+                       href="/usuarios">
                         <span class="material-symbols-outlined">group</span>
                         <span class="text-sm">Utilizadores</span>
                     </a>
@@ -98,26 +98,23 @@
             <div class="flex items-center gap-4 flex-1 max-w-xl">
                 <div class="relative w-full">
                     <span
-                        class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">search</span>
+                        class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">
+                        search
+                    </span>
                     <input
                         class="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:ring-2 focus:ring-primary focus:border-primary text-sm transition-all outline-none"
-                        placeholder="Pesquisar registros, frotas ou alertas..." type="text" />
+                        placeholder="Pesquisar registros, frotas ou alertas..." type="text"/>
                 </div>
             </div>
             <div class="flex items-center gap-4">
-                <button
-                    class="p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg relative transition-colors">
-                    <span class="material-symbols-outlined">notifications</span>
-                    <span
-                        class="absolute top-2 right-2.5 size-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
-                </button>
+                <NotificationBell/>
                 <button
                     class="p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
                     <span class="material-symbols-outlined">dark_mode</span>
                 </button>
                 <AuthorizeView Roles="Admin,Manager,Driver">
                     <button @onclick="() => _recolhaModal.Show()"
-                        class="px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg text-sm font-semibold transition-colors flex items-center gap-2">
+                            class="px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg text-sm font-semibold transition-colors flex items-center gap-2">
                         <span class="material-symbols-outlined text-lg">add_circle</span>
                         Nova Coleta
                     </button>
@@ -125,9 +122,9 @@
             </div>
         </header>
         @Body
-        
-        <Elisal.WasteManagement.UI.Components.Modals.RecolhaModal @ref="_recolhaModal" NavigateOnSuccess="true" />
-        <Elisal.WasteManagement.UI.Components.Modals.WasteTypeManagementModal @ref="_wasteTypeModal" />
+
+        <Elisal.WasteManagement.UI.Components.Modals.RecolhaModal @ref="_recolhaModal" NavigateOnSuccess="true"/>
+        <Elisal.WasteManagement.UI.Components.Modals.WasteTypeManagementModal @ref="_wasteTypeModal"/>
         <!-- Footer -->
         <footer
             class="mt-auto py-6 px-8 text-center text-slate-400 text-xs border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
@@ -136,7 +133,7 @@
     </main>
 </div>
 
-<ToastContainer />
+<ToastContainer/>
 
 @code {
     private Elisal.WasteManagement.UI.Components.Modals.RecolhaModal _recolhaModal;
@@ -150,4 +147,5 @@
         await ((Elisal.WasteManagement.UI.Services.ApiAuthenticationStateProvider)AuthStateProvider).MarkUserAsLoggedOut();
         Navigation.NavigateTo("login");
     }
+
 }

@@ -8,6 +8,7 @@
 @code {
     [Parameter] public string MapId { get; set; } = "map";
     [Parameter] public List<CollectionPoint>? Points { get; set; }
+    [Parameter] public bool ShowRoute { get; set; } = false;
     [Parameter] public EventCallback<double[]> OnMapClick { get; set; }
     [Parameter] public EventCallback<int> OnPointSelected { get; set; }
     [Parameter] public double InitialLat { get; set; } = -8.83833;
@@ -25,10 +26,15 @@
                 _dotNetHelper = DotNetObjectReference.Create(this);
                 await JS.InvokeVoidAsync("mapFunctions.initMap", MapId, InitialLat, InitialLng, InitialZoom);
                 await JS.InvokeVoidAsync("mapFunctions.setHelper", MapId, _dotNetHelper);
-                
+
                 if (Points != null && Points.Any())
                 {
                     await JS.InvokeVoidAsync("mapFunctions.addMarkers", MapId, Points);
+
+                    if (ShowRoute && Points.Count >= 2)
+                    {
+                        await JS.InvokeVoidAsync("mapFunctions.drawRoute", MapId, Points);
+                    }
                 }
             }
             catch (Exception ex)
@@ -60,4 +66,5 @@
     {
         _dotNetHelper?.Dispose();
     }
+
 }

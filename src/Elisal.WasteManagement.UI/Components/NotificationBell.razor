@@ -1,0 +1,126 @@
+@using Elisal.WasteManagement.Application.DTOs
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@implements IDisposable
+
+<div class="relative inline-block text-left">
+    <button @onclick="ToggleDropdown" class="p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg relative transition-colors shadow-sm">
+        <span class="material-symbols-outlined">notifications</span>
+        @if (alerts.Any(a => !a.IsRead))
+        {
+            <span class="absolute top-2 right-2.5 size-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-900 shadow-[0_0_8px_rgba(239,68,68,0.5)]"></span>
+        }
+    </button>
+
+    @if (showDropdown)
+    {
+        <div class="absolute right-0 mt-3 w-80 rounded-2xl bg-white dark:bg-slate-800 shadow-2xl border border-slate-200 dark:border-slate-700 z-[70] overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div class="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50">
+                <h3 class="font-bold text-slate-900 dark:text-white flex items-center gap-2 text-sm">
+                    <span class="material-symbols-outlined text-primary text-lg">notifications_active</span>
+                    Alertas Operacionais
+                </h3>
+                @if(alerts.Any(a => !a.IsRead))
+                {
+                    <span class="text-[10px] font-black bg-primary/10 text-primary px-2 py-0.5 rounded-full uppercase tracking-tighter">@alerts.Count(a => !a.IsRead) NOVOS</span>
+                }
+            </div>
+            <div class="max-h-[320px] overflow-y-auto">
+                @if (!alerts.Any())
+                {
+                    <div class="p-10 text-center flex flex-col items-center gap-3">
+                        <span class="material-symbols-outlined text-slate-200 dark:text-slate-700 text-5xl">notifications_off</span>
+                        <p class="text-slate-400 italic text-xs">Sem alertas operacionais no momento.</p>
+                    </div>
+                }
+                else
+                {
+                    @foreach (var alert in alerts)
+                    {
+                        <div class="p-4 border-b border-slate-50 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors cursor-pointer group" @onclick="() => MarkAsRead(alert.Id)">
+                            <div class="flex gap-3">
+                                <div class="size-2 mt-1.5 rounded-full flex-shrink-0 @(alert.Type == "Critical" ? "bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.4)]" : "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)]")"></div>
+                                <div class="flex-1">
+                                    <p class="text-[13px] font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors">@alert.Title</p>
+                                    <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">@alert.Message</p>
+                                    <div class="flex items-center justify-between mt-2">
+                                        <p class="text-[9px] font-medium text-slate-400 uppercase tracking-widest">@alert.CreatedAt.ToString("HH:mm - dd/MM")</p>
+                                        <span class="text-[9px] font-bold text-primary opacity-0 group-hover:opacity-100 transition-opacity">MARCAR COMO LIDO</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+            <div class="p-3 text-center border-t border-slate-100 dark:border-slate-700 bg-slate-50/30 dark:bg-slate-800/30">
+                <button @onclick="ProcessAlerts" disabled="@isProcessing" class="text-[10px] font-black text-slate-500 hover:text-primary transition-colors uppercase tracking-widest flex items-center justify-center gap-2 w-full">
+                    @if(isProcessing)
+                    {
+                        <span class="animate-spin material-symbols-outlined text-xs">progress_activity</span>
+                        <span>Sincronizando...</span>
+                    }
+                    else
+                    {
+                        <span class="material-symbols-outlined text-xs">sync</span>
+                        <span>Atualizar Estado do Sistema</span>
+                    }
+                </button>
+            </div>
+        </div>
+    }
+</div>
+
+@if (showDropdown)
+{
+    <div class="fixed inset-0 z-[60] bg-transparent" @onclick="ToggleDropdown"></div>
+}
+
+@code {
+    private List<OperationalAlertDto> alerts = new();
+    private bool showDropdown = false;
+    private bool isProcessing = false;
+    private System.Threading.Timer? _timer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAlerts();
+        // Polling every 60 seconds
+        _timer = new System.Threading.Timer(async _ => await InvokeAsync(async () => { await LoadAlerts(); StateHasChanged(); }), null, 60000, 60000);
+    }
+
+    private async Task LoadAlerts()
+    {
+        try 
+        {
+            alerts = await Http.GetFromJsonAsync<List<OperationalAlertDto>>("api/operationalalerts") ?? new();
+        }
+        catch { }
+    }
+
+    private void ToggleDropdown() => showDropdown = !showDropdown;
+
+    private async Task MarkAsRead(int id)
+    {
+        await Http.PostAsync($"api/operationalalerts/{id}/read", null);
+        await LoadAlerts();
+    }
+
+    private async Task ProcessAlerts()
+    {
+        isProcessing = true;
+        StateHasChanged();
+        try 
+        {
+            await Http.PostAsync("api/operationalalerts/process", null);
+            await LoadAlerts();
+        }
+        finally
+        {
+            isProcessing = false;
+            StateHasChanged();
+        }
+    }
+    
+    public void Dispose() => _timer?.Dispose();
+}

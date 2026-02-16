@@ -18,15 +18,18 @@ public class RouteExecutionController : ControllerBase
     private readonly IRepository<RouteExecution> _executionRepo;
     private readonly IRepository<RoutePointExecutionStatus> _pointStatusRepo;
     private readonly IRepository<Elisal.WasteManagement.Domain.Entities.Route> _routeRepo;
+    private readonly Elisal.WasteManagement.Infrastructure.Persistence.ElisalDbContext _context;
 
     public RouteExecutionController(
         IRepository<RouteExecution> executionRepo,
         IRepository<RoutePointExecutionStatus> pointStatusRepo,
-        IRepository<Elisal.WasteManagement.Domain.Entities.Route> routeRepo)
+        IRepository<Elisal.WasteManagement.Domain.Entities.Route> routeRepo,
+        Elisal.WasteManagement.Infrastructure.Persistence.ElisalDbContext context)
     {
         _executionRepo = executionRepo;
         _pointStatusRepo = pointStatusRepo;
         _routeRepo = routeRepo;
+        _context = context;
     }
 
     [HttpPost("start/{routeId}")]
@@ -35,8 +38,12 @@ public class RouteExecutionController : ControllerBase
         var route = await _routeRepo.GetByIdAsync(routeId);
         if (route == null) return NotFound("Rota não encontrada.");
 
-        // Obter ID do motorista autenticado (simulado ou do JWT)
-        var driverId = 1; // Simplificado para demo
+        // Obter ID do motorista autenticado do JWT
+        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var driverId))
+        {
+            return Unauthorized("Usuário não identificado.");
+        }
 
         var execution = new RouteExecution
         {
@@ -48,18 +55,22 @@ public class RouteExecutionController : ControllerBase
 
         var created = await _executionRepo.AddAsync(execution);
 
-        // Inicializar status dos pontos
-        var routeWithPoints = (await _routeRepo.GetAllAsync())
-            .First(r => r.Id == routeId);
+        // Inicializar status dos pontos - Usando context diretamente para incluir RoutePoints
+        var routeWithPoints = await _context.Routes
+            .Include(r => r.RoutePoints)
+            .FirstOrDefaultAsync(r => r.Id == routeId);
 
-        foreach (var rp in routeWithPoints.RoutePoints)
+        if (routeWithPoints != null)
         {
-            await _pointStatusRepo.AddAsync(new RoutePointExecutionStatus
+            foreach (var rp in routeWithPoints.RoutePoints)
             {
-                RouteExecutionId = execution.Id,
-                CollectionPointId = rp.CollectionPointId,
-                IsCompleted = false
-            });
+                await _pointStatusRepo.AddAsync(new RoutePointExecutionStatus
+                {
+                    RouteExecutionId = execution.Id,
+                    CollectionPointId = rp.CollectionPointId,
+                    IsCompleted = false
+                });
+            }
         }
 
         return Ok(new RouteExecutionResponseDto { ExecutionId = execution.Id, Status = execution });
@@ -74,10 +85,11 @@ public class RouteExecutionController : ControllerBase
 
         if (execution == null) return NotFound();
 
-        // Carregar status dos pontos
-        var points = (await _pointStatusRepo.GetAllAsync())
+        // Carregar status dos pontos com detalhes do CollectionPoint
+        var points = await _context.RoutePointExecutionStatuses
+            .Include(p => p.CollectionPoint)
             .Where(p => p.RouteExecutionId == execution.Id)
-            .ToList();
+            .ToListAsync();
 
         return Ok(new { Execution = execution, Points = points });
     }

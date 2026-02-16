@@ -14,11 +14,14 @@ public class UsuarioService : IUsuarioService
 {
     private readonly IUserRepository _userRepository;
     private readonly IRepository<AuditLog> _auditLogRepository;
+    private readonly IEmailService _emailService;
 
-    public UsuarioService(IUserRepository userRepository, IRepository<AuditLog> auditLogRepository)
+    public UsuarioService(IUserRepository userRepository, IRepository<AuditLog> auditLogRepository,
+        IEmailService emailService)
     {
         _userRepository = userRepository;
         _auditLogRepository = auditLogRepository;
+        _emailService = emailService;
     }
 
     public async Task<UserDto?> AutenticarAsync(string email, string senha)
@@ -55,6 +58,17 @@ public class UsuarioService : IUsuarioService
 
         await LogActionAsync(usuario.Id, "Criar", "Usuario", $"Novo usuário criado: {usuario.Email}");
 
+        // Envido de email com credenciais
+        try
+        {
+            await _emailService.SendCredentialsEmailAsync(usuario.Email, usuario.Name, dto.Senha);
+        }
+        catch (Exception ex)
+        {
+            // Log do erro de email mas não impede a criação do usuário
+            Console.WriteLine($"Erro ao enviar email de boas-vindas: {ex.Message}");
+        }
+
         return usuario.ToDto();
     }
 
@@ -65,7 +79,7 @@ public class UsuarioService : IUsuarioService
             throw new InvalidOperationException("Usuário não encontrado.");
 
         user.Name = dto.Nome;
-        
+
         _userRepository.Update(user);
         await _userRepository.SaveChangesAsync();
 
@@ -110,6 +124,17 @@ public class UsuarioService : IUsuarioService
         await _userRepository.SaveChangesAsync();
 
         await LogActionAsync(id, "ResetSenha", "Usuario", "Senha resetada.");
+
+        // Envio de email com senha temporária
+        try
+        {
+            await _emailService.SendResetPasswordEmailAsync(user.Email, user.Name, senhaTemporaria);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erro ao enviar email de reset: {ex.Message}");
+        }
+
         return senhaTemporaria;
     }
 
@@ -143,7 +168,7 @@ public class UsuarioService : IUsuarioService
 
     private async Task LogActionAsync(int userId, string action, string table, string details)
     {
-        try 
+        try
         {
             var audit = new AuditLog
             {
