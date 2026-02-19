@@ -23,7 +23,7 @@ public class CollectionRecordRepository : Repository<CollectionRecord>, ICollect
             .Include(r => r.RecordWasteTypes)
             .ThenInclude(rwt => rwt.WasteType)
             .Include(r => r.CollectionPoint)
-            .Include(r => r.User)
+            .Include(r => r.User)   
             .ToListAsync();
     }
 }

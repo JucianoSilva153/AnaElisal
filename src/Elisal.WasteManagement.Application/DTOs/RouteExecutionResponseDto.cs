@@ -5,5 +5,5 @@ namespace Elisal.WasteManagement.Application.DTOs;
 public class RouteExecutionResponseDto
 {
     public int ExecutionId { get; set; }
-    public RouteExecution Status { get; set; } = null!;
+    public RouteExecutionDto Status { get; set; } = null!;
 }

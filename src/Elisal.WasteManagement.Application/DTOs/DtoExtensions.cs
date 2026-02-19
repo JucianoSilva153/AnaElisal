@@ -112,6 +112,34 @@ public static class DtoExtensions
         };
     }
 
+    public static RouteExecutionDto ToDto(this RouteExecution re)
+    {
+        if (re == null) return null;
+        return new RouteExecutionDto
+        {
+            RouteId = re.RouteId,
+            DriverId = re.DriverId,
+            EndTime = re.EndTime,
+            Id = re.RouteId,
+            PointStatuses = re.PointStatuses.Select(p => p.ToDto()).ToList(),
+            StartTime = re.StartTime,
+            Status = re.Status
+        };
+    }
+
+    public static RoutePointExecutionStatusDto ToDto(this RoutePointExecutionStatus rpe)
+    {
+        if (rpe == null) return null;
+        return new RoutePointExecutionStatusDto
+        {
+            Id = rpe.Id,
+            CollectionPointId = rpe.CollectionPointId,
+            CompletedAt = rpe.CompletedAt,
+            IsCompleted = rpe.IsCompleted,
+            RouteExecutionId = rpe.RouteExecutionId
+        };
+    }
+
     public static OperationalAlertDto ToDto(this OperationalAlert entity)
     {
         if (entity == null) return null;

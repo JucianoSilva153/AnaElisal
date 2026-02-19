@@ -73,7 +73,7 @@ public class RouteExecutionController : ControllerBase
             }
         }
 
-        return Ok(new RouteExecutionResponseDto { ExecutionId = execution.Id, Status = execution });
+        return Ok(new RouteExecutionResponseDto { ExecutionId = execution.Id, Status = execution.ToDto() });
     }
 
     [HttpGet("active/{routeId}")]

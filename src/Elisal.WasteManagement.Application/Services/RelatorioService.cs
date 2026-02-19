@@ -15,15 +15,15 @@ namespace Elisal.WasteManagement.Application.Services;
 
 public class RelatorioService : IRelatorioService
 {
-    private readonly IRepository<CollectionRecord> _recordRepo;
-    private readonly IRepository<CollectionPoint> _pointRepo;
+    private readonly ICollectionRecordRepository _recordRepo;
+    private readonly ICollectionPointRepository _pointRepo;
     private readonly ITransactionRepository _transactionRepo;
     private readonly IRepository<Cooperative> _coopRepo;
     private readonly IRepository<WasteType> _wasteRepo;
 
     public RelatorioService(
-        IRepository<CollectionRecord> recordRepo,
-        IRepository<CollectionPoint> pointRepo,
+        ICollectionRecordRepository recordRepo,
+        ICollectionPointRepository pointRepo,
         ITransactionRepository transactionRepo,
         IRepository<Cooperative> coopRepo,
         IRepository<WasteType> wasteRepo)
@@ -51,7 +51,7 @@ public class RelatorioService : IRelatorioService
                 page.Header().Element(ComposeHeader);
                 page.Content().Element(container =>
                 {
-                    container.Column(col =>
+                    container.Column(async col =>
                     {
                         col.Item().PaddingVertical(10).Text($"Relatório de {tipoRelatorio}").FontSize(16).Bold();
                         col.Item().Text($"Período: {inicio:dd/MM/yyyy} a {fim:dd/MM/yyyy}").FontSize(10);
@@ -59,29 +59,42 @@ public class RelatorioService : IRelatorioService
 
                         if (tipoRelatorio.ToLower() == "producao")
                         {
-                            var records = (_recordRepo as ICollectionRecordRepository).GetByPeriodAsync(inicio, fim)
-                                .GetAwaiter().GetResult().ToList();
-                            ComposeProducaoSync(col, records);
+                            var records = _recordRepo.GetByPeriodAsync(inicio, fim).GetAwaiter().GetResult(); ;
+                            
+                            if (records == null)
+                                return;
+
+                            ComposeProducaoSync(col, records.ToList());
                         }
                         else if (tipoRelatorio.ToLower() == "transacoes")
                         {
                             var transactions = _transactionRepo.GetByPeriodAsync(inicio, fim, filtros.CooperativaId)
-                                .GetAwaiter().GetResult().ToList();
-                            ComposeTransacoesSync(col, transactions);
+                                .GetAwaiter().GetResult();
+
+                            if (transactions == null)
+                                return;
+
+                            ComposeTransacoesSync(col, transactions.ToList());
                         }
                         else if (tipoRelatorio.ToLower() == "operadores")
                         {
-                            var records = (_recordRepo as ICollectionRecordRepository).GetByPeriodAsync(inicio, fim)
-                                .GetAwaiter().GetResult().ToList();
+                            var records = _recordRepo.GetByPeriodAsync(inicio, fim).GetAwaiter().GetResult(); ;
+
+                            if (records == null)
+                                return;
+
                             if (filtros.UsuarioId.HasValue)
                                 records = records.Where(r => r.UserId == filtros.UsuarioId.Value).ToList();
-                            ComposeOperadoresSync(col, records);
+                            ComposeOperadoresSync(col, records.ToList());
                         }
                         else if (tipoRelatorio.ToLower() == "desempenho-ponto")
                         {
-                            var records = (_recordRepo as ICollectionRecordRepository).GetByPeriodAsync(inicio, fim)
-                                .GetAwaiter().GetResult().ToList();
-                            ComposeDesempenhoPontoSync(col, records);
+                            var records = _recordRepo.GetByPeriodAsync(inicio, fim).GetAwaiter().GetResult(); ;
+
+                            if (records == null)
+                                return;
+
+                            ComposeDesempenhoPontoSync(col, records.ToList());
                         }
                     });
                 });

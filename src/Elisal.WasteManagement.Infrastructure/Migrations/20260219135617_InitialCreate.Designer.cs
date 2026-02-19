@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Elisal.WasteManagement.Infrastructure.Migrations
 {
     [DbContext(typeof(ElisalDbContext))]
-    [Migration("20260204223954_AddUserTokens")]
-    partial class AddUserTokens
+    [Migration("20260219135617_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -161,6 +161,21 @@ namespace Elisal.WasteManagement.Infrastructure.Migrations
                     b.ToTable("RegistoRecolha", (string)null);
                 });
 
+            modelBuilder.Entity("Elisal.WasteManagement.Domain.Entities.CollectionRecordWasteType", b =>
+                {
+                    b.Property<int>("CollectionRecordId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("WasteTypeId")
+                        .HasColumnType("int");
+
+                    b.HasKey("CollectionRecordId", "WasteTypeId");
+
+                    b.HasIndex("WasteTypeId");
+
+                    b.ToTable("CollectionRecordWasteTypes");
+                });
+
             modelBuilder.Entity("Elisal.WasteManagement.Domain.Entities.Cooperative", b =>
                 {
                     b.Property<int>("Id")
@@ -203,6 +218,54 @@ namespace Elisal.WasteManagement.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Cooperativa", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 999,
+                            AcceptedWasteTypes = "Todos",
+                            Address = "Elisal Sede",
+                            Contact = "N/A",
+                            Email = "interno@elisal.co.ao",
+                            Name = "Elisal - Reaproveitamento Interno"
+                        });
+                });
+
+            modelBuilder.Entity("Elisal.WasteManagement.Domain.Entities.OperationalAlert", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("CollectionPointId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<int?>("RouteId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("OperationalAlerts");
                 });
 
             modelBuilder.Entity("Elisal.WasteManagement.Domain.Entities.Route", b =>
@@ -247,6 +310,39 @@ namespace Elisal.WasteManagement.Infrastructure.Migrations
                     b.ToTable("Rota", (string)null);
                 });
 
+            modelBuilder.Entity("Elisal.WasteManagement.Domain.Entities.RouteExecution", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("DriverId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("EndTime")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("RouteId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("StartTime")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DriverId");
+
+                    b.HasIndex("RouteId");
+
+                    b.ToTable("RouteExecutions");
+                });
+
             modelBuilder.Entity("Elisal.WasteManagement.Domain.Entities.RoutePoint", b =>
                 {
                     b.Property<int>("RouteId")
@@ -266,6 +362,35 @@ namespace Elisal.WasteManagement.Infrastructure.Migrations
                     b.HasIndex("CollectionPointId");
 
                     b.ToTable("RotaPonto", (string)null);
+                });
+
+            modelBuilder.Entity("Elisal.WasteManagement.Domain.Entities.RoutePointExecutionStatus", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CollectionPointId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<bool>("IsCompleted")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<int>("RouteExecutionId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CollectionPointId");
+
+                    b.HasIndex("RouteExecutionId");
+
+                    b.ToTable("RoutePointExecutionStatuses");
                 });
 
             modelBuilder.Entity("Elisal.WasteManagement.Domain.Entities.Transaction", b =>
@@ -355,6 +480,18 @@ namespace Elisal.WasteManagement.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Usuario", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "root@elisal.ao",
+                            IsActive = true,
+                            Name = "Root Admin",
+                            PasswordHash = "$2a$12$kRntuZvjc1inEbVrN//K/uVjXSiPDTuX8eJtmIKa9fc9rlFs483/a",
+                            Role = "Admin"
+                        });
                 });
 
             modelBuilder.Entity("Elisal.WasteManagement.Domain.Entities.UserToken", b =>
@@ -455,6 +592,44 @@ namespace Elisal.WasteManagement.Infrastructure.Migrations
                     b.Navigation("WasteType");
                 });
 
+            modelBuilder.Entity("Elisal.WasteManagement.Domain.Entities.CollectionRecordWasteType", b =>
+                {
+                    b.HasOne("Elisal.WasteManagement.Domain.Entities.CollectionRecord", "CollectionRecord")
+                        .WithMany("RecordWasteTypes")
+                        .HasForeignKey("CollectionRecordId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Elisal.WasteManagement.Domain.Entities.WasteType", "WasteType")
+                        .WithMany()
+                        .HasForeignKey("WasteTypeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CollectionRecord");
+
+                    b.Navigation("WasteType");
+                });
+
+            modelBuilder.Entity("Elisal.WasteManagement.Domain.Entities.RouteExecution", b =>
+                {
+                    b.HasOne("Elisal.WasteManagement.Domain.Entities.User", "Driver")
+                        .WithMany()
+                        .HasForeignKey("DriverId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Elisal.WasteManagement.Domain.Entities.Route", "Route")
+                        .WithMany()
+                        .HasForeignKey("RouteId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Driver");
+
+                    b.Navigation("Route");
+                });
+
             modelBuilder.Entity("Elisal.WasteManagement.Domain.Entities.RoutePoint", b =>
                 {
                     b.HasOne("Elisal.WasteManagement.Domain.Entities.CollectionPoint", "CollectionPoint")
@@ -472,6 +647,25 @@ namespace Elisal.WasteManagement.Infrastructure.Migrations
                     b.Navigation("CollectionPoint");
 
                     b.Navigation("Route");
+                });
+
+            modelBuilder.Entity("Elisal.WasteManagement.Domain.Entities.RoutePointExecutionStatus", b =>
+                {
+                    b.HasOne("Elisal.WasteManagement.Domain.Entities.CollectionPoint", "CollectionPoint")
+                        .WithMany()
+                        .HasForeignKey("CollectionPointId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Elisal.WasteManagement.Domain.Entities.RouteExecution", "RouteExecution")
+                        .WithMany("PointStatuses")
+                        .HasForeignKey("RouteExecutionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CollectionPoint");
+
+                    b.Navigation("RouteExecution");
                 });
 
             modelBuilder.Entity("Elisal.WasteManagement.Domain.Entities.Transaction", b =>
@@ -504,9 +698,19 @@ namespace Elisal.WasteManagement.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Elisal.WasteManagement.Domain.Entities.CollectionRecord", b =>
+                {
+                    b.Navigation("RecordWasteTypes");
+                });
+
             modelBuilder.Entity("Elisal.WasteManagement.Domain.Entities.Route", b =>
                 {
                     b.Navigation("RoutePoints");
+                });
+
+            modelBuilder.Entity("Elisal.WasteManagement.Domain.Entities.RouteExecution", b =>
+                {
+                    b.Navigation("PointStatuses");
                 });
 #pragma warning restore 612, 618
         }
