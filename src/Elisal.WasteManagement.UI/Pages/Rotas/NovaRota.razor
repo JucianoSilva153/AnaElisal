@@ -2,6 +2,7 @@
 @page "/rotas/{Id:int}/editar"
 @inject HttpClient Http
 @inject NavigationManager Navigation
+@using Elisal.WasteManagement.Application.DTOs
 @using Elisal.WasteManagement.Domain.Entities
 
 <PageTitle>SGR Elisal - @(Id.HasValue ? "Editar" : "Nova") Rota</PageTitle>
@@ -145,13 +146,14 @@
     {
         try
         {
-            var dto = new
+            var dto = new CreateRouteDto
             {
                 Nome = routeName,
                 Descricao = "",
                 DiaSemana = weekDay,
                 HorarioInicio = TimeSpan.Parse(startTime.Hour.ToString()),
-                PontoIds = selectedPoints.Select(p => p.Id).ToArray()
+                PontoIds = selectedPoints.Select(p => p.Id).ToArray(),
+                TotalDistance = totalDistance
             };
 
             if (Id.HasValue)

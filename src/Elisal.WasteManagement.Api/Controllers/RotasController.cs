@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Elisal.WasteManagement.Application.DTOs;
 using Elisal.WasteManagement.Application.Interfaces;
 using Elisal.WasteManagement.Domain.Entities;
 using Elisal.WasteManagement.Domain.Interfaces;
@@ -92,7 +93,7 @@ public class RotasController : ControllerBase
                 await _routePointRepo.SaveChangesAsync();
             }
 
-            return CreatedAtAction(nameof(GetById), new { id = route.Id }, route);
+            return CreatedAtAction(nameof(GetById), new { id = route.Id }, route.ToDto());
         }
         catch (Exception ex)
         {
@@ -176,13 +177,4 @@ public class RotasController : ControllerBase
         var dtos = routePoints.Select(rp => rp.ToDto()).ToList();
         return Ok(dtos);
     }
-}
-
-public class CreateRouteDto
-{
-    public string Nome { get; set; } = "";
-    public string Descricao { get; set; } = "";
-    public string DiaSemana { get; set; } = "";
-    public TimeSpan HorarioInicio { get; set; }
-    public int[] PontoIds { get; set; } = Array.Empty<int>();
 }

@@ -2,8 +2,10 @@
 @inject HttpClient Http
 @inject AuthenticationStateProvider AuthStateProvider
 @inject Elisal.WasteManagement.UI.Services.LocalStorageService LocalStorage
+@using Elisal.WasteManagement.Application.DTOs
 @using Elisal.WasteManagement.Domain.Entities
 @using Microsoft.AspNetCore.Authorization
+@using System.Security.Claims
 
 @attribute [Authorize]
 
@@ -35,11 +37,10 @@
         <div class="md:col-span-1 space-y-6">
             <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 flex flex-col items-center text-center">
                 <div class="size-24 rounded-full bg-primary flex items-center justify-center text-white text-3xl font-bold mb-4 shadow-lg">
-                    @(user?.Name?[0].ToString().ToUpper() ?? "?")
+                    @(  string.IsNullOrEmpty(user?.Name) ? "??" : user?.Name?[0].ToString().ToUpper() ?? "?")
                 </div>
                 <h2 class="text-xl font-bold text-slate-900 dark:text-white">@user?.Name</h2>
                 <p class="text-sm text-slate-500">@user?.Role.ToString()</p>
-                <p class="text-xs text-slate-400 mt-1">Membro desde @user?.CreatedAt.ToString("MMMM/yyyy")</p>
             </div>
         </div>
 
@@ -54,11 +55,11 @@
                     <div class="grid grid-cols-1 gap-4">
                         <div class="space-y-1">
                             <label class="text-xs font-semibold text-slate-500 uppercase">Nome Completo</label>
-                            <input type="text" @bind="user.Name" class="w-full rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white p-2.5"/>
+                            <input type="text" @bind="user.Name" class="w-full rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white p-2.5" />
                         </div>
                         <div class="space-y-1">
                             <label class="text-xs font-semibold text-slate-500 uppercase">Email</label>
-                            <input type="email" @bind="user.Email" class="w-full rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white p-2.5"/>
+                            <input type="email" @bind="user.Email" class="w-full rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white p-2.5" />
                         </div>
                     </div>
                     <div class="pt-4">
@@ -78,16 +79,16 @@
                     <div class="grid grid-cols-1 gap-4">
                         <div class="space-y-1">
                             <label class="text-xs font-semibold text-slate-500 uppercase">Senha Atual</label>
-                            <input type="password" @bind="currentPassword" class="w-full rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white p-2.5"/>
+                            <input type="password" @bind="currentPassword" class="w-full rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white p-2.5" />
                         </div>
                         <div class="grid grid-cols-2 gap-4">
                             <div class="space-y-1">
                                 <label class="text-xs font-semibold text-slate-500 uppercase">Nova Senha</label>
-                                <input type="password" @bind="newPassword" class="w-full rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white p-2.5"/>
+                                <input type="password" @bind="newPassword" class="w-full rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white p-2.5" />
                             </div>
                             <div class="space-y-1">
                                 <label class="text-xs font-semibold text-slate-500 uppercase">Confirmar Nova Senha</label>
-                                <input type="password" @bind="confirmPassword" class="w-full rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white p-2.5"/>
+                                <input type="password" @bind="confirmPassword" class="w-full rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white p-2.5" />
                             </div>
                         </div>
                     </div>
@@ -103,7 +104,7 @@
 </div>
 
 @code {
-    private User user = new();
+    private UserDto user = new();
     private string currentPassword = "";
     private string newPassword = "";
     private string confirmPassword = "";
@@ -113,15 +114,15 @@
     protected override async Task OnInitializedAsync()
     {
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-        var email = authState.User.Identity?.Name;
+        var email = authState.User.Claims.FirstOrDefault(c => c.Type == "email");
 
-        if (string.IsNullOrEmpty(email)) return;
+        if (string.IsNullOrEmpty(email?.Value)) return;
 
         try
         {
             // Usually we have a /me endpoint
-            var allUsers = await Http.GetFromJsonAsync<List<User>>("api/usuarios");
-            user = allUsers?.FirstOrDefault(u => u.Email == email) ?? new();
+            var allUsers = await Http.GetFromJsonAsync<List<UserDto>>("api/usuarios");
+            user = allUsers?.FirstOrDefault(u => u.Email == email.Value) ?? new();
         }
         catch
         {
@@ -134,7 +135,12 @@
         errorMessage = "";
         try
         {
-            var response = await Http.PutAsJsonAsync($"api/usuarios/{user.Id}", user);
+            var userUpdate = new UpdateUserDto
+            {
+                Nome = user.Name
+            };
+
+            var response = await Http.PutAsJsonAsync($"api/usuarios/{user.Id}", userUpdate);
             if (response.IsSuccessStatusCode)
             {
                 showSuccess = true;
