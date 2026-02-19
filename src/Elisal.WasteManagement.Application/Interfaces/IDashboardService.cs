@@ -5,5 +5,5 @@ namespace Elisal.WasteManagement.Application.Interfaces;
 
 public interface IDashboardService
 {
-    Task<DashboardStatsDto> GetStatsAsync();
+    Task<DashboardStatsDto> GetStatsAsync(int? userId = null, string? role = null);
 }

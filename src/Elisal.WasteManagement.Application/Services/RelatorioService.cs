@@ -17,14 +17,14 @@ public class RelatorioService : IRelatorioService
 {
     private readonly IRepository<CollectionRecord> _recordRepo;
     private readonly IRepository<CollectionPoint> _pointRepo;
-    private readonly IRepository<Transaction> _transactionRepo;
+    private readonly ITransactionRepository _transactionRepo;
     private readonly IRepository<Cooperative> _coopRepo;
     private readonly IRepository<WasteType> _wasteRepo;
 
     public RelatorioService(
         IRepository<CollectionRecord> recordRepo,
         IRepository<CollectionPoint> pointRepo,
-        IRepository<Transaction> transactionRepo,
+        ITransactionRepository transactionRepo,
         IRepository<Cooperative> coopRepo,
         IRepository<WasteType> wasteRepo)
     {
@@ -33,11 +33,12 @@ public class RelatorioService : IRelatorioService
         _transactionRepo = transactionRepo;
         _coopRepo = coopRepo;
         _wasteRepo = wasteRepo;
-        
+
         QuestPDF.Settings.License = LicenseType.Community;
     }
 
-    public async Task<byte[]> GerarRelatorioPdfAsync(string tipoRelatorio, DateTime inicio, DateTime fim, FiltrosRelatorio filtros)
+    public async Task<byte[]> GerarRelatorioPdfAsync(string tipoRelatorio, DateTime inicio, DateTime fim,
+        FiltrosRelatorio filtros)
     {
         var document = Document.Create(container =>
         {
@@ -48,7 +49,7 @@ public class RelatorioService : IRelatorioService
                 page.DefaultTextStyle(x => x.FontSize(10).FontFamily("Arial"));
 
                 page.Header().Element(ComposeHeader);
-                page.Content().Element(container => 
+                page.Content().Element(container =>
                 {
                     container.Column(col =>
                     {
@@ -58,17 +59,29 @@ public class RelatorioService : IRelatorioService
 
                         if (tipoRelatorio.ToLower() == "producao")
                         {
-                            var records = _recordRepo.GetAllAsync().GetAwaiter().GetResult()
-                                .Where(r => r.DateTime >= inicio && r.DateTime <= fim)
-                                .ToList();
+                            var records = (_recordRepo as ICollectionRecordRepository).GetByPeriodAsync(inicio, fim)
+                                .GetAwaiter().GetResult().ToList();
                             ComposeProducaoSync(col, records);
                         }
                         else if (tipoRelatorio.ToLower() == "transacoes")
                         {
-                            var transactions = _transactionRepo.GetAllAsync().GetAwaiter().GetResult()
-                                .Where(t => t.Date >= inicio && t.Date <= fim)
-                                .ToList();
+                            var transactions = _transactionRepo.GetByPeriodAsync(inicio, fim, filtros.CooperativaId)
+                                .GetAwaiter().GetResult().ToList();
                             ComposeTransacoesSync(col, transactions);
+                        }
+                        else if (tipoRelatorio.ToLower() == "operadores")
+                        {
+                            var records = (_recordRepo as ICollectionRecordRepository).GetByPeriodAsync(inicio, fim)
+                                .GetAwaiter().GetResult().ToList();
+                            if (filtros.UsuarioId.HasValue)
+                                records = records.Where(r => r.UserId == filtros.UsuarioId.Value).ToList();
+                            ComposeOperadoresSync(col, records);
+                        }
+                        else if (tipoRelatorio.ToLower() == "desempenho-ponto")
+                        {
+                            var records = (_recordRepo as ICollectionRecordRepository).GetByPeriodAsync(inicio, fim)
+                                .GetAwaiter().GetResult().ToList();
+                            ComposeDesempenhoPontoSync(col, records);
                         }
                     });
                 });
@@ -83,7 +96,8 @@ public class RelatorioService : IRelatorioService
         return document.GeneratePdf();
     }
 
-    public async Task<byte[]> GerarRelatorioExcelAsync(string tipoRelatorio, DateTime inicio, DateTime fim, FiltrosRelatorio filtros)
+    public async Task<byte[]> GerarRelatorioExcelAsync(string tipoRelatorio, DateTime inicio, DateTime fim,
+        FiltrosRelatorio filtros)
     {
         using var workbook = new XLWorkbook();
         var worksheet = workbook.Worksheets.Add("Relatório");
@@ -100,6 +114,12 @@ public class RelatorioService : IRelatorioService
                 break;
             case "transacoes":
                 await PreencherTransacoesExcel(worksheet, inicio, fim, filtros);
+                break;
+            case "operadores":
+                await PreencherOperadoresExcel(worksheet, inicio, fim, filtros);
+                break;
+            case "desempenho-ponto":
+                await PreencherDesempenhoPontoExcel(worksheet, inicio, fim, filtros);
                 break;
             default:
                 worksheet.Cell(5, 1).Value = "Tipo de relatório não implementado.";
@@ -125,7 +145,6 @@ public class RelatorioService : IRelatorioService
     }
 
 
-
     private void ComposeProducaoSync(ColumnDescriptor col, List<CollectionRecord> records)
     {
         col.Item().Text($"Total de Recolhas: {records.Count}").FontSize(12).Bold();
@@ -137,6 +156,7 @@ public class RelatorioService : IRelatorioService
             {
                 columns.RelativeColumn(2);
                 columns.RelativeColumn(2);
+                columns.RelativeColumn(2);
                 columns.RelativeColumn(1);
             });
 
@@ -144,14 +164,20 @@ public class RelatorioService : IRelatorioService
             {
                 header.Cell().Background(Colors.Grey.Lighten2).Padding(5).Text("Data").Bold();
                 header.Cell().Background(Colors.Grey.Lighten2).Padding(5).Text("Ponto").Bold();
+                header.Cell().Background(Colors.Grey.Lighten2).Padding(5).Text("Tipo").Bold();
                 header.Cell().Background(Colors.Grey.Lighten2).Padding(5).Text("Quantidade (Kg)").Bold();
             });
 
             foreach (var record in records.Take(100))
             {
-                table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(5).Text(record.DateTime.ToString("dd/MM/yyyy HH:mm"));
-                table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(5).Text(record.CollectionPoint?.Name ?? $"Ponto #{record.CollectionPointId}");
-                table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(5).Text(record.AmountKg.ToString("N2"));
+                table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(5)
+                    .Text(record.DateTime.ToString("dd/MM/yyyy HH:mm"));
+                table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(5)
+                    .Text(record.CollectionPoint?.Name ?? $"Ponto #{record.CollectionPointId}");
+                table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(5)
+                    .Text(record.WasteType?.Name ?? "N/A");
+                table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(5)
+                    .Text(record.AmountKg.ToString("N2"));
             }
         });
     }
@@ -181,39 +207,42 @@ public class RelatorioService : IRelatorioService
 
             foreach (var trans in transactions.Take(100))
             {
-                table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(5).Text(trans.Date.ToString("dd/MM/yyyy"));
-                table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(5).Text(trans.Cooperative?.Name ?? $"Coop #{trans.CooperativeId}");
-                table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(5).Text(trans.AmountKg.ToString("N2"));
-                table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(5).Text(trans.Value.ToString("N2"));
+                table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(5)
+                    .Text(trans.Date.ToString("dd/MM/yyyy"));
+                table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(5)
+                    .Text(trans.Cooperative?.Name ?? $"Coop #{trans.CooperativeId}");
+                table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(5)
+                    .Text(trans.AmountKg.ToString("N2"));
+                table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(5)
+                    .Text(trans.Value.ToString("N2"));
             }
         });
     }
 
     private async Task PreencherProducaoExcel(IXLWorksheet ws, DateTime inicio, DateTime fim, FiltrosRelatorio filtros)
     {
-        var records = (await _recordRepo.GetAllAsync())
-            .Where(r => r.DateTime >= inicio && r.DateTime <= fim)
-            .ToList();
+        var records = (await (_recordRepo as ICollectionRecordRepository).GetByPeriodAsync(inicio, fim)).ToList();
 
         ws.Cell(5, 1).Value = "Data";
         ws.Cell(5, 2).Value = "Ponto";
-        ws.Cell(5, 3).Value = "Quantidade (Kg)";
+        ws.Cell(5, 3).Value = "Tipo";
+        ws.Cell(5, 4).Value = "Quantidade (Kg)";
 
         int row = 6;
         foreach (var r in records)
         {
-            ws.Cell(row, 1).Value = r.DateTime.ToString("dd/MM/yyyy");
-            ws.Cell(row, 2).Value = $"Ponto #{r.CollectionPointId}";
-            ws.Cell(row, 3).Value = r.AmountKg;
+            ws.Cell(row, 1).Value = r.DateTime;
+            ws.Cell(row, 2).Value = r.CollectionPoint?.Name ?? $"Ponto #{r.CollectionPointId}";
+            ws.Cell(row, 3).Value = r.WasteType?.Name ?? "N/A";
+            ws.Cell(row, 4).Value = r.AmountKg;
             row++;
         }
     }
 
-    private async Task PreencherTransacoesExcel(IXLWorksheet ws, DateTime inicio, DateTime fim, FiltrosRelatorio filtros)
+    private async Task PreencherTransacoesExcel(IXLWorksheet ws, DateTime inicio, DateTime fim,
+        FiltrosRelatorio filtros)
     {
-        var transactions = (await _transactionRepo.GetAllAsync())
-            .Where(t => t.Date >= inicio && t.Date <= fim)
-            .ToList();
+        var transactions = (await _transactionRepo.GetByPeriodAsync(inicio, fim, filtros.CooperativaId)).ToList();
 
         ws.Cell(5, 1).Value = "Data";
         ws.Cell(5, 2).Value = "Cooperativa";
@@ -223,10 +252,117 @@ public class RelatorioService : IRelatorioService
         int row = 6;
         foreach (var t in transactions)
         {
-            ws.Cell(row, 1).Value = t.Date.ToString("dd/MM/yyyy");
-            ws.Cell(row, 2).Value = $"Coop #{t.CooperativeId}";
+            ws.Cell(row, 1).Value = t.Date;
+            ws.Cell(row, 2).Value = t.Cooperative?.Name ?? $"Coop #{t.CooperativeId}";
             ws.Cell(row, 3).Value = t.AmountKg;
             ws.Cell(row, 4).Value = (double)t.Value;
+            row++;
+        }
+    }
+
+    private void ComposeOperadoresSync(ColumnDescriptor col, List<CollectionRecord> records)
+    {
+        var grouped = records.GroupBy(r => r.User?.Name ?? "N/A")
+            .Select(g => new { Nome = g.Key, Qtd = g.Count(), Peso = g.Sum(r => r.AmountKg) })
+            .OrderByDescending(x => x.Peso);
+
+        col.Item().PaddingTop(10).Table(table =>
+        {
+            table.ColumnsDefinition(columns =>
+            {
+                columns.RelativeColumn(3);
+                columns.RelativeColumn(1);
+                columns.RelativeColumn(1);
+            });
+
+            table.Header(header =>
+            {
+                header.Cell().Background(Colors.Grey.Lighten2).Padding(5).Text("Operador").Bold();
+                header.Cell().Background(Colors.Grey.Lighten2).Padding(5).Text("Total Recolhas").Bold();
+                header.Cell().Background(Colors.Grey.Lighten2).Padding(5).Text("Total (Kg)").Bold();
+            });
+
+            foreach (var g in grouped)
+            {
+                table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(5).Text(g.Nome);
+                table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(5).Text(g.Qtd.ToString());
+                table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(5).Text(g.Peso.ToString("N2"));
+            }
+        });
+    }
+
+    private void ComposeDesempenhoPontoSync(ColumnDescriptor col, List<CollectionRecord> records)
+    {
+        var grouped = records.GroupBy(r => r.CollectionPoint?.Name ?? "N/A")
+            .Select(g => new { Local = g.Key, Qtd = g.Count(), Peso = g.Sum(r => r.AmountKg) })
+            .OrderByDescending(x => x.Peso);
+
+        col.Item().PaddingTop(10).Table(table =>
+        {
+            table.ColumnsDefinition(columns =>
+            {
+                columns.RelativeColumn(3);
+                columns.RelativeColumn(1);
+                columns.RelativeColumn(1);
+            });
+
+            table.Header(header =>
+            {
+                header.Cell().Background(Colors.Grey.Lighten2).Padding(5).Text("Ponto de Recolha").Bold();
+                header.Cell().Background(Colors.Grey.Lighten2).Padding(5).Text("Frequência").Bold();
+                header.Cell().Background(Colors.Grey.Lighten2).Padding(5).Text("Total (Kg)").Bold();
+            });
+
+            foreach (var g in grouped)
+            {
+                table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(5).Text(g.Local);
+                table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(5).Text(g.Qtd.ToString());
+                table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(5).Text(g.Peso.ToString("N2"));
+            }
+        });
+    }
+
+    private async Task PreencherOperadoresExcel(IXLWorksheet ws, DateTime inicio, DateTime fim,
+        FiltrosRelatorio filtros)
+    {
+        var records = (await (_recordRepo as ICollectionRecordRepository).GetByPeriodAsync(inicio, fim)).ToList();
+        if (filtros.UsuarioId.HasValue) records = records.Where(r => r.UserId == filtros.UsuarioId.Value).ToList();
+
+        var grouped = records.GroupBy(r => r.User?.Name ?? "N/A")
+            .Select(g => new { Nome = g.Key, Qtd = g.Count(), Peso = g.Sum(r => r.AmountKg) });
+
+        ws.Cell(5, 1).Value = "Operador";
+        ws.Cell(5, 2).Value = "Total Recolhas";
+        ws.Cell(5, 3).Value = "Total (Kg)";
+
+        int row = 6;
+        foreach (var g in grouped)
+        {
+            ws.Cell(row, 1).Value = g.Nome;
+            ws.Cell(row, 2).Value = g.Qtd;
+            ws.Cell(row, 3).Value = g.Peso;
+            row++;
+        }
+    }
+
+    private async Task PreencherDesempenhoPontoExcel(IXLWorksheet ws, DateTime inicio, DateTime fim,
+        FiltrosRelatorio filtros)
+    {
+        var records = (await (_recordRepo as ICollectionRecordRepository).GetByPeriodAsync(inicio, fim)).ToList();
+
+        var grouped = records.GroupBy(r => r.CollectionPoint?.Name ?? "N/A")
+            .Select(g => new { Local = g.Key, Qtd = g.Count(), Peso = g.Sum(r => r.AmountKg) });
+
+        ws.Cell(5, 1).Value = "Ponto de Recolha";
+        ws.Cell(5, 2).Value = "Frequência";
+        ws.Cell(5, 3).Value = "Total (Kg)";
+
+        int row = 6;
+        foreach (var g in grouped)
+        {
+            ws.Cell(row, 1).Value = g.Local;
+            ws.Cell(row, 2).Value = g.Qtd;
+            ws.Cell(row, 3).Value = g.Peso;
             row++;
         }
     }

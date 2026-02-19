@@ -32,14 +32,17 @@ public class ResiduoService : IResiduoService
 
         var registoRecolha = new CollectionRecord
         {
-            DateTime = DateTime.UtcNow,
+            DateTime = dto.DateTime == default ? DateTime.UtcNow : dto.DateTime,
             AmountKg = dto.AmountKg,
             Notes = dto.Notes,
-            WasteTypeId = dto.WasteTypeId,
+            WasteTypeId = dto.WasteTypeIds?.FirstOrDefault() ?? dto.WasteTypeId,
             CollectionPointId = dto.CollectionPointId,
-            UserId = dto.UserId
+            UserId = dto.UserId,
+            RecordWasteTypes =
+                dto.WasteTypeIds?.Select(id => new CollectionRecordWasteType { WasteTypeId = id }).ToList() ??
+                new List<CollectionRecordWasteType>()
         };
-        
+
         await _collectionRecordRepository.AddAsync(registoRecolha);
         await _collectionRecordRepository.SaveChangesAsync();
 
@@ -47,7 +50,8 @@ public class ResiduoService : IResiduoService
         return registoRecolha.ToDto();
     }
 
-    public async Task<IEnumerable<CollectionRecordDto>> ObterEstatisticasPorPeriodoAsync(DateTime dataInicio, DateTime dataFim)
+    public async Task<IEnumerable<CollectionRecordDto>> ObterEstatisticasPorPeriodoAsync(DateTime dataInicio,
+        DateTime dataFim)
     {
         var records = await _collectionRecordRepository.GetByPeriodAsync(dataInicio, dataFim);
         return records.Select(r => r.ToDto());

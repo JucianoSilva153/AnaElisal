@@ -1,8 +1,10 @@
 @page "/relatorios"
 @attribute [Authorize(Roles = "Admin,Manager")]
+@using Elisal.WasteManagement.Application.DTOs
 @using Elisal.WasteManagement.Domain.Entities
 @inject HttpClient Http
 @inject NavigationManager Navigation
+@inject IJSRuntime JS
 
 <PageTitle>SGR Elisal - Relatórios</PageTitle>
 
@@ -16,7 +18,7 @@
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         @foreach (var tipo in tiposRelatorio)
         {
-            <button @onclick="() => SelecionarTipo(tipo)" 
+            <button @onclick="() => SelecionarTipo(tipo)"
                     class="bg-white dark:bg-slate-900 rounded-xl border-2 @(tipoSelecionado == tipo ? "border-primary" : "border-slate-200 dark:border-slate-800") p-6 text-left hover:shadow-lg transition-all group">
                 <div class="flex items-start gap-4">
                     <div class="p-3 rounded-lg bg-@tipo.Color-50 dark:bg-@tipo.Color-900/20 text-@tipo.Color-600 dark:text-@tipo.Color-400 group-hover:scale-110 transition-transform">
@@ -40,15 +42,15 @@
     {
         <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
             <h2 class="text-lg font-bold text-slate-900 dark:text-white mb-6">Configurar Relatório</h2>
-            
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div class="space-y-2">
                     <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Data Início</label>
-                    <input type="date" @bind="dataInicio" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white" />
+                    <input type="date" @bind="dataInicio" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white"/>
                 </div>
                 <div class="space-y-2">
                     <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Data Fim</label>
-                    <input type="date" @bind="dataFim" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white" />
+                    <input type="date" @bind="dataFim" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white"/>
                 </div>
 
                 @if (tipoSelecionado.Id == "transacoes")
@@ -64,19 +66,33 @@
                         </select>
                     </div>
                 }
+
+                @if (tipoSelecionado.Id == "operadores")
+                {
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Operador (Opcional)</label>
+                        <select @bind="usuarioId" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white p-2">
+                            <option value="">Todos</option>
+                            @foreach (var user in usuarios)
+                            {
+                                <option value="@user.Id">@user.Name</option>
+                            }
+                        </select>
+                    </div>
+                }
             </div>
 
             <div class="space-y-2 mb-6">
                 <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Formato de Saída</label>
                 <div class="flex gap-4">
                     <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="radio" name="formato" value="pdf" @onchange='() => formato = "pdf"' checked="@(formato == "pdf")" class="text-primary focus:ring-primary" />
+                        <input type="radio" name="formato" value="pdf" @onchange='() => formato = "pdf"' checked="@(formato == "pdf")" class="text-primary focus:ring-primary"/>
                         <span class="flex items-center gap-1 text-sm text-slate-700 dark:text-slate-300">
                             <span class="material-symbols-outlined text-red-600">picture_as_pdf</span> PDF
                         </span>
                     </label>
                     <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="radio" name="formato" value="excel" @onchange='() => formato = "excel"' checked="@(formato == "excel")" class="text-primary focus:ring-primary" />
+                        <input type="radio" name="formato" value="excel" @onchange='() => formato = "excel"' checked="@(formato == "excel")" class="text-primary focus:ring-primary"/>
                         <span class="flex items-center gap-1 text-sm text-slate-700 dark:text-slate-300">
                             <span class="material-symbols-outlined text-green-600">table_view</span> Excel
                         </span>
@@ -85,7 +101,7 @@
             </div>
 
             <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
-                <button @onclick="GerarRelatorio" disabled="@isGenerating" 
+                <button @onclick="GerarRelatorio" disabled="@isGenerating"
                         class="px-6 py-2 rounded-lg bg-primary hover:bg-primary/90 text-white font-medium flex items-center gap-2 disabled:opacity-50">
                     @if (isGenerating)
                     {
@@ -123,10 +139,9 @@
     private List<TipoRelatorio> tiposRelatorio = new()
     {
         new() { Id = "producao", Nome = "Produção de Resíduos", Descricao = "Quantidade total coletada por período", Icon = "delete_sweep", Color = "blue" },
-        new() { Id = "desempenho", Nome = "Desempenho por Ponto", Descricao = "Análise de performance dos ecopontos", Icon = "analytics", Color = "purple" },
-        new() { Id = "reciclagem", Nome = "Taxa de Reciclagem", Descricao = "Percentual de resíduos reciclados", Icon = "recycling", Color = "green" },
-        new() { Id = "transacoes", Nome = "Transações com Cooperativas", Descricao = "Histórico financeiro e parcerias", Icon = "payments", Color = "yellow" },
-        new() { Id = "indicadores", Nome = "Indicadores Ambientais", Descricao = "Métricas de impacto ambiental", Icon = "eco", Color = "teal" }
+        new() { Id = "operadores", Nome = "Operadores / Motoristas", Descricao = "Desempenho individual por operador", Icon = "badge", Color = "orange" },
+        new() { Id = "desempenho-ponto", Nome = "Desempenho por Ponto", Descricao = "Análise de performance dos ecopontos", Icon = "analytics", Color = "purple" },
+        new() { Id = "transacoes", Nome = "Transações com Cooperativas", Descricao = "Histórico financeiro e parcerias", Icon = "payments", Color = "yellow" }
     };
 
     private void SelecionarTipo(TipoRelatorio tipo)
@@ -139,13 +154,14 @@
     {
         isGenerating = true;
         errorMessage = "";
-        
+
         try
         {
             var queryParams = $"inicio={dataInicio:yyyy-MM-dd}&fim={dataFim:yyyy-MM-dd}";
             if (cooperativaId.HasValue) queryParams += $"&coopId={cooperativaId}";
+            if (usuarioId.HasValue) queryParams += $"&usuarioId={usuarioId}";
 
-            var url = formato == "pdf" 
+            var url = formato == "pdf"
                 ? $"api/relatorios/pdf/{tipoSelecionado.Id}?{queryParams}"
                 : $"api/relatorios/excel/{tipoSelecionado.Id}?{queryParams}";
 
@@ -155,7 +171,7 @@
                 var content = await response.Content.ReadAsByteArrayAsync();
                 var fileName = $"relatorio_{tipoSelecionado.Id}_{DateTime.Now:yyyyMMdd}.{(formato == "pdf" ? "pdf" : "xlsx")}";
                 var contentType = formato == "pdf" ? "application/pdf" : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-                
+
                 await JS.InvokeVoidAsync("dashboardCharts.downloadFile", fileName, contentType, content);
             }
             else
@@ -179,11 +195,19 @@
         {
             var coops = await Http.GetFromJsonAsync<List<Cooperative>>("api/cooperativas");
             if (coops != null) cooperativas = coops;
+
+            var users = await Http.GetFromJsonAsync<List<UserDto>>("api/usuarios");
+            if (users != null) usuarios = users.OrderBy(u => u.Name).ToList();
         }
-        catch { /* Fallback */ }
+        catch
+        {
+            /* Fallback */
+        }
     }
 
     private List<Cooperative> cooperativas = new();
+    private List<UserDto> usuarios = new();
+    private int? usuarioId;
 
     public class TipoRelatorio
     {
@@ -193,4 +217,5 @@
         public string Icon { get; set; } = "";
         public string Color { get; set; } = "";
     }
+
 }

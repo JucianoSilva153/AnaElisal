@@ -17,7 +17,8 @@ public class UsuariosController : ControllerBase
     private readonly IUserRepository _userRepository;
     private readonly IRepository<AuditLog> _auditLogRepository;
 
-    public UsuariosController(IUsuarioService usuarioService, IUserRepository userRepository, IRepository<AuditLog> auditLogRepository)
+    public UsuariosController(IUsuarioService usuarioService, IUserRepository userRepository,
+        IRepository<AuditLog> auditLogRepository)
     {
         _usuarioService = usuarioService;
         _userRepository = userRepository;
@@ -84,7 +85,7 @@ public class UsuariosController : ControllerBase
     {
         var user = await _userRepository.GetByIdAsync(id);
         if (user == null) return NotFound();
-        
+
         var dto = new UserDto
         {
             Id = user.Id,
@@ -97,11 +98,20 @@ public class UsuariosController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateUserDto dto)
     {
         try
         {
+            // Allow user to update themselves OR allow Admin to update anyone
+            var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var isAdmin = User.IsInRole("Admin");
+
+            if (!isAdmin && currentUserId != id.ToString())
+            {
+                return Forbid();
+            }
+
             await _usuarioService.AtualizarPerfilAsync(id, dto);
             return NoContent();
         }
@@ -187,7 +197,7 @@ public class UsuariosController : ControllerBase
             .Where(l => l.UserId == id)
             .OrderByDescending(l => l.Timestamp)
             .Take(50);
-            
+
         return Ok(logs);
     }
 }

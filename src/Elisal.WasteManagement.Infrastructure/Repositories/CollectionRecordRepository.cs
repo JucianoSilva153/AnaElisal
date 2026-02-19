@@ -18,8 +18,10 @@ public class CollectionRecordRepository : Repository<CollectionRecord>, ICollect
     public async Task<IEnumerable<CollectionRecord>> GetByPeriodAsync(DateTime startDate, DateTime endDate)
     {
         return await _dbSet
-            .Where(r => r.DateTime >= startDate && r.DateTime <= endDate.Date)
+            .Where(r => r.DateTime >= startDate && r.DateTime <= endDate)
             .Include(r => r.WasteType)
+            .Include(r => r.RecordWasteTypes)
+            .ThenInclude(rwt => rwt.WasteType)
             .Include(r => r.CollectionPoint)
             .Include(r => r.User)
             .ToListAsync();

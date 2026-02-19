@@ -22,6 +22,7 @@ public class ElisalDbContext : DbContext
     public DbSet<AuditLog> AuditLogs { get; set; }
     public DbSet<UserToken> UserTokens { get; set; }
     public DbSet<OperationalAlert> OperationalAlerts { get; set; }
+    public DbSet<CollectionRecordWasteType> CollectionRecordWasteTypes { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -29,6 +30,9 @@ public class ElisalDbContext : DbContext
 
         modelBuilder.Entity<RoutePoint>()
             .HasKey(rp => new { rp.RouteId, rp.CollectionPointId });
+
+        modelBuilder.Entity<CollectionRecordWasteType>()
+            .HasKey(crwt => new { crwt.CollectionRecordId, crwt.WasteTypeId });
 
         modelBuilder.Entity<Cooperative>().HasData(
             new Cooperative

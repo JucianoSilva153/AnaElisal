@@ -33,6 +33,9 @@ public static class DtoExtensions
             Notes = record.Notes,
             WasteTypeId = record.WasteTypeId,
             WasteTypeName = record.WasteType?.Name ?? string.Empty,
+            WasteTypeNames =
+                record.RecordWasteTypes?.Select(rwt => rwt.WasteType?.Name).Where(n => n != null).ToList() ??
+                new List<string>(),
             CollectionPointId = record.CollectionPointId,
             CollectionPointName = record.CollectionPoint?.Name ?? string.Empty,
             Municipality = record.CollectionPoint?.Municipality ?? string.Empty,
@@ -108,6 +111,7 @@ public static class DtoExtensions
             CollectionPoint = rp.CollectionPoint?.ToDto()
         };
     }
+
     public static OperationalAlertDto ToDto(this OperationalAlert entity)
     {
         if (entity == null) return null;
@@ -133,8 +137,8 @@ public static class DtoExtensions
             AmountKg = entity.AmountKg,
             CooperativeId = entity.CooperativeId,
             DateTime = entity.Date,
-            PricePerKg = entity.Value / (decimal) entity.AmountKg,
-            Status =  entity.Status,
+            PricePerKg = entity.Value / (decimal)entity.AmountKg,
+            Status = entity.Status,
             TotalValue = entity.Value,
             WasteTypeId = entity.WasteTypeId
         };

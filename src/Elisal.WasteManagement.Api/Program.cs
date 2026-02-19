@@ -33,6 +33,7 @@ builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ICollectionRecordRepository, CollectionRecordRepository>();
 builder.Services.AddScoped<ICollectionPointRepository, CollectionPointRepository>();
+builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
 builder.Services.AddScoped<IOperationalAlertRepository, OperationalAlertRepository>();
 
 // Configurations

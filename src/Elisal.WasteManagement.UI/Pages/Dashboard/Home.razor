@@ -1,7 +1,9 @@
 ﻿@page "/"
 @inject HttpClient Http
 @inject IJSRuntime JS
+@inject AuthenticationStateProvider AuthStateProvider
 @using Elisal.WasteManagement.Application.DTOs
+@using Microsoft.AspNetCore.Components.Authorization
 
 <PageTitle>SGR Elisal - Dashboard</PageTitle>
 
@@ -18,15 +20,19 @@ else
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 flex flex-col gap-2">
                 <div class="flex justify-between items-start">
-                    <span class="text-slate-500 dark:text-slate-400 text-sm font-medium leading-normal">Total Resíduos</span>
+                    <span class="text-slate-500 dark:text-slate-400 text-sm font-medium leading-normal">
+                        @(userRole == "Driver" ? "Minhas Coletas" : "Total Resíduos")
+                    </span>
                     <span class="@(stats.VariacaoTotalResiduos >= 0 ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400") text-xs px-2 py-0.5 rounded-full font-bold">
                         @(stats.VariacaoTotalResiduos >= 0 ? "+" : "")@stats.VariacaoTotalResiduos%
                     </span>
                 </div>
-                <p class="text-3xl font-bold text-slate-900 dark:text-white">@stats.TotalResiduosMensal <span class="text-lg font-normal">Ton</span></p>
+                <p class="text-3xl font-bold text-slate-900 dark:text-white">
+                    @stats.TotalResiduosMensal <span class="text-lg font-normal">Ton</span>
+                </p>
                 <p class="text-xs text-slate-400">Dados do mês atual</p>
             </div>
-            
+
             <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 flex flex-col gap-2">
                 <div class="flex justify-between items-start">
                     <span class="text-slate-500 dark:text-slate-400 text-sm font-medium leading-normal">Taxa Reaproveitamento</span>
@@ -93,33 +99,35 @@ else
             <!-- Table: Coletas Recentes -->
             <div class="lg:col-span-2 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
                 <div class="p-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
-                    <h2 class="text-lg font-bold text-slate-900 dark:text-white">Coletas Recentes</h2>
+                    <h2 class="text-lg font-bold text-slate-900 dark:text-white">
+                        @(userRole == "Driver" ? "Minhas Recolhas Recentes" : "Coletas Recentes")
+                    </h2>
                     <a href="/residuos" class="text-primary text-sm font-semibold hover:underline">Ver todas</a>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left">
                         <thead class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">
-                            <tr>
-                                <th class="px-6 py-4">Data/Hora</th>
-                                <th class="px-6 py-4">Localização</th>
-                                <th class="px-6 py-4">Tipo</th>
-                                <th class="px-6 py-4">Peso</th>
-                                <th class="px-6 py-4">Status</th>
-                            </tr>
+                        <tr>
+                            <th class="px-6 py-4">Data/Hora</th>
+                            <th class="px-6 py-4">Localização</th>
+                            <th class="px-6 py-4">Tipo</th>
+                            <th class="px-6 py-4">Peso</th>
+                            <th class="px-6 py-4">Status</th>
+                        </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
-                            @foreach (var record in stats.ColetasRecentes)
-                            {
-                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                                    <td class="px-6 py-4 whitespace-nowrap">@record.DataHora</td>
-                                    <td class="px-6 py-4 font-medium">@record.Localizacao</td>
-                                    <td class="px-6 py-4">@record.Tipo</td>
-                                    <td class="px-6 py-4">@record.Peso</td>
-                                    <td class="px-6 py-4">
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">@record.Status</span>
-                                    </td>
-                                </tr>
-                            }
+                        @foreach (var record in stats.ColetasRecentes)
+                        {
+                            <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                <td class="px-6 py-4 whitespace-nowrap">@record.DataHora</td>
+                                <td class="px-6 py-4 font-medium">@record.Localizacao</td>
+                                <td class="px-6 py-4">@record.Tipo</td>
+                                <td class="px-6 py-4">@record.Peso</td>
+                                <td class="px-6 py-4">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">@record.Status</span>
+                                </td>
+                            </tr>
+                        }
                         </tbody>
                     </table>
                 </div>
@@ -131,7 +139,7 @@ else
                     <h2 class="text-lg font-bold text-slate-900 dark:text-white">Pontos de Monitoramento</h2>
                 </div>
                 <div class="flex-1 relative bg-slate-100 dark:bg-slate-800 min-h-[300px]">
-                    <MapComponent MapId="miniMap" InitialLat="-8.8390" InitialLng="13.2894" InitialZoom="11" />
+                    <MapComponent MapId="miniMap" InitialLat="-8.8390" InitialLng="13.2894" InitialZoom="11"/>
                 </div>
             </div>
         </div>
@@ -140,9 +148,13 @@ else
 
 @code {
     private DashboardStatsDto? stats;
+    private string userRole = "";
 
     protected override async Task OnInitializedAsync()
     {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        userRole = authState.User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "";
+
         try
         {
             stats = await Http.GetFromJsonAsync<DashboardStatsDto>("api/dashboard/stats");
@@ -162,4 +174,5 @@ else
             await JS.InvokeVoidAsync("dashboardCharts.renderLineChart", "volumeChart", labels, values);
         }
     }
+
 }

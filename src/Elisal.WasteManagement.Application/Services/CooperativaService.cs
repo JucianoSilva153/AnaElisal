@@ -15,7 +15,8 @@ public class CooperativaService : ICooperativaService
     private readonly IRepository<Transaction> _transactionRepository;
     private readonly IRepository<Cooperative> _cooperativeRepository;
 
-    public CooperativaService(IRepository<Transaction> transactionRepository, IRepository<Cooperative> cooperativeRepository)
+    public CooperativaService(IRepository<Transaction> transactionRepository,
+        IRepository<Cooperative> cooperativeRepository)
     {
         _transactionRepository = transactionRepository;
         _cooperativeRepository = cooperativeRepository;
@@ -25,7 +26,7 @@ public class CooperativaService : ICooperativaService
     {
         if (dto.AmountKg <= 0)
             throw new ArgumentException("Quantidade inválida.");
-        
+
         if (dto.TotalValue <= 0)
             throw new ArgumentException("Valor deve ser positivo.");
 
@@ -52,13 +53,14 @@ public class CooperativaService : ICooperativaService
         return all.Where(t => t.CooperativeId == cooperativaId).OrderByDescending(t => t.Date).Select(t => t.ToDto());
     }
 
-    public async Task<IEnumerable<TransactionDto>> ObterTodasTransacoesAsync(DateTime? inicio, DateTime? fim, int? coopId, int? wasteTypeId)
+    public async Task<IEnumerable<TransactionDto>> ObterTodasTransacoesAsync(DateTime? inicio, DateTime? fim,
+        int? coopId, int? wasteTypeId)
     {
         var all = await _transactionRepository.GetAllAsync();
         var query = all.AsQueryable();
 
-        if (inicio.HasValue) query = query.Where(t => t.Date >= inicio.Value);
-        if (fim.HasValue) query = query.Where(t => t.Date <= fim.Value);
+        if (inicio.HasValue) query = query.Where(t => t.Date >= inicio.Value.Date);
+        if (fim.HasValue) query = query.Where(t => t.Date <= fim.Value.Date.AddDays(1).AddTicks(-1));
         if (coopId.HasValue) query = query.Where(t => t.CooperativeId == coopId.Value);
         if (wasteTypeId.HasValue) query = query.Where(t => t.WasteTypeId == wasteTypeId.Value);
 

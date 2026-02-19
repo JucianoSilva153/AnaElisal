@@ -28,36 +28,51 @@ public class DashboardService : IDashboardService
         _auditLogRepository = auditLogRepository;
     }
 
-    public async Task<DashboardStatsDto> GetStatsAsync()
+    public async Task<DashboardStatsDto> GetStatsAsync(int? userId = null, string? role = null)
     {
         var now = DateTime.UtcNow;
         var startOfMonth = new DateTime(now.Year, now.Month, 1);
         var startOfLastMonth = startOfMonth.AddMonths(-1);
         var endOfLastMonth = startOfMonth.AddDays(-1);
 
-        var currentMonthRecords = (await _collectionRecordRepository.GetByPeriodAsync(startOfMonth, now)).ToList();
-        var lastMonthRecords = (await _collectionRecordRepository.GetByPeriodAsync(startOfLastMonth, endOfLastMonth)).ToList();
+        var allCurrentRecords = (await _collectionRecordRepository.GetByPeriodAsync(startOfMonth, now)).ToList();
+        var allLastRecords = (await _collectionRecordRepository.GetByPeriodAsync(startOfLastMonth, endOfLastMonth))
+            .ToList();
+
+        // Filtering for Drivers/Operators
+        var currentMonthRecords = (role == "Driver" && userId.HasValue)
+            ? allCurrentRecords.Where(r => r.UserId == userId.Value).ToList()
+            : allCurrentRecords;
+
+        var lastMonthRecords = (role == "Driver" && userId.HasValue)
+            ? allLastRecords.Where(r => r.UserId == userId.Value).ToList()
+            : allLastRecords;
 
         var totalResiduos = currentMonthRecords.Sum(r => r.AmountKg) / 1000.0; // Ton
         var lastTotalResiduos = lastMonthRecords.Sum(r => r.AmountKg) / 1000.0;
-        var variacaoResiduos = lastTotalResiduos == 0 ? 0 : ((totalResiduos - lastTotalResiduos) / lastTotalResiduos) * 100;
+        var variacaoResiduos =
+            lastTotalResiduos == 0 ? 0 : ((totalResiduos - lastTotalResiduos) / lastTotalResiduos) * 100;
 
-        var currentRecyclable = currentMonthRecords.Where(r => r.WasteType != null && r.WasteType.IsRecyclable).Sum(r => r.AmountKg);
+        var currentRecyclable = currentMonthRecords.Where(r => r.WasteType != null && r.WasteType.IsRecyclable)
+            .Sum(r => r.AmountKg);
         var currentTotalKg = currentMonthRecords.Sum(r => r.AmountKg);
         var taxaReaproveitamento = currentTotalKg == 0 ? 0 : (currentRecyclable / currentTotalKg) * 100;
 
-        var lastRecyclable = lastMonthRecords.Where(r => r.WasteType != null && r.WasteType.IsRecyclable).Sum(r => r.AmountKg);
+        var lastRecyclable = lastMonthRecords.Where(r => r.WasteType != null && r.WasteType.IsRecyclable)
+            .Sum(r => r.AmountKg);
         var lastTotalKg = lastMonthRecords.Sum(r => r.AmountKg);
         var lastTaxa = lastTotalKg == 0 ? 0 : (lastRecyclable / lastTotalKg) * 100;
         var variacaoTaxa = taxaReaproveitamento - lastTaxa;
 
         var pontos = (await _collectionPointRepository.GetAllAsync()).ToList();
         var pontosAtivos = pontos.Count(p => p.IsActive);
-        
+
         // Regra de Alertas Inteligentes: Pontos com > 90% de ocupação + Logs críticos
         var pontosCheios = pontos.Count(p => p.Capacity > 0 && (p.CurrentOccupancy / (double)p.Capacity) > 0.9);
         var logsCriticos = (await _auditLogRepository.GetAllAsync())
-            .Count(l => l.Timestamp >= now.AddDays(-1) && (l.Action.Contains("Error", StringComparison.OrdinalIgnoreCase) || l.Details.Contains("Importante", StringComparison.OrdinalIgnoreCase)));
+            .Count(l => l.Timestamp >= now.AddDays(-1) &&
+                        (l.Action.Contains("Error", StringComparison.OrdinalIgnoreCase) ||
+                         l.Details.Contains("Importante", StringComparison.OrdinalIgnoreCase)));
 
         var stats = new DashboardStatsDto
         {
@@ -75,10 +90,15 @@ public class DashboardService : IDashboardService
         {
             var endOfMonth = month.AddMonths(1).AddDays(-1);
             var monthRecords = await _collectionRecordRepository.GetByPeriodAsync(month, endOfMonth);
-            stats.VolumeMensal.Add(new ChartSeriesDto 
-            { 
-                Label = month.ToString("MMM"), 
-                Value = Math.Round(monthRecords.Sum(r => r.AmountKg) / 1000.0, 1) 
+
+            var filteredMonthRecords = (role == "Driver" && userId.HasValue)
+                ? monthRecords.Where(r => r.UserId == userId.Value)
+                : monthRecords;
+
+            stats.VolumeMensal.Add(new ChartSeriesDto
+            {
+                Label = month.ToString("MMM"),
+                Value = Math.Round(filteredMonthRecords.Sum(r => r.AmountKg) / 1000.0, 1)
             });
         }
 
@@ -98,11 +118,17 @@ public class DashboardService : IDashboardService
         }
 
         // Recent Collections
-        var allRecords = (await _collectionRecordRepository.GetAllAsync())
+        var allRecordsQuery = (await _collectionRecordRepository.GetAllAsync());
+
+        var filteredRecords = (role == "Driver" && userId.HasValue)
+            ? allRecordsQuery.Where(r => r.UserId == userId.Value)
+            : allRecordsQuery;
+
+        var finalRecords = filteredRecords
             .OrderByDescending(r => r.DateTime)
             .Take(5);
 
-        foreach (var r in allRecords)
+        foreach (var r in finalRecords)
         {
             stats.ColetasRecentes.Add(new RecentCollectionDto
             {

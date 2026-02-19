@@ -2,8 +2,7 @@ using System;
 using System.Threading.Tasks;
 using Elisal.WasteManagement.Application.Interfaces;
 using Elisal.WasteManagement.Domain.Entities;
-using Elisal.WasteManagement.Application.Interfaces;
-using Elisal.WasteManagement.Domain.Entities;
+using Elisal.WasteManagement.Domain.Enums;
 using Elisal.WasteManagement.Domain.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -18,11 +17,16 @@ public class CooperativasController : ControllerBase
 {
     private readonly ICooperativaService _cooperativaService;
     private readonly IRepository<Cooperative> _cooperativeRepository;
+    private readonly IRepository<Transaction> _transactionRepository;
 
-    public CooperativasController(ICooperativaService cooperativaService, IRepository<Cooperative> cooperativeRepository)
+    public CooperativasController(
+        ICooperativaService cooperativaService,
+        IRepository<Cooperative> cooperativeRepository,
+        IRepository<Transaction> transactionRepository)
     {
         _cooperativaService = cooperativaService;
         _cooperativeRepository = cooperativeRepository;
+        _transactionRepository = transactionRepository;
     }
 
     [HttpGet]
@@ -38,7 +42,7 @@ public class CooperativasController : ControllerBase
     {
         var coop = await _cooperativeRepository.GetByIdAsync(id);
         if (coop == null) return NotFound();
-        
+
         return Ok(coop.ToDto());
     }
 
@@ -90,9 +94,40 @@ public class CooperativasController : ControllerBase
 
     [HttpGet("transacoes")]
     [Authorize(Roles = "Admin,Manager")]
-    public async Task<IActionResult> GetTodasTransacoes([FromQuery] DateTime? inicio, [FromQuery] DateTime? fim, [FromQuery] int? coopId, [FromQuery] int? wasteId)
+    public async Task<IActionResult> GetTodasTransacoes([FromQuery] DateTime? inicio, [FromQuery] DateTime? fim,
+        [FromQuery] int? coopId, [FromQuery] int? wasteId)
     {
         var result = await _cooperativaService.ObterTodasTransacoesAsync(inicio, fim, coopId, wasteId);
         return Ok(result);
     }
+
+    [HttpPut("transacoes/{id}/status")]
+    [Authorize(Roles = "Admin,Manager")]
+    public async Task<IActionResult> AtualizarStatusTransacao(int id, [FromBody] UpdateTransactionStatusDto dto)
+    {
+        try
+        {
+            var transaction = await _transactionRepository.GetByIdAsync(id);
+            if (transaction == null)
+                return NotFound(new { Message = "Transação não encontrada." });
+
+            if (!Enum.TryParse<TransactionStatus>(dto.Status, true, out var newStatus))
+                return BadRequest(new { Message = "Status inválido. Valores aceites: Pending, Completed, Cancelled." });
+
+            transaction.Status = newStatus;
+            await _transactionRepository.UpdateAsync(transaction);
+            await _transactionRepository.SaveChangesAsync();
+
+            return Ok(transaction.ToDto());
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { Message = "Erro ao atualizar status.", Details = ex.Message });
+        }
+    }
+}
+
+public class UpdateTransactionStatusDto
+{
+    public string Status { get; set; } = string.Empty;
 }

@@ -1,6 +1,7 @@
 @page "/usuarios"
 @attribute [Authorize(Roles = "Admin")]
 @inject HttpClient Http
+@inject AuthenticationStateProvider AuthStateProvider
 @using Elisal.WasteManagement.Domain.Entities
 @using Elisal.WasteManagement.Domain.Enums
 @using Microsoft.AspNetCore.Authorization
@@ -22,7 +23,7 @@
     <!-- Filters -->
     <div class="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex gap-4">
         <div class="flex-1">
-            <input type="text" @bind="searchTerm" @bind:event="oninput" placeholder="Buscar por nome ou email..." class="w-full text-sm rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white p-2" />
+            <input type="text" @bind="searchTerm" @bind:event="oninput" placeholder="Buscar por nome ou email..." class="w-full text-sm rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white p-2"/>
         </div>
         <select @bind="filterRole" class="text-sm rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white p-2">
             <option value="">Todos os Perfis</option>
@@ -42,68 +43,70 @@
     <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
         <table class="w-full">
             <thead class="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
-                <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Nome</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Email</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Perfil</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Data Cadastro</th>
-                    <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Ações</th>
-                </tr>
+            <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Nome</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Email</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Perfil</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Data Cadastro</th>
+                <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Ações</th>
+            </tr>
             </thead>
             <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
-                @if (FilteredUsers == null)
+            @if (FilteredUsers == null)
+            {
+                <tr>
+                    <td colspan="6" class="px-6 py-8 text-center text-slate-500">Carregando...</td>
+                </tr>
+            }
+            else
+            {
+                @foreach (var user in FilteredUsers)
                 {
-                    <tr><td colspan="6" class="px-6 py-8 text-center text-slate-500">Carregando...</td></tr>
-                }
-                else
-                {
-                    @foreach (var user in FilteredUsers)
-                    {
-                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900 dark:text-white">@user.Name</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">@user.Email</td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="px-2 py-1 text-xs font-semibold rounded @GetRoleBadgeClass(user.Role)">
-                                    @GetRoleName(user.Role)
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="px-2 py-1 text-xs font-semibold rounded @(user.IsActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700")">
-                                    @(user.IsActive ? "Ativo" : "Inativo")
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">@user.CreatedAt.ToString("dd/MM/yyyy")</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                                <button @onclick="() => EditUser(user)" class="text-blue-600 hover:text-blue-900 dark:text-blue-400" title="Editar">
-                                    <span class="material-symbols-outlined text-lg">edit</span>
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900 dark:text-white">@user.Name</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">@user.Email</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 text-xs font-semibold rounded @GetRoleBadgeClass(user.Role)">
+                                @GetRoleName(user.Role)
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 text-xs font-semibold rounded @(user.IsActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700")">
+                                @(user.IsActive ? "Ativo" : "Inativo")
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">@user.CreatedAt.ToString("dd/MM/yyyy")</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                            <button @onclick="() => EditUser(user)" class="text-blue-600 hover:text-blue-900 dark:text-blue-400" title="Editar">
+                                <span class="material-symbols-outlined text-lg">edit</span>
+                            </button>
+                            @if (user.IsActive)
+                            {
+                                <button @onclick="() => DeactivateUser(user.Id)" class="text-red-600 hover:text-red-900 dark:text-red-400" title="Desativar">
+                                    <span class="material-symbols-outlined text-lg">person_off</span>
                                 </button>
-                                @if (user.IsActive)
-                                {
-                                    <button @onclick="() => DeactivateUser(user.Id)" class="text-red-600 hover:text-red-900 dark:text-red-400" title="Desativar">
-                                        <span class="material-symbols-outlined text-lg">person_off</span>
-                                    </button>
-                                }
-                                else
-                                {
-                                    <button @onclick="() => ActivateUser(user.Id)" class="text-green-600 hover:text-green-900 dark:text-green-400" title="Ativar">
-                                        <span class="material-symbols-outlined text-lg">person_check</span>
-                                    </button>
-                                }
-                                <button @onclick="() => ResetPassword(user.Id)" class="text-yellow-600 hover:text-yellow-900 dark:text-yellow-400" title="Resetar Senha">
-                                    <span class="material-symbols-outlined text-lg">lock_reset</span>
+                            }
+                            else
+                            {
+                                <button @onclick="() => ActivateUser(user.Id)" class="text-green-600 hover:text-green-900 dark:text-green-400" title="Ativar">
+                                    <span class="material-symbols-outlined text-lg">person_check</span>
                                 </button>
-                            </td>
-                        </tr>
-                    }
+                            }
+                            <button @onclick="() => ResetPassword(user.Id)" class="text-yellow-600 hover:text-yellow-900 dark:text-yellow-400" title="Resetar Senha">
+                                <span class="material-symbols-outlined text-lg">lock_reset</span>
+                            </button>
+                        </td>
+                    </tr>
                 }
+            }
             </tbody>
         </table>
     </div>
 </div>
 
-<NovoUsuarioModal @ref="_novoModal" OnSaved="LoadData" />
-<EditUsuarioModal @ref="_editModal" OnSaved="LoadData" />
+<NovoUsuarioModal @ref="_novoModal" OnSaved="LoadData"/>
+<EditUsuarioModal @ref="_editModal" OnSaved="LoadData"/>
 
 @code {
     private List<User> users;
@@ -112,9 +115,12 @@
     private string searchTerm = "";
     private string filterRole = "";
     private string filterStatus = "all";
+    private string currentUserName = "";
 
     protected override async Task OnInitializedAsync()
     {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        currentUserName = authState.User.Identity?.Name ?? "";
         await LoadData();
     }
 
@@ -131,8 +137,9 @@
     }
 
     private List<User> FilteredUsers => users?
-        .Where(u => (string.IsNullOrEmpty(searchTerm) || 
-                     u.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) || 
+        .Where(u => u.Name != currentUserName &&
+                    (string.IsNullOrEmpty(searchTerm) ||
+                     u.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
                      u.Email.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) &&
                     (string.IsNullOrEmpty(filterRole) || u.Role.ToString() == filterRole) &&
                     (filterStatus == "all" || (filterStatus == "active" && u.IsActive) || (filterStatus == "inactive" && !u.IsActive)))
@@ -182,4 +189,5 @@
         UserRole.Citizen => "bg-yellow-100 text-yellow-700",
         _ => "bg-gray-100 text-gray-700"
     };
+
 }

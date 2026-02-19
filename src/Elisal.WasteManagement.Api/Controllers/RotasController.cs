@@ -4,8 +4,10 @@ using System.Threading.Tasks;
 using Elisal.WasteManagement.Application.Interfaces;
 using Elisal.WasteManagement.Domain.Entities;
 using Elisal.WasteManagement.Domain.Interfaces;
+using Elisal.WasteManagement.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Route = Elisal.WasteManagement.Domain.Entities.Route;
 
 namespace Elisal.WasteManagement.Api.Controllers;
@@ -18,21 +20,27 @@ public class RotasController : ControllerBase
     private readonly IRepository<Route> _routeRepo;
     private readonly IRepository<RoutePoint> _routePointRepo;
     private readonly IRotaService _rotaService;
+    private readonly ElisalDbContext _context;
 
     public RotasController(
         IRepository<Route> routeRepo,
         IRepository<RoutePoint> routePointRepo,
-        IRotaService rotaService)
+        IRotaService rotaService,
+        ElisalDbContext context)
     {
         _routeRepo = routeRepo;
         _routePointRepo = routePointRepo;
         _rotaService = rotaService;
+        _context = context;
     }
 
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        var routes = await _routeRepo.GetAllAsync();
+        var routes = await _context.Routes
+            .Include(r => r.RoutePoints)
+            .ThenInclude(rp => rp.CollectionPoint)
+            .ToListAsync();
         var dtos = routes.Select(r => r.ToDto());
         return Ok(dtos);
     }
@@ -40,9 +48,12 @@ public class RotasController : ControllerBase
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(int id)
     {
-        var route = await _routeRepo.GetByIdAsync(id);
+        var route = await _context.Routes
+            .Include(r => r.RoutePoints)
+            .ThenInclude(rp => rp.CollectionPoint)
+            .FirstOrDefaultAsync(r => r.Id == id);
         if (route == null) return NotFound();
-        
+
         return Ok(route.ToDto());
     }
 
@@ -77,6 +88,7 @@ public class RotasController : ControllerBase
                     };
                     await _routePointRepo.AddAsync(routePoint);
                 }
+
                 await _routePointRepo.SaveChangesAsync();
             }
 
@@ -139,9 +151,9 @@ public class RotasController : ControllerBase
         {
             var optimized = await _rotaService.OtimizarRotaAsync(pontoIds.ToList());
             var distance = await _rotaService.CalcularDistanciaTotal(optimized);
-            
-            return Ok(new 
-            { 
+
+            return Ok(new
+            {
                 Pontos = optimized.Select(p => new { p.Id, p.Name, p.Latitude, p.Longitude }),
                 DistanciaTotal = distance
             });
@@ -155,13 +167,14 @@ public class RotasController : ControllerBase
     [HttpGet("{id}/pontos")]
     public async Task<IActionResult> GetRoutePoints(int id)
     {
-        var routePoints = (await _routePointRepo.GetAllAsync())
+        var routePoints = await _context.RoutePoints
+            .Include(rp => rp.CollectionPoint)
             .Where(rp => rp.RouteId == id)
             .OrderBy(rp => rp.SequenceOrder)
-            .Select(rp => rp.ToDto())
-            .ToList();
+            .ToListAsync();
 
-        return Ok(routePoints);
+        var dtos = routePoints.Select(rp => rp.ToDto()).ToList();
+        return Ok(dtos);
     }
 }
 

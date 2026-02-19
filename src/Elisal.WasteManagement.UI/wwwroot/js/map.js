@@ -17,7 +17,11 @@ window.mapFunctions = {
 
         map.on('click', function (e) {
             if (window.mapFunctions.helpers[mapId]) {
-                window.mapFunctions.helpers[mapId].invokeMethodAsync('OnMapClickInternal', e.latlng.lat, e.latlng.lng);
+                try {
+                    window.mapFunctions.helpers[mapId].invokeMethodAsync('OnMapClickInternal', e.latlng.lat, e.latlng.lng);
+                } catch (err) {
+                    // Componente não suporta click no mapa (ex: NovaRotaModal)
+                }
             }
         });
 
@@ -39,7 +43,7 @@ window.mapFunctions = {
             const marker = L.marker([p.latitude, p.longitude])
                 .addTo(map)
                 .bindPopup(`<b>${p.name}</b><br>${p.address}`);
-            
+
             if (!this.markers[mapId]) this.markers[mapId] = [];
             this.markers[mapId].push({ id: p.id, marker: marker });
         });
@@ -53,7 +57,7 @@ window.mapFunctions = {
 
         points.forEach(p => {
             const isSelected = selectedIds && selectedIds.includes(p.id);
-            
+
             // Custom icon for selected markers
             const icon = L.divIcon({
                 className: 'custom-marker',
@@ -150,7 +154,7 @@ window.mapFunctions = {
 
     clearRoute: function (mapId) {
         const map = this.maps[mapId];
-        if (!map && this.routes[mapId]) {
+        if (map && this.routes[mapId]) {
             map.removeLayer(this.routes[mapId]);
             this.routes[mapId] = null;
         }

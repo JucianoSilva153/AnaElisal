@@ -1,5 +1,3 @@
-using System;
-using System.Threading.Tasks;
 using Elisal.WasteManagement.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -25,7 +23,8 @@ public class RelatoriosController : ControllerBase
         [FromQuery] DateTime fim,
         [FromQuery] int? municipioId,
         [FromQuery] int? residuoId,
-        [FromQuery] int? coopId)
+        [FromQuery] int? coopId,
+        [FromQuery] int? usuarioId)
     {
         try
         {
@@ -33,10 +32,15 @@ public class RelatoriosController : ControllerBase
             {
                 MunicipioId = municipioId,
                 TipoResiduoId = residuoId,
-                CooperativaId = coopId
+                CooperativaId = coopId,
+                UsuarioId = usuarioId
             };
 
-            var pdfBytes = await _relatorioService.GerarRelatorioPdfAsync(tipo, inicio, fim, filtros);
+            // Ajustar datas para incluir o dia inteiro
+            var inicioAjustado = inicio.Date;
+            var fimAjustado = fim.Date.AddDays(1).AddTicks(-1);
+
+            var pdfBytes = await _relatorioService.GerarRelatorioPdfAsync(tipo, inicioAjustado, fimAjustado, filtros);
             return File(pdfBytes, "application/pdf", $"relatorio_{tipo}_{DateTime.Now:yyyyMMdd}.pdf");
         }
         catch (Exception ex)
@@ -52,7 +56,8 @@ public class RelatoriosController : ControllerBase
         [FromQuery] DateTime fim,
         [FromQuery] int? municipioId,
         [FromQuery] int? residuoId,
-        [FromQuery] int? coopId)
+        [FromQuery] int? coopId,
+        [FromQuery] int? usuarioId)
     {
         try
         {
@@ -60,11 +65,17 @@ public class RelatoriosController : ControllerBase
             {
                 MunicipioId = municipioId,
                 TipoResiduoId = residuoId,
-                CooperativaId = coopId
+                CooperativaId = coopId,
+                UsuarioId = usuarioId
             };
 
-            var excelBytes = await _relatorioService.GerarRelatorioExcelAsync(tipo, inicio, fim, filtros);
-            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", 
+            // Ajustar datas para incluir o dia inteiro
+            var inicioAjustado = inicio.Date;
+            var fimAjustado = fim.Date.AddDays(1).AddTicks(-1);
+
+            var excelBytes =
+                await _relatorioService.GerarRelatorioExcelAsync(tipo, inicioAjustado, fimAjustado, filtros);
+            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 $"relatorio_{tipo}_{DateTime.Now:yyyyMMdd}.xlsx");
         }
         catch (Exception ex)

@@ -1,148 +1,136 @@
 @page "/transacoes"
 @inject HttpClient Http
 @using Elisal.WasteManagement.Application.DTOs
-@using Elisal.WasteManagement.Domain.Entities
 @using Elisal.WasteManagement.Domain.Enums
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
 
 <PageTitle>SGR Elisal - Transações</PageTitle>
 
 <div class="p-8 space-y-8">
     <div class="flex items-center justify-between">
         <div>
-            <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Histórico de Transações</h1>
-            <p class="text-slate-500 dark:text-slate-400 text-sm">Registo financeiro com cooperativas</p>
+            <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Transações com Cooperativas</h1>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Histórico de vendas de material reciclável</p>
         </div>
         <div class="flex gap-2">
             <button class="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-600 dark:text-slate-300 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
                 <span class="material-symbols-outlined text-lg">download</span>
                 Relatório
             </button>
-            <button @onclick="() => _transacaoModal.Show()" class="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors shadow-sm">
-                <span class="material-symbols-outlined text-lg">add_card</span>
-                Nova Transação
-            </button>
+            <AuthorizeView Roles="Admin,Manager">
+                <button @onclick="() => _transacaoModal.Show()"
+                        class="px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg text-sm font-semibold transition-colors flex items-center gap-2">
+                    <span class="material-symbols-outlined text-lg">add_circle</span> Nova Transação
+                </button>
+            </AuthorizeView>
         </div>
     </div>
 
-    <!-- Filters -->
-    <div class="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-        <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
-            <div class="space-y-1">
-                <label class="text-xs font-semibold text-slate-500 uppercase">Período</label>
-                <div class="flex gap-2">
-                    <input type="date" @bind="startDate" class="w-full text-sm rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white" />
-                    <input type="date" @bind="endDate" class="w-full text-sm rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white" />
-                </div>
+    <!-- Filtros -->
+    <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-4">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Data Início</label>
+                <input type="date" @bind="startDate" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white p-2 text-sm"/>
             </div>
-             <div class="space-y-1">
-                <label class="text-xs font-semibold text-slate-500 uppercase">Cooperativa</label>
-                <select @bind="selectedCoop" class="w-full text-sm rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white p-2">
-                    <option value="">Todas</option>
-                    @if (coops != null) { foreach(var c in coops) { <option value="@c.Id">@c.Name</option> } }
+            <div>
+                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Data Fim</label>
+                <input type="date" @bind="endDate" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white p-2 text-sm"/>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Cooperativa</label>
+                <select @bind="selectedCoopId" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white p-2 text-sm">
+                    <option value="0">Todas</option>
+                    @if (cooperativas != null)
+                    {
+                        @foreach (var c in cooperativas)
+                        {
+                            <option value="@c.Id">@c.Name</option>
+                        }
+                    }
                 </select>
             </div>
-            <div class="space-y-1">
-                <label class="text-xs font-semibold text-slate-500 uppercase">Resíduo</label>
-                <select @bind="selectedWaste" class="w-full text-sm rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white p-2">
-                    <option value="">Todos</option>
-                    @if (wasteTypes != null) { foreach(var t in wasteTypes) { <option value="@t.Id">@t.Name</option> } }
-                </select>
-            </div>
-             <div class="flex items-end">
-                <button @onclick="LoadData" class="w-full py-2 bg-slate-900 dark:bg-slate-700 text-white rounded-lg text-sm font-medium hover:bg-slate-800 dark:hover:bg-slate-600 transition-colors">
-                    Aplicar Filtros
+            <div class="flex items-end">
+                <button @onclick="LoadData" class="w-full px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg text-sm font-medium transition-colors">
+                    <span class="material-symbols-outlined text-sm align-middle">search</span> Filtrar
                 </button>
             </div>
-             <div class="flex flex-col justify-end">
-                 <div class="bg-green-50 dark:bg-green-900/30 border border-green-100 dark:border-green-900 p-2 rounded-lg text-right">
-                     <p class="text-xs text-green-600 dark:text-green-400 font-medium uppercase">Total no Período</p>
-                     <p class="text-lg font-bold text-green-700 dark:text-green-300">@((transactions?.Sum(t => t.TotalValue) ?? 0).ToString("N2")) Kz</p>
-                 </div>
-            </div>
         </div>
     </div>
 
-    <!-- Table -->
-    <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
-        <table class="w-full text-left">
-            <thead class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider border-b border-slate-200 dark:border-slate-800">
-                <tr>
-                    <th class="px-6 py-4">Data</th>
-                    <th class="px-6 py-4">Cooperativa</th>
-                    <th class="px-6 py-4">Resíduo</th>
-                    <th class="px-6 py-4 text-right">Qtd (Kg)</th>
-                    <th class="px-6 py-4 text-right">Valor (Kz)</th>
-                    <th class="px-6 py-4 text-center">Status</th>
-                </tr>
+    <!-- Tabela -->
+    <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+        <table class="w-full">
+            <thead class="bg-slate-50 dark:bg-slate-800/50">
+            <tr>
+                <th class="text-left px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Data</th>
+                <th class="text-left px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Cooperativa</th>
+                <th class="text-left px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Tipo Resíduo</th>
+                <th class="text-right px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Qtd (Kg)</th>
+                <th class="text-right px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Valor</th>
+                <th class="text-center px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Estado</th>
+            </tr>
             </thead>
-            <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
-                @if (transactions == null)
+            <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+            @if (transacoes != null)
+            {
+                @foreach (var t in transacoes)
                 {
-                    <tr><td colspan="6" class="px-6 py-8 text-center text-slate-500">Carregando...</td></tr>
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                        <td class="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">@t.DateTime.ToString("dd/MM/yyyy")</td>
+                        <td class="px-6 py-4 text-sm font-medium text-slate-900 dark:text-white">
+                            @(cooperativas?.FirstOrDefault(c => c.Id == t.CooperativeId)?.Name ?? "—")
+                        </td>
+                        <td class="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">
+                            @(wasteTypes?.FirstOrDefault(w => w.Id == t.WasteTypeId)?.Name ?? "—")
+                        </td>
+                        <td class="px-6 py-4 text-sm text-right text-slate-600 dark:text-slate-400">@t.AmountKg.ToString("N1")</td>
+                        <td class="px-6 py-4 text-sm text-right font-medium text-slate-900 dark:text-white">@t.TotalValue.ToString("C0")</td>
+                        <td class="px-6 py-4 text-center">
+                            <AuthorizeView Roles="Admin,Manager">
+                                <Authorized>
+                                    <button @onclick="() => ToggleStatus(t)" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium cursor-pointer transition-colors @GetStatusClass(t.Status)" title="Clique para alterar status">
+                                        @GetStatusText(t.Status)
+                                    </button>
+                                </Authorized>
+                                <NotAuthorized>
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium @GetStatusClass(t.Status)">
+                                        @GetStatusText(t.Status)
+                                    </span>
+                                </NotAuthorized>
+                            </AuthorizeView>
+                        </td>
+                    </tr>
                 }
-                else if (transactions.Count == 0)
-                {
-                    <tr><td colspan="6" class="px-6 py-8 text-center text-slate-500">Nenhum registro encontrado.</td></tr>
-                }
-                else
-                {
-                    @foreach (var t in transactions)
-                    {
-                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                            <td class="px-6 py-4 text-slate-600 dark:text-slate-300">@t.DateTime.ToString("dd/MM/yyyy HH:mm")</td>
-                            <td class="px-6 py-4 font-medium text-slate-900 dark:text-white">
-                                @(GetCoopName(t.CooperativeId))
-                            </td>
-                            <td class="px-6 py-4 text-slate-600 dark:text-slate-300">
-                                @(GetWasteName(t.WasteTypeId))
-                            </td>
-                            <td class="px-6 py-4 text-right font-mono text-slate-600 dark:text-slate-300">@t.AmountKg.ToString("N2")</td>
-                            <td class="px-6 py-4 text-right font-mono font-bold text-slate-700 dark:text-slate-300">@t.TotalValue.ToString("N2")</td>
-                            <td class="px-6 py-4 text-center">
-                                @if (t.Status == TransactionStatus.Completed)
-                                {
-                                    <span class="px-2 py-1 rounded-full bg-green-100 text-green-700 text-xs font-semibold">Pago</span>
-                                }
-                                else if (t.Status == TransactionStatus.Pending)
-                                {
-                                    <span class="px-2 py-1 rounded-full bg-yellow-100 text-yellow-700 text-xs font-semibold">Pendente</span>
-                                }
-                                else
-                                {
-                                    <span class="px-2 py-1 rounded-full bg-red-100 text-red-700 text-xs font-semibold">Cancelado</span>
-                                }
-                            </td>
-                        </tr>
-                    }
-                }
+            }
             </tbody>
         </table>
     </div>
 </div>
 
-<Elisal.WasteManagement.UI.Components.Modals.NovaTransacaoModal @ref="_transacaoModal" OnSaved="LoadData" />
+<Elisal.WasteManagement.UI.Components.Modals.NovaTransacaoModal @ref="_transacaoModal" OnSaved="LoadData"/>
 
 @code {
     private Elisal.WasteManagement.UI.Components.Modals.NovaTransacaoModal _transacaoModal;
-    private List<TransactionDto> transactions;
-    private List<Cooperative> coops;
-    private List<WasteType> wasteTypes;
+    private List<TransactionDto>? transacoes;
+    private List<CooperativeDto>? cooperativas;
+    private List<WasteTypeDto>? wasteTypes;
 
-    private DateTime startDate = DateTime.Now.AddDays(-30);
-    private DateTime endDate = DateTime.Now;
-    private int? selectedCoop;
-    private int? selectedWaste;
+    private DateTime startDate = DateTime.Today.AddMonths(-1);
+    private DateTime endDate = DateTime.Today;
+    private int selectedCoopId = 0;
 
     protected override async Task OnInitializedAsync()
     {
-        try 
+        try
         {
-            var t1 = Http.GetFromJsonAsync<List<Cooperative>>("api/cooperativas");
-            var t2 = Http.GetFromJsonAsync<List<WasteType>>("api/residuos/tipos");
-            await Task.WhenAll(t1, t2);
-            coops = await t1 ?? new();
-            wasteTypes = await t2 ?? new();
-        } catch {}
+            cooperativas = await Http.GetFromJsonAsync<List<CooperativeDto>>("api/cooperativas");
+            wasteTypes = await Http.GetFromJsonAsync<List<WasteTypeDto>>("api/residuos/tipos");
+        }
+        catch
+        {
+        }
 
         await LoadData();
     }
@@ -151,18 +139,53 @@
     {
         try
         {
-            var query = $"api/cooperativas/transacoes?inicio={startDate:yyyy-MM-dd}&fim={endDate:yyyy-MM-dd}";
-            if (selectedCoop.HasValue) query += $"&coopId={selectedCoop}";
-            if (selectedWaste.HasValue) query += $"&wasteId={selectedWaste}";
-
-            transactions = await Http.GetFromJsonAsync<List<TransactionDto>>(query);
+            var url = $"api/cooperativas/transacoes?inicio={startDate:yyyy-MM-dd}&fim={endDate:yyyy-MM-dd}";
+            if (selectedCoopId > 0) url += $"&coopId={selectedCoopId}";
+            transacoes = await Http.GetFromJsonAsync<List<TransactionDto>>(url);
         }
-        catch 
+        catch
         {
-            transactions = new List<TransactionDto>();
+            transacoes = new();
         }
     }
 
-    private string GetCoopName(int id) => coops?.FirstOrDefault(c => c.Id == id)?.Name ?? $"#{id}";
-    private string GetWasteName(int id) => wasteTypes?.FirstOrDefault(t => t.Id == id)?.Name ?? $"#{id}";
+    private async Task ToggleStatus(TransactionDto transaction)
+    {
+        var nextStatus = transaction.Status switch
+        {
+            TransactionStatus.Pending => "Completed",
+            TransactionStatus.Completed => "Cancelled",
+            TransactionStatus.Cancelled => "Pending",
+            _ => "Pending"
+        };
+
+        try
+        {
+            var response = await Http.PutAsJsonAsync($"api/cooperativas/transacoes/{transaction.Id}/status", new { Status = nextStatus });
+            if (response.IsSuccessStatusCode)
+            {
+                await LoadData();
+            }
+        }
+        catch
+        {
+        }
+    }
+
+    private string GetStatusClass(TransactionStatus status) => status switch
+    {
+        TransactionStatus.Pending => "bg-yellow-100 text-yellow-800 hover:bg-yellow-200",
+        TransactionStatus.Completed => "bg-green-100 text-green-800 hover:bg-green-200",
+        TransactionStatus.Cancelled => "bg-red-100 text-red-800 hover:bg-red-200",
+        _ => "bg-slate-100 text-slate-800"
+    };
+
+    private string GetStatusText(TransactionStatus status) => status switch
+    {
+        TransactionStatus.Pending => "Pendente",
+        TransactionStatus.Completed => "Concluída",
+        TransactionStatus.Cancelled => "Cancelada",
+        _ => "—"
+    };
+
 }

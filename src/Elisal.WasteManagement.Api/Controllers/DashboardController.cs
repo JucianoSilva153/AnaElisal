@@ -20,7 +20,11 @@ public class DashboardController : ControllerBase
     [HttpGet("stats")]
     public async Task<IActionResult> GetStats()
     {
-        var stats = await _dashboardService.GetStatsAsync();
+        var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        int? userId = int.TryParse(userIdStr, out var id) ? id : null;
+        var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+
+        var stats = await _dashboardService.GetStatsAsync(userId, role);
         return Ok(stats);
     }
 }

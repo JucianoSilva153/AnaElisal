@@ -77,7 +77,7 @@ public class ResiduosController : ControllerBase
     public async Task<IActionResult> AtualizarTipo(int id, [FromBody] WasteTypeDto dto)
     {
         if (id != dto.Id) return BadRequest();
-        
+
         var type = await _wasteTypeRepository.GetByIdAsync(id);
         if (type == null) return NotFound();
 
@@ -107,14 +107,16 @@ public class ResiduosController : ControllerBase
         if (!dataInicio.HasValue || !dataFim.HasValue)
             return BadRequest(new { Message = "Data de Início e Fim são obrigatórias." });
 
-        var results = await _residuoService.ObterEstatisticasPorPeriodoAsync(dataInicio.Value, dataFim.Value);
+        // Ajustar data fim para incluir o dia inteiro
+        var fimAjustado = dataFim.Value.Date.AddDays(1).AddTicks(-1);
+        var results = await _residuoService.ObterEstatisticasPorPeriodoAsync(dataInicio.Value.Date, fimAjustado);
         return Ok(results);
     }
 
     [HttpGet("estatisticas")]
     public async Task<IActionResult> GetEstatisticas([FromQuery] DateTime? periodo) // Simulação period approx
     {
-         if (!periodo.HasValue)
+        if (!periodo.HasValue)
             return BadRequest(new { Message = "Período obrigatório." });
 
         // Simulating monthly stats based on the provided date's month
@@ -122,11 +124,11 @@ public class ResiduosController : ControllerBase
         var end = start.AddMonths(1).AddDays(-1);
 
         var recyclingRate = await _residuoService.CalcularTaxaReciclagemAsync(start, end);
-        
-        return Ok(new 
-        { 
+
+        return Ok(new
+        {
             Mes = start.ToString("MMMM/yyyy"),
-            TaxaReciclagem = recyclingRate 
+            TaxaReciclagem = recyclingRate
         });
     }
 }
