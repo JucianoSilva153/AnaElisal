@@ -8,103 +8,106 @@
 
 <PageTitle>SGR Elisal - Gestão de Utilizadores</PageTitle>
 
-<div class="p-8 space-y-6">
-    <div class="flex items-center justify-between">
+<div class="p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-            <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Gestão de Utilizadores</h1>
-            <p class="text-slate-500 dark:text-slate-400 text-sm">Administração completa de contas de utilizador</p>
+            <h1 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">Gestão de Utilizadores</h1>
+            <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">Administração completa de contas de utilizador</p>
         </div>
-        <button @onclick="() => _novoModal.Show()" class="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors shadow-sm flex items-center gap-2">
-            <span class="material-symbols-outlined">person_add</span>
+        <button @onclick="() => _novoModal.Show()" class="w-full sm:w-auto px-4 py-2 bg-primary text-white rounded-lg text-sm font-bold hover:bg-primary/90 transition-colors shadow-sm flex items-center justify-center gap-2">
+            <span class="material-symbols-outlined text-xl">person_add</span>
             Novo Utilizador
         </button>
     </div>
 
     <!-- Filters -->
-    <div class="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex gap-4">
+    <div class="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row gap-3 sm:gap-4">
         <div class="flex-1">
-            <input type="text" @bind="searchTerm" @bind:event="oninput" placeholder="Buscar por nome ou email..." class="w-full text-sm rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white p-2"/>
+            <input type="text" @bind="searchTerm" @bind:event="oninput" placeholder="Buscar por nome ou email..." class="w-full text-sm rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white p-2 focus:ring-primary focus:border-primary"/>
         </div>
-        <select @bind="filterRole" class="text-sm rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white p-2">
-            <option value="">Todos os Perfis</option>
-            <option value="Admin">Administrador</option>
-            <option value="Manager">Gestor</option>
-            <option value="Driver">Operador</option>
-            <option value="Citizen">Coordenador</option>
-        </select>
-        <select @bind="filterStatus" class="text-sm rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white p-2">
-            <option value="all">Todos os Status</option>
-            <option value="active">Ativos</option>
-            <option value="inactive">Inativos</option>
-        </select>
+        <div class="flex gap-2 sm:gap-4">
+            <select @bind="filterRole" class="flex-1 sm:flex-none text-sm rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white p-2 focus:ring-primary focus:border-primary">
+                <option value="">Todos os Perfis</option>
+                <option value="Admin">Administrador</option>
+                <option value="Manager">Gestor</option>
+                <option value="Driver">Operador</option>
+                <option value="Citizen">Coordenador</option>
+            </select>
+            <select @bind="filterStatus" class="flex-1 sm:flex-none text-sm rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white p-2 focus:ring-primary focus:border-primary">
+                <option value="all">Todos</option>
+                <option value="active">Ativos</option>
+                <option value="inactive">Inativos</option>
+            </select>
+        </div>
     </div>
 
     <!-- Table -->
     <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-        <table class="w-full">
-            <thead class="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
-            <tr>
-                <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Nome</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Email</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Perfil</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Data Cadastro</th>
-                <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Ações</th>
-            </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
-            @if (FilteredUsers == null)
-            {
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead class="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
                 <tr>
-                    <td colspan="6" class="px-6 py-8 text-center text-slate-500">Carregando...</td>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Nome</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Email</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Perfil</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Data Cadastro</th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Ações</th>
                 </tr>
-            }
-            else
-            {
-                @foreach (var user in FilteredUsers)
+                </thead>
+                <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
+                @if (FilteredUsers == null)
                 {
-                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900 dark:text-white">@user.Name</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">@user.Email</td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-2 py-1 text-xs font-semibold rounded @GetRoleBadgeClass(user.Role)">
-                                @GetRoleName(user.Role)
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-2 py-1 text-xs font-semibold rounded @(user.IsActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700")">
-                                @(user.IsActive ? "Ativo" : "Inativo")
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">@user.CreatedAt.ToString("dd/MM/yyyy")</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                            <button @onclick="() => EditUser(user)" class="text-blue-600 hover:text-blue-900 dark:text-blue-400" title="Editar">
-                                <span class="material-symbols-outlined text-lg">edit</span>
-                            </button>
-                            @if (user.IsActive)
-                            {
-                                <button @onclick="() => DeactivateUser(user.Id)" class="text-red-600 hover:text-red-900 dark:text-red-400" title="Desativar">
-                                    <span class="material-symbols-outlined text-lg">person_off</span>
-                                </button>
-                            }
-                            else
-                            {
-                                <button @onclick="() => ActivateUser(user.Id)" class="text-green-600 hover:text-green-900 dark:text-green-400" title="Ativar">
-                                    <span class="material-symbols-outlined text-lg">person_check</span>
-                                </button>
-                            }
-                            <button @onclick="() => ResetPassword(user.Id)" class="text-yellow-600 hover:text-yellow-900 dark:text-yellow-400" title="Resetar Senha">
-                                <span class="material-symbols-outlined text-lg">lock_reset</span>
-                            </button>
-                        </td>
+                    <tr>
+                        <td colspan="6" class="px-6 py-8 text-center text-slate-500">Carregando...</td>
                     </tr>
                 }
-            }
-            </tbody>
-        </table>
+                else
+                {
+                    @foreach (var user in FilteredUsers)
+                    {
+                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900 dark:text-white">@user.Name</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">@user.Email</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 py-1 text-xs font-semibold rounded @GetRoleBadgeClass(user.Role)">
+                                    @GetRoleName(user.Role)
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 py-1 text-xs font-semibold rounded @(user.IsActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700")">
+                                    @(user.IsActive ? "Ativo" : "Inativo")
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">@user.CreatedAt.ToString("dd/MM/yyyy")</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                                <button @onclick="() => EditUser(user)" class="text-blue-600 hover:text-blue-900 dark:text-blue-400" title="Editar">
+                                    <span class="material-symbols-outlined text-lg">edit</span>
+                                </button>
+                                @if (user.IsActive)
+                                {
+                                    <button @onclick="() => DeactivateUser(user.Id)" class="text-red-600 hover:text-red-900 dark:text-red-400" title="Desativar">
+                                        <span class="material-symbols-outlined text-lg">person_off</span>
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button @onclick="() => ActivateUser(user.Id)" class="text-green-600 hover:text-green-900 dark:text-green-400" title="Ativar">
+                                        <span class="material-symbols-outlined text-lg">person_check</span>
+                                    </button>
+                                }
+                                <button @onclick="() => ResetPassword(user.Id)" class="text-yellow-600 hover:text-yellow-900 dark:text-yellow-400" title="Resetar Senha">
+                                    <span class="material-symbols-outlined text-lg">lock_reset</span>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                }
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
-
 <NovoUsuarioModal @ref="_novoModal" OnSaved="LoadData"/>
 <EditUsuarioModal @ref="_editModal" OnSaved="LoadData"/>
 

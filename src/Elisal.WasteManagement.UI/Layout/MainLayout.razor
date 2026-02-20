@@ -4,62 +4,74 @@
 @inject AuthenticationStateProvider AuthStateProvider
 
 <!-- Layout Wrapper -->
-<div class="flex h-screen overflow-hidden">
+<div class="flex h-screen overflow-hidden bg-slate-50 dark:bg-slate-950">
+    <!-- Overlay for mobile sidebar -->
+    @if (_isSidebarOpen)
+    {
+        <div class="fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-sm lg:hidden" @onclick="ToggleSidebar"></div>
+    }
+
     <!-- Sidebar Navigation -->
     <aside
-        class="w-64 flex-shrink-0 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col justify-between">
-        <div class="flex flex-col gap-6 p-6">
-            <div class="flex items-center gap-3">
-                <div class="bg-primary p-2 rounded-lg text-white">
-                    <span class="material-symbols-outlined block">recycling</span>
+        class="fixed inset-y-0 left-0 z-50 w-64 transform bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col justify-between transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0 @(_isSidebarOpen ? "translate-x-0" : "-translate-x-full")">
+        <div class="flex flex-col gap-6 p-6 overflow-y-auto">
+            <div class="flex items-center justify-between lg:justify-start gap-3">
+                <div class="flex items-center gap-3">
+                    <div class="bg-primary p-2 rounded-lg text-white">
+                        <span class="material-symbols-outlined block">recycling</span>
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-bold leading-none text-slate-900 dark:text-white">ELISAL SGRS</h1>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Gestão de Resíduos</p>
+                    </div>
                 </div>
-                <div>
-                    <h1 class="text-lg font-bold leading-none text-slate-900 dark:text-white">ELISAL SGRS</h1>
-                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Gestão de Resíduos</p>
-                </div>
+                <!-- Close button for mobile sidebar -->
+                <button class="lg:hidden p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg" @onclick="ToggleSidebar">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
             </div>
             <nav class="flex flex-col gap-1">
                 <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400 font-medium"
-                   href="/">
+                   href="/" @onclick="CloseSidebarOnMobile">
                     <span class="material-symbols-outlined">dashboard</span>
                     <span class="text-sm">Dashboard</span>
                 </a>
                 <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                   href="/residuos">
+                   href="/residuos" @onclick="CloseSidebarOnMobile">
                     <span class="material-symbols-outlined">delete_sweep</span>
                     <span class="text-sm">Recolhas</span>
                 </a>
                 <AuthorizeView Roles="Admin,Manager">
-                    <button @onclick="() => _wasteTypeModal.Show()" class="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors pl-8 text-xs">
+                    <button @onclick="() => { _wasteTypeModal.Show(); CloseSidebarOnMobile(); }" class="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors pl-8 text-xs">
                         <span class="material-symbols-outlined text-sm">category</span>
                         <span>Tipos de Resíduos</span>
                     </button>
                     <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                       href="/cooperativas">
+                       href="/cooperativas" @onclick="CloseSidebarOnMobile">
                         <span class="material-symbols-outlined">storefront</span>
                         <span class="text-sm">Cooperativas</span>
                     </a>
                     <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                       href="/transacoes">
+                       href="/transacoes" @onclick="CloseSidebarOnMobile">
                         <span class="material-symbols-outlined">payments</span>
                         <span class="text-sm">Transações</span>
                     </a>
                 </AuthorizeView>
                 <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                   href="/pontos-recolha">
+                   href="/pontos-recolha" @onclick="CloseSidebarOnMobile">
                     <span class="material-symbols-outlined">location_on</span>
                     <span class="text-sm">Pontos de Coleta</span>
                 </a>
                 <AuthorizeView Roles="Admin,Manager">
                     <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                       href="/relatorios">
+                       href="/relatorios" @onclick="CloseSidebarOnMobile">
                         <span class="material-symbols-outlined">description</span>
                         <span class="text-sm">Relatórios</span>
                     </a>
                 </AuthorizeView>
                 <AuthorizeView Roles="Admin,Manager,Driver,Citizen">
                     <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                       href="/rotas">
+                       href="/rotas" @onclick="CloseSidebarOnMobile">
                         <span class="material-symbols-outlined">alt_route</span>
                         <span class="text-sm">Rotas</span>
                     </a>
@@ -67,14 +79,14 @@
 
                 <AuthorizeView Roles="Admin">
                     <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                       href="/usuarios">
+                       href="/usuarios" @onclick="CloseSidebarOnMobile">
                         <span class="material-symbols-outlined">group</span>
                         <span class="text-sm">Utilizadores</span>
                     </a>
                 </AuthorizeView>
 
                 <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors border-t border-slate-100 dark:border-slate-800"
-                   href="/perfil">
+                   href="/perfil" @onclick="CloseSidebarOnMobile">
                     <span class="material-symbols-outlined font-light">account_circle</span>
                     <span class="text-sm">O Meu Perfil</span>
                 </a>
@@ -84,11 +96,11 @@
             <AuthorizeView>
                 <Authorized>
                     <div class="flex items-center gap-3 px-2">
-                        <div class="size-10 rounded-full bg-primary flex items-center justify-center text-white font-bold">
+                        <div class="size-10 rounded-full bg-primary flex items-center justify-center text-white font-bold flex-shrink-0">
                             @context.User.Identity?.Name?[0].ToString().ToUpper()
                         </div>
                         <div class="flex-1 min-w-0">
-                            <p class="text-sm font-semibold truncate">@context.User.Identity?.Name</p>
+                            <p class="text-sm font-semibold truncate text-slate-900 dark:text-white">@context.User.Identity?.Name</p>
                             <button @onclick="Logout" class="text-[10px] text-red-500 font-bold uppercase hover:underline">Sair do Sistema</button>
                         </div>
                     </div>
@@ -96,23 +108,35 @@
             </AuthorizeView>
         </div>
     </aside>
+
     <!-- Main Content Area -->
-    <main class="flex-1 flex flex-col overflow-y-auto">
+    <main class="flex-1 flex flex-col min-w-0 overflow-hidden">
         <!-- Top Navigation Bar -->
         <header
-            class="sticky top-0 z-10 flex items-center justify-between px-8 py-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
-            <div class="flex items-center gap-4 flex-1 max-w-xl">
-                <div class="relative w-full">
+            class="sticky top-0 z-30 flex items-center justify-between px-4 lg:px-8 py-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+            <div class="flex items-center gap-4 flex-1">
+                <!-- Hamburger Menu Button -->
+                <button class="lg:hidden p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors" @onclick="ToggleSidebar">
+                    <span class="material-symbols-outlined">menu</span>
+                </button>
+
+                <div class="relative w-full max-w-xl hidden sm:block">
                     <span
                         class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">
                         search
                     </span>
                     <input
-                        class="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:ring-2 focus:ring-primary focus:border-primary text-sm transition-all outline-none"
+                        class="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:ring-2 focus:ring-primary focus:border-primary text-sm transition-all outline-none text-slate-900 dark:text-white"
                         placeholder="Pesquisar registros, frotas ou alertas..." type="text"/>
                 </div>
+
+                <!-- Mobile Logo (Icon only) -->
+                <div class="lg:hidden sm:hidden flex items-center justify-center bg-primary p-2 rounded-lg text-white">
+                    <span class="material-symbols-outlined text-lg leading-none">recycling</span>
+                </div>
             </div>
-            <div class="flex items-center gap-4">
+
+            <div class="flex items-center gap-2 lg:gap-4">
                 <NotificationBell/>
                 <button
                     class="p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
@@ -120,22 +144,29 @@
                 </button>
                 <AuthorizeView Roles="Admin,Manager,Driver">
                     <button @onclick="() => _recolhaModal.Show()"
-                            class="px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg text-sm font-semibold transition-colors flex items-center gap-2">
-                        <span class="material-symbols-outlined text-lg">add_circle</span>
-                        Nova Coleta
+                            class="p-2 lg:px-4 lg:py-2 bg-primary hover:bg-primary/90 text-white rounded-lg text-sm font-semibold transition-colors flex items-center gap-2">
+                        <span class="material-symbols-outlined text-xl lg:text-lg">add_circle</span>
+                        <span class="hidden lg:inline">Nova Coleta</span>
                     </button>
                 </AuthorizeView>
             </div>
         </header>
-        @Body
+
+        <!-- Dynamic Body -->
+        <div class="flex-1 overflow-y-auto">
+            @Body
+
+            <div class="mt-auto">
+                <!-- Footer -->
+                <footer
+                    class="py-6 px-4 lg:px-8 text-center text-slate-400 text-[10px] lg:text-xs border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+                    <p>© 2026 ELISAL SGRS - Sistema de Gestão de Resíduos Sólidos. Luanda, Angola.</p>
+                </footer>
+            </div>
+        </div>
 
         <Elisal.WasteManagement.UI.Components.Modals.RecolhaModal @ref="_recolhaModal" NavigateOnSuccess="true"/>
         <Elisal.WasteManagement.UI.Components.Modals.WasteTypeManagementModal @ref="_wasteTypeModal"/>
-        <!-- Footer -->
-        <footer
-            class="mt-auto py-6 px-8 text-center text-slate-400 text-xs border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
-            <p>© 2026 ELISAL SGRS - Sistema de Gestão de Resíduos Sólidos. Luanda, Angola.</p>
-        </footer>
     </main>
 </div>
 
@@ -144,6 +175,17 @@
 @code {
     private Elisal.WasteManagement.UI.Components.Modals.RecolhaModal _recolhaModal;
     private Elisal.WasteManagement.UI.Components.Modals.WasteTypeManagementModal _wasteTypeModal;
+    private bool _isSidebarOpen = false;
+
+    private void ToggleSidebar()
+    {
+        _isSidebarOpen = !_isSidebarOpen;
+    }
+
+    private void CloseSidebarOnMobile()
+    {
+        _isSidebarOpen = false;
+    }
 
     private async Task Logout()
     {

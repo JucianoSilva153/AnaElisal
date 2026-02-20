@@ -7,73 +7,76 @@
 
 <PageTitle>SGR Elisal - Rotas de Recolha</PageTitle>
 
-<div class="max-w-7xl mx-auto p-8 space-y-6">
-    <div class="flex items-center justify-between mb-6">
+<div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2 sm:mb-6">
         <div>
-            <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Rotas de Recolha</h1>
-            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Gerir e monitorizar rotas de recolha de resíduos</p>
+            <h1 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">Rotas de Recolha</h1>
+            <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">Gerir e monitorizar rotas de recolha de resíduos</p>
         </div>
         <AuthorizeView Roles="Admin,Manager">
-            <button @onclick="() => _novaRotaModal.Show()" class="px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg text-sm font-semibold transition-colors flex items-center gap-2">
-                <span class="material-symbols-outlined text-lg">add_circle</span> Nova Rota
+            <button @onclick="() => _novaRotaModal.Show()" class="w-full sm:w-auto px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2 shadow-sm">
+                <span class="material-symbols-outlined text-lg">add_circle</span>
+                Nova Rota
             </button>
         </AuthorizeView>
     </div>
 
     <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-        <table class="w-full">
-            <thead class="bg-slate-50 dark:bg-slate-800/50">
-            <tr>
-                <th class="text-left px-6 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Nome</th>
-                <th class="text-left px-6 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Dia Semana</th>
-                <th class="text-left px-6 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Horário</th>
-                <th class="text-center px-6 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">N° Pontos</th>
-                <th class="text-center px-6 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Distância</th>
-                <th class="text-center px-6 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Estado</th>
-                <th class="text-right px-6 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Ações</th>
-            </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-            @if (routes != null)
-            {
-                @foreach (var route in routes)
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead class="bg-slate-50 dark:bg-slate-800/50">
+                <tr>
+                    <th class="text-left px-6 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Nome</th>
+                    <th class="text-left px-6 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Dia Semana</th>
+                    <th class="text-left px-6 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Horário</th>
+                    <th class="text-center px-6 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">N° Pontos</th>
+                    <th class="text-center px-6 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Distância</th>
+                    <th class="text-center px-6 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Estado</th>
+                    <th class="text-right px-6 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Ações</th>
+                </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                @if (routes != null)
                 {
-                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                        <td class="px-6 py-4">
-                            <p class="text-sm font-semibold text-slate-900 dark:text-white">@route.Name</p>
-                            <p class="text-xs text-slate-500 dark:text-slate-400">@route.Description</p>
-                        </td>
-                        <td class="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">@(string.IsNullOrEmpty(route.WeekDay) ? "—" : route.WeekDay)</td>
-                        <td class="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">@route.StartTime.ToString(@"hh\:mm")</td>
-                        <td class="px-6 py-4 text-center text-sm text-slate-600 dark:text-slate-400">@route.RoutePoints.Count</td>
-                        <td class="px-6 py-4 text-center text-sm text-slate-600 dark:text-slate-400">@route.TotalDistance.ToString("N1") km</td>
-                        <td class="px-6 py-4 text-center">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium @(route.IsActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800")">
-                                @(route.IsActive ? "Ativa" : "Inativa")
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 text-right">
-                            <div class="flex items-center justify-end gap-2">
-                                <AuthorizeView Roles="Admin,Manager,Driver">
-                                    <button @onclick="() => ExecuteRoute(route.Id)" class="p-1.5 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors" title="Executar">
-                                        <span class="material-symbols-outlined text-lg">play_arrow</span>
-                                    </button>
-                                </AuthorizeView>
-                                <AuthorizeView Roles="Admin,Manager">
-                                    <button @onclick="() => _novaRotaModal.Show(route.Id)" class="p-1.5 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors" title="Editar">
-                                        <span class="material-symbols-outlined text-lg">edit</span>
-                                    </button>
-                                    <button @onclick="() => DeleteRoute(route.Id)" class="p-1.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors" title="Eliminar">
-                                        <span class="material-symbols-outlined text-lg">delete</span>
-                                    </button>
-                                </AuthorizeView>
-                            </div>
-                        </td>
-                    </tr>
+                    @foreach (var route in routes)
+                    {
+                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                            <td class="px-6 py-4">
+                                <p class="text-sm font-semibold text-slate-900 dark:text-white">@route.Name</p>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">@route.Description</p>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">@(string.IsNullOrEmpty(route.WeekDay) ? "—" : route.WeekDay)</td>
+                            <td class="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">@route.StartTime.ToString(@"hh\:mm")</td>
+                            <td class="px-6 py-4 text-center text-sm text-slate-600 dark:text-slate-400">@route.RoutePoints.Count</td>
+                            <td class="px-6 py-4 text-center text-sm text-slate-600 dark:text-slate-400">@route.TotalDistance.ToString("N1") km</td>
+                            <td class="px-6 py-4 text-center">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium @(route.IsActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800")">
+                                    @(route.IsActive ? "Ativa" : "Inativa")
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                <div class="flex items-center justify-end gap-2">
+                                    <AuthorizeView Roles="Admin,Manager,Driver">
+                                        <button @onclick="() => ExecuteRoute(route.Id)" class="p-1.5 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors" title="Executar">
+                                            <span class="material-symbols-outlined text-lg">play_arrow</span>
+                                        </button>
+                                    </AuthorizeView>
+                                    <AuthorizeView Roles="Admin,Manager">
+                                        <button @onclick="() => _novaRotaModal.Show(route.Id)" class="p-1.5 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors" title="Editar">
+                                            <span class="material-symbols-outlined text-lg">edit</span>
+                                        </button>
+                                        <button @onclick="() => DeleteRoute(route.Id)" class="p-1.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors" title="Eliminar">
+                                            <span class="material-symbols-outlined text-lg">delete</span>
+                                        </button>
+                                    </AuthorizeView>
+                                </div>
+                            </td>
+                        </tr>
+                    }
                 }
-            }
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
