@@ -5,21 +5,18 @@ WORKDIR /src
 # Instalar workload WASM
 RUN dotnet workload install wasm-tools
 
-# Copiar solution
-COPY ["src/Elisal.WasteManagement.sln", "./"]
-
-# Copiar TODOS os csproj referenciados
+# Copiar apenas os projetos necessários
 COPY ["src/Elisal.WasteManagement.UI/Elisal.WasteManagement.UI.csproj", "Elisal.WasteManagement.UI/"]
 COPY ["src/Elisal.WasteManagement.Domain/Elisal.WasteManagement.Domain.csproj", "Elisal.WasteManagement.Domain/"]
 COPY ["src/Elisal.WasteManagement.Application/Elisal.WasteManagement.Application.csproj", "Elisal.WasteManagement.Application/"]
 
-# Restore usando a solution (mais seguro)
-RUN dotnet restore "Elisal.WasteManagement.sln"
+# Restore apenas o projeto UI
+RUN dotnet restore "Elisal.WasteManagement.UI/Elisal.WasteManagement.UI.csproj"
 
-# Agora copiar TODO o código
+# Copiar todo o código
 COPY ["src/", "./"]
 
-# Publicar UI
+# Publicar
 WORKDIR "/src/Elisal.WasteManagement.UI"
 RUN dotnet publish "Elisal.WasteManagement.UI.csproj" \
     -c Release \
@@ -27,7 +24,7 @@ RUN dotnet publish "Elisal.WasteManagement.UI.csproj" \
     -o /app/publish \
     --no-restore
 
-# Runtime stage
+# Runtime
 FROM nginx:alpine AS final
 WORKDIR /usr/share/nginx/html
 
