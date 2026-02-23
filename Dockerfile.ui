@@ -10,7 +10,6 @@ RUN dotnet restore "Elisal.WasteManagement.UI/Elisal.WasteManagement.UI.csproj"
 
 # Copy source code
 COPY ["src/Elisal.WasteManagement.UI/", "Elisal.WasteManagement.UI/"]
-COPY ["src/Elisal.WasteManagement.Common/", "Elisal.WasteManagement.Common/"]
 
 # Build and publish Blazor WebAssembly
 WORKDIR "/src/Elisal.WasteManagement.UI"
