@@ -1,0 +1,26 @@
+# Build stage
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+WORKDIR /src
+
+# Copy project files
+COPY ["src/Elisal.WasteManagement.UI/Elisal.WasteManagement.UI.csproj", "Elisal.WasteManagement.UI/"]
+COPY ["src/Elisal.WasteManagement.Common/Elisal.WasteManagement.Common.csproj", "Elisal.WasteManagement.Common/"]
+
+# Restore dependencies
+RUN dotnet restore "Elisal.WasteManagement.UI/Elisal.WasteManagement.UI.csproj"
+
+# Copy source code
+COPY ["src/Elisal.WasteManagement.UI/", "Elisal.WasteManagement.UI/"]
+COPY ["src/Elisal.WasteManagement.Common/", "Elisal.WasteManagement.Common/"]
+
+# Build and publish Blazor WebAssembly
+WORKDIR "/src/Elisal.WasteManagement.UI"
+RUN dotnet publish "Elisal.WasteManagement.UI.csproj" -p:WasmApplicationEnvironmentName=Development -c Release -o /app/publish --no-restore
+
+# Production stage - nginx
+FROM nginx:alpine AS final
+WORKDIR /usr/share/nginx/html
+COPY --from=build /app/publish/wwwroot .
+COPY nginx.conf /etc/nginx/nginx.conf
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
