@@ -6,10 +6,8 @@ WORKDIR /src
 COPY ["src/Elisal.WasteManagement.sln", "./"]
 COPY ["src/Elisal.WasteManagement.Api/Elisal.WasteManagement.Api.csproj", "Elisal.WasteManagement.Api/"]
 COPY ["src/Elisal.WasteManagement.Application/Elisal.WasteManagement.Application.csproj", "Elisal.WasteManagement.Application/"]
-COPY ["src/Elisal.WasteManagement.Common/Elisal.WasteManagement.Common.csproj", "Elisal.WasteManagement.Common/"]
 COPY ["src/Elisal.WasteManagement.Domain/Elisal.WasteManagement.Domain.csproj", "Elisal.WasteManagement.Domain/"]
 COPY ["src/Elisal.WasteManagement.Infrastructure/Elisal.WasteManagement.Infrastructure.csproj", "Elisal.WasteManagement.Infrastructure/"]
-COPY ["src/Elisal.WasteManagement.Persistance/Elisal.WasteManagement.Persistance.csproj", "Elisal.WasteManagement.Persistance/"]
 
 # Restore dependencies
 RUN dotnet restore "Elisal.WasteManagement.Api/Elisal.WasteManagement.Api.csproj"
