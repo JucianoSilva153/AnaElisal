@@ -4,7 +4,6 @@ WORKDIR /src
 
 # Copy project files
 COPY ["src/Elisal.WasteManagement.UI/Elisal.WasteManagement.UI.csproj", "Elisal.WasteManagement.UI/"]
-COPY ["src/Elisal.WasteManagement.Common/Elisal.WasteManagement.Common.csproj", "Elisal.WasteManagement.Common/"]
 
 # Restore dependencies
 RUN dotnet restore "Elisal.WasteManagement.UI/Elisal.WasteManagement.UI.csproj"
