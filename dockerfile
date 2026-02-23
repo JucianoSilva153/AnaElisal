@@ -15,7 +15,7 @@ RUN dotnet restore "Elisal.WasteManagement.Api/Elisal.WasteManagement.Api.csproj
 # Copy remaining source code
 COPY ["src/Elisal.WasteManagement.Api/", "Elisal.WasteManagement.Api/"]
 COPY ["src/Elisal.WasteManagement.Application/", "Elisal.WasteManagement.Application/"]
-COPY ["src/Elisal.WasteManagement.Common/", "Elisal.WasteManagement.Domain/"]
+COPY ["src/Elisal.WasteManagement.Domain/", "Elisal.WasteManagement.Domain/"]
 COPY ["src/Elisal.WasteManagement.Infrastructure/", "Elisal.WasteManagement.Infrastructure/"]
 
 # Build and publish
