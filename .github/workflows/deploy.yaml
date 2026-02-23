@@ -28,10 +28,10 @@ jobs:
       run: dotnet restore
       
     - name: Build API
-      run: dotnet build ./src/Elisal.WasteManagement.Api/Elisal.WasteManagement.Api.csproj --configuration Release --no-restore
+      run: dotnet build Elisal.WasteManagement.Api/Elisal.WasteManagement.Api.csproj --configuration Release --no-restore
       
     - name: Build UI
-      run: dotnet build -p:WasmApplicationEnvironmentName=Development ./src/Elisal.WasteManagement.UI/Elisal.WasteManagement.UI.csproj --configuration Release --no-restore
+      run: dotnet build -p:WasmApplicationEnvironmentName=Development Elisal.WasteManagement.UI/Elisal.WasteManagement.UI.csproj --configuration Release --no-restore
 
   build-and-push-images:
     needs: build-and-test
