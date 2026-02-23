@@ -25,14 +25,11 @@ jobs:
         dotnet-version: '9.0.x'
         
     - name: Restore dependencies
-      run: dotnet restore
-      
-    - name: Build API
-      run: dotnet build Elisal.WasteManagement.Api/Elisal.WasteManagement.Api.csproj --configuration Release --no-restore
-      
-    - name: Build UI
-      run: dotnet build -p:WasmApplicationEnvironmentName=Development Elisal.WasteManagement.UI/Elisal.WasteManagement.UI.csproj --configuration Release --no-restore
+      run: dotnet restore ./src/Elisal.WasteManagement.sln
 
+    - name: Build
+      run: dotnet build ./src/Elisal.WasteManagement.sln --configuration Release --no-restore
+  
   build-and-push-images:
     needs: build-and-test
     runs-on: ubuntu-latest
