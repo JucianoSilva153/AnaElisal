@@ -2,9 +2,6 @@
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
-# Instalar workload WASM
-RUN dotnet workload install wasm-tools
-
 # Copiar apenas os projetos necessários
 COPY ["src/Elisal.WasteManagement.UI/Elisal.WasteManagement.UI.csproj", "Elisal.WasteManagement.UI/"]
 COPY ["src/Elisal.WasteManagement.Domain/Elisal.WasteManagement.Domain.csproj", "Elisal.WasteManagement.Domain/"]
