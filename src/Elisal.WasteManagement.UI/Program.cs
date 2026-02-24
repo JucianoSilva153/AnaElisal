@@ -15,7 +15,19 @@ builder.Services.AddScoped<NotificationService>();
 builder.Services.AddScoped<AuthenticationStateProvider>(s => s.GetRequiredService<ApiAuthenticationStateProvider>());
 builder.Services.AddTransient<JwtInterceptor>();
 
-builder.Services.AddHttpClient("ElisalApi", client => client.BaseAddress = new Uri("http://localhost:5090"))
+using var http = new HttpClient
+{
+    BaseAddress = new Uri(builder.HostEnvironment.BaseAddress)
+};
+
+var config = new ConfigurationBuilder()
+    .AddJsonStream(await http.GetStreamAsync("appsettings.json"))
+    .AddJsonStream(await http.GetStreamAsync($"appsettings.{builder.HostEnvironment.Environment}.json"))
+    .Build();
+
+var apiBaseUrl = config["ApiSettings:BaseUrl"];
+
+builder.Services.AddHttpClient("ElisalApi", client => client.BaseAddress = new Uri(apiBaseUrl ?? ""))
     .AddHttpMessageHandler<JwtInterceptor>();
 
 builder.Services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient("ElisalApi"));
