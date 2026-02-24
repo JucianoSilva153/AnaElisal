@@ -1,0 +1,107 @@
+name: CI/CD Pipeline - Ambiente  Dev
+
+on:
+  push:
+    branches: [ master ]
+env:
+  REGISTRY: ghcr.io
+  IMAGE_API: ${{ github.repository }}/elisal-api
+  IMAGE_UI: ${{ github.repository }}/elisal-ui
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write # <--- Add this line
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '9.0.x'
+
+    - name: Restore dependencies
+      run: dotnet restore ./src/Elisal.WasteManagement.sln
+
+    - name: Build API
+      run: dotnet build ./src/Elisal.WasteManagement.Api/Elisal.WasteManagement.Api.csproj --configuration Release --no-restore
+
+    - name: Build UI
+      run: dotnet publish ./src/Elisal.WasteManagement.UI/Elisal.WasteManagement.UI.csproj -p:WasmApplicationEnvironmentName=Development --configuration Release --output ./app/publish --no-restore
+  build-and-push-images:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Log in to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GHCR_PAT }}
+        
+    - name: Extract metadata for API
+      id: meta-api
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_API }}
+        
+    - name: Extract metadata for UI
+      id: meta-ui
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_UI }}
+        
+    - name: Build and push API image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./Dockerfile
+        push: true
+        tags: ${{ steps.meta-api.outputs.tags }}
+        labels: ${{ steps.meta-api.outputs.labels }}
+        
+    - name: Build and push UI image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./Dockerfile.ui
+        push: true
+        tags: ${{ steps.meta-ui.outputs.tags }}
+        labels: ${{ steps.meta-ui.outputs.labels }}
+
+  deploy:
+    needs: build-and-push-images
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Deploy to VPS
+      uses: appleboy/ssh-action@v1.2.4
+      with:
+        host: ${{ secrets.VPS_HOST }}
+        username: ${{ secrets.VPS_USER }}
+        key: ${{ secrets.VPS_SSH_KEY }}
+        port: 2222
+        script: |
+          cd /www/wwwroot/elisal-sgrs
+          
+          # Pull latest images
+          docker-compose pull
+          
+          # Stop current services
+          docker-compose down
+          
+          # Start with new images
+          docker-compose -f docker-compose.yml up -d
+          
+          # Clean up
+          docker system prune -f
+          
+          echo "Deploy completed successfully!"
