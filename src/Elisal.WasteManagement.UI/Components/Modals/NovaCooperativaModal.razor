@@ -5,82 +5,97 @@
 
 @if (IsVisible)
 {
-    <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-        <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity" @onclick="Close"></div>
-        <div class="flex min-h-full items-center justify-center p-4">
-            <div class="relative w-full max-w-2xl transform overflow-hidden rounded-xl bg-white dark:bg-slate-900 text-left shadow-xl transition-all border border-slate-200 dark:border-slate-800">
-                <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
-                    <h3 class="text-lg font-bold text-slate-900 dark:text-white" id="modal-title">Nova Cooperativa</h3>
-                    <button @onclick="Close" class="text-slate-400 hover:text-slate-500 transition-colors">
-                        <span class="material-symbols-outlined">close</span>
+    <div class="fixed inset-0 z-[100] overflow-y-auto animate-fade-in" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-md transition-opacity" @onclick="Close"></div>
+        <div class="flex min-h-full items-center justify-center p-4 sm:p-6 relative z-10">
+            <div class="relative w-full max-w-2xl transform overflow-hidden rounded-[2.5rem] bg-white dark:bg-slate-900 text-left shadow-premium transition-all border border-slate-50 dark:border-slate-800">
+                <div class="px-8 py-6 border-b border-slate-50 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50">
+                    <div class="flex items-center gap-3">
+                        <div class="size-10 rounded-xl bg-primary text-white flex items-center justify-center shadow-green-glow">
+                            <span class="material-symbols-outlined font-bold">domain</span>
+                        </div>
+                        <h3 class="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight" id="modal-title">Gestão de <span class="text-gradient-green">Cooperativa</span></h3>
+                    </div>
+                    <button @onclick="Close" class="size-10 rounded-xl flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all">
+                        <span class="material-symbols-outlined font-bold">close</span>
                     </button>
                 </div>
 
-                <div class="p-6">
+                <div class="p-8">
                     @if (showSuccess)
                     {
-                        <div class="mb-6 p-4 rounded-lg bg-green-50 border border-green-200 text-green-700 flex items-center gap-3">
-                            <span class="material-symbols-outlined">check_circle</span>
-                            <span>Cooperativa registada com sucesso!</span>
+                        <div class="mb-8 p-5 rounded-2xl bg-primary/10 border border-primary/20 text-primary flex items-center gap-4 animate-bounce-subtle">
+                            <span class="material-symbols-outlined font-bold">check_circle</span>
+                            <span class="font-black uppercase tracking-widest text-[10px]">Entidade cooperativa registada com sucesso!</span>
                         </div>
                     }
                     @if (!string.IsNullOrEmpty(errorMessage))
                     {
-                        <div class="mb-6 p-4 rounded-lg bg-red-50 border border-red-200 text-red-700 flex items-center gap-3">
-                            <span class="material-symbols-outlined">error</span>
-                            <span>@errorMessage</span>
+                        <div class="mb-8 p-5 rounded-2xl bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800 text-red-600 flex items-center gap-4">
+                            <span class="material-symbols-outlined font-bold">error</span>
+                            <span class="font-black uppercase tracking-widest text-[10px]">@errorMessage</span>
                         </div>
                     }
 
                     <EditForm Model="@model" OnValidSubmit="HandleSubmit">
                         <DataAnnotationsValidator/>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
                             <div class="space-y-2">
-                                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Nome da Cooperativa</label>
-                                <InputText @bind-Value="model.Name" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary"/>
-                                <ValidationMessage For="@(() => model.Name)" class="text-xs text-red-500"/>
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Razão Social / Nome</label>
+                                <InputText @bind-Value="model.Name" class="w-full h-12 px-5 rounded-2xl border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold transition-all shadow-inner" placeholder="Ex: Cooperativa Verde Luanda"/>
+                                <ValidationMessage For="@(() => model.Name)" class="text-[10px] font-bold text-red-500 italic mt-1"/>
                             </div>
 
                             <div class="space-y-2">
-                                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Responsável / Contacto</label>
-                                <InputText @bind-Value="model.Contact" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary"/>
-                                <ValidationMessage For="@(() => model.Contact)" class="text-xs text-red-500"/>
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Ponto Focal / Contacto</label>
+                                <InputText @bind-Value="model.Contact" class="w-full h-12 px-5 rounded-2xl border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold transition-all shadow-inner" placeholder="Ex: João Silva / +244..."/>
+                                <ValidationMessage For="@(() => model.Contact)" class="text-[10px] font-bold text-red-500 italic mt-1"/>
                             </div>
 
                             <div class="space-y-2">
-                                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Email</label>
-                                <InputText @bind-Value="model.Email" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary"/>
-                                <ValidationMessage For="@(() => model.Email)" class="text-xs text-red-500"/>
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Canal de Comunicação (Email)</label>
+                                <InputText @bind-Value="model.Email" class="w-full h-12 px-5 rounded-2xl border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold transition-all shadow-inner" placeholder="Ex: contacto@coopverde.ao"/>
+                                <ValidationMessage For="@(() => model.Email)" class="text-[10px] font-bold text-red-500 italic mt-1"/>
                             </div>
 
                             <div class="space-y-2">
-                                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Endereço</label>
-                                <InputText @bind-Value="model.Address" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary"/>
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Extensão Geográfica (Endereço)</label>
+                                <InputText @bind-Value="model.Address" class="w-full h-12 px-5 rounded-2xl border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold transition-all shadow-inner" placeholder="Ex: Via Expressa, KM 12"/>
                             </div>
                         </div>
 
-                        <div class="space-y-2 mb-6">
-                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Resíduos Aceites</label>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3">
+                        <div class="space-y-4 mb-10">
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                                <span class="size-1.5 rounded-full bg-primary"></span>
+                                Matriz de Resíduos Homologados
+                            </label>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                                 @if (wasteTypes != null)
                                 {
                                     @foreach (var type in wasteTypes)
                                     {
-                                        <label class="flex items-center gap-2 p-2.5 sm:p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
-                                            <input type="checkbox" @onchange="@(e => ToggleWasteType(type.Name, e.Value))" checked="@selectedWasteTypes.Contains(type.Name)" class="rounded border-slate-300 text-primary focus:ring-primary"/>
-                                            <span class="text-sm font-medium text-slate-700 dark:text-slate-300">@type.Name</span>
+                                        <label class="flex items-center gap-4 p-4 rounded-[1.25rem] border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 cursor-pointer hover:border-primary/20 hover:bg-white dark:hover:bg-slate-900 hover:shadow-premium transition-all group">
+                                            <input type="checkbox" @onchange="@(e => ToggleWasteType(type.Name, e.Value))" checked="@selectedWasteTypes.Contains(type.Name)" class="size-5 rounded-lg border-slate-200 dark:border-slate-700 text-primary focus:ring-primary cursor-pointer transition-all"/>
+                                            <div class="flex flex-col">
+                                                <span class="text-xs font-black text-slate-600 dark:text-slate-300 uppercase tracking-tight group-hover:text-primary transition-colors">@type.Name</span>
+                                                <span class="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Processamento</span>
+                                            </div>
                                         </label>
                                     }
                                 }
                             </div>
-                            <p class="text-xs text-slate-400">Selecione os tipos de resíduos que a cooperativa processa.</p>
+                            <p class="text-[9px] font-medium text-slate-400 italic">Identifique os fluxos de resíduos que esta unidade operacional está capacitada a gerir.</p>
                         </div>
 
-                        <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
-                            <button type="button" @onclick="Close" class="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300">Cancelar</button>
-                            <button type="submit" class="px-4 py-2 rounded-lg bg-primary hover:bg-primary/90 text-white font-medium flex items-center gap-2">
-                                <span class="material-symbols-outlined">save</span> Salvar
+                        <div class="flex items-center justify-end gap-4 pt-6 mt-2 border-t border-slate-50 dark:border-slate-800">
+                            <button type="button" @onclick="Close"
+                                    class="px-8 py-3 rounded-2xl font-black uppercase tracking-widest text-[10px] text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all">
+                                Cancelar
+                            </button>
+                            <button type="submit" class="btn-vibrant px-12 py-3 flex items-center gap-3 shadow-green-glow transition-all">
+                                <span class="material-symbols-outlined font-bold">verified_user</span>
+                                <span class="font-black uppercase tracking-widest text-[10px]">CONSOLIDAR REGISTO</span>
                             </button>
                         </div>
                     </EditForm>

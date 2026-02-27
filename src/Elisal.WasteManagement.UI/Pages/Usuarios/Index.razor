@@ -8,97 +8,116 @@
 
 <PageTitle>SGR Elisal - Gestão de Utilizadores</PageTitle>
 
-<div class="p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6">
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+<div class="p-6 lg:p-10 space-y-10 animate-fade-in relative overflow-hidden">
+    <div class="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 w-96 h-96 bg-primary/5 blur-[120px] rounded-full pointer-events-none"></div>
+
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-6 relative z-10">
         <div>
-            <h1 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">Gestão de Utilizadores</h1>
-            <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">Administração completa de contas de utilizador</p>
+            <h1 class="text-4xl font-black text-slate-900 dark:text-white leading-tight">
+                Gestão de <span class="text-gradient-green">Acessos</span>
+            </h1>
+            <p class="text-slate-500 font-medium mt-2">Administração de identidades e permissões de segurança do sistema.</p>
         </div>
-        <button @onclick="() => _novoModal.Show()" class="w-full sm:w-auto px-4 py-2 bg-primary text-white rounded-lg text-sm font-bold hover:bg-primary/90 transition-colors shadow-sm flex items-center justify-center gap-2">
-            <span class="material-symbols-outlined text-xl">person_add</span>
-            Novo Utilizador
+        <button @onclick="() => _novoModal.Show()" class="btn-vibrant px-8 py-3 flex items-center gap-2 shadow-green-glow">
+            <span class="material-symbols-outlined font-bold">person_add</span>
+            NOVO UTILIZADOR
         </button>
     </div>
 
     <!-- Filters -->
-    <div class="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row gap-3 sm:gap-4">
-        <div class="flex-1">
-            <input type="text" @bind="searchTerm" @bind:event="oninput" placeholder="Buscar por nome ou email..." class="w-full text-sm rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white p-2 focus:ring-primary focus:border-primary"/>
+    <div class="relative z-10 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-50 dark:border-slate-800 shadow-premium flex flex-col lg:flex-row gap-4">
+        <div class="relative flex-1">
+            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">person_search</span>
+            <input type="text" @bind="searchTerm" @bind:event="oninput" placeholder="Pesquisar por nome ou e-mail corporativo..." class="w-full h-12 pl-12 pr-4 rounded-xl border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary font-bold transition-all"/>
         </div>
-        <div class="flex gap-2 sm:gap-4">
-            <select @bind="filterRole" class="flex-1 sm:flex-none text-sm rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white p-2 focus:ring-primary focus:border-primary">
-                <option value="">Todos os Perfis</option>
-                <option value="Admin">Administrador</option>
-                <option value="Manager">Gestor</option>
-                <option value="Driver">Operador</option>
-                <option value="Citizen">Coordenador</option>
+        <div class="flex gap-4">
+            <select @bind="filterRole" class="h-12 px-6 rounded-xl border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-black uppercase tracking-widest text-[10px] appearance-none cursor-pointer">
+                <option value="">TODOS OS PERFIS</option>
+                <option value="Admin">ADMINISTRADOR</option>
+                <option value="Manager">GESTOR</option>
+                <option value="Driver">OPERADOR</option>
             </select>
-            <select @bind="filterStatus" class="flex-1 sm:flex-none text-sm rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white p-2 focus:ring-primary focus:border-primary">
-                <option value="all">Todos</option>
-                <option value="active">Ativos</option>
-                <option value="inactive">Inativos</option>
+            <select @bind="filterStatus" class="h-12 px-6 rounded-xl border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-black uppercase tracking-widest text-[10px] appearance-none cursor-pointer">
+                <option value="all">TODOS OS ESTADOS</option>
+                <option value="active">ATIVOS</option>
+                <option value="inactive">INATIVOS</option>
             </select>
         </div>
     </div>
 
     <!-- Table -->
-    <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+    <div class="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-premium border border-slate-50 dark:border-slate-800 overflow-hidden relative z-10">
         <div class="overflow-x-auto">
             <table class="w-full text-left">
-                <thead class="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
+                <thead class="bg-slate-50 dark:bg-slate-800/50 text-slate-400 text-[10px] font-black uppercase tracking-widest border-b border-slate-100 dark:border-slate-800">
                 <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Nome</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Email</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Perfil</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Data Cadastro</th>
-                    <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Ações</th>
+                    <th class="px-8 py-6">Colaborador</th>
+                    <th class="px-8 py-6">Perfil de Acesso</th>
+                    <th class="px-8 py-6 text-center">Status</th>
+                    <th class="px-8 py-6">Data de Adesão</th>
+                    <th class="px-8 py-6 text-right">Ações de Gestão</th>
                 </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
+                <tbody class="divide-y divide-slate-50 dark:divide-slate-800/50 text-sm">
                 @if (FilteredUsers == null)
                 {
                     <tr>
-                        <td colspan="6" class="px-6 py-8 text-center text-slate-500">Carregando...</td>
+                        <td colspan="5" class="px-8 py-12 text-center text-slate-500">
+                            <div class="flex flex-col items-center gap-3">
+                                <div class="size-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                                <span class="text-slate-400 font-black uppercase tracking-widest text-[10px]">Sincronizando Utilizadores...</span>
+                            </div>
+                        </td>
                     </tr>
                 }
                 else
                 {
                     @foreach (var user in FilteredUsers)
                     {
-                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900 dark:text-white">@user.Name</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">@user.Email</td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="px-2 py-1 text-xs font-semibold rounded @GetRoleBadgeClass(user.Role)">
-                                    @GetRoleName(user.Role)
+                        <tr class="hover:bg-primary-subtle/30 transition-colors group">
+                            <td class="px-8 py-6">
+                                <div class="flex items-center gap-4">
+                                    <div class="size-10 rounded-full bg-gradient-elisal text-white flex items-center justify-center font-black text-xs shadow-sm">
+                                        @user.Name.Substring(0, 1).ToUpper()
+                                    </div>
+                                    <div class="flex flex-col">
+                                        <span class="font-black text-slate-900 dark:text-white uppercase tracking-tight">@user.Name</span>
+                                        <span class="text-[10px] font-bold text-slate-400 italic">@user.Email</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-8 py-6">
+                                <span class="px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border @GetRoleBadgeClass(user.Role)">
+                                    @GetRoleName(user.Role).ToUpper()
                                 </span>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="px-2 py-1 text-xs font-semibold rounded @(user.IsActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700")">
+                            <td class="px-8 py-6 text-center">
+                                <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest @(user.IsActive ? "bg-primary-subtle text-primary border border-primary/10" : "bg-red-50 text-red-500 border border-red-100")">
                                     @(user.IsActive ? "Ativo" : "Inativo")
                                 </span>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">@user.CreatedAt.ToString("dd/MM/yyyy")</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                                <button @onclick="() => EditUser(user)" class="text-blue-600 hover:text-blue-900 dark:text-blue-400" title="Editar">
-                                    <span class="material-symbols-outlined text-lg">edit</span>
-                                </button>
-                                @if (user.IsActive)
-                                {
-                                    <button @onclick="() => DeactivateUser(user.Id)" class="text-red-600 hover:text-red-900 dark:text-red-400" title="Desativar">
-                                        <span class="material-symbols-outlined text-lg">person_off</span>
+                            <td class="px-8 py-6 whitespace-nowrap text-xs font-bold text-slate-500 italic">@user.CreatedAt.ToString("dd/MM/yyyy")</td>
+                            <td class="px-8 py-6 text-right">
+                                <div class="flex items-center justify-end gap-3 translate-x-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-0 transition-all">
+                                    <button @onclick="() => EditUser(user)" class="size-10 flex items-center justify-center bg-slate-50 dark:bg-slate-800 text-slate-400 hover:text-primary hover:bg-white dark:hover:bg-slate-700 hover:shadow-premium rounded-xl transition-all" title="Editar Perfil">
+                                        <span class="material-symbols-outlined text-xl font-bold">edit</span>
                                     </button>
-                                }
-                                else
-                                {
-                                    <button @onclick="() => ActivateUser(user.Id)" class="text-green-600 hover:text-green-900 dark:text-green-400" title="Ativar">
-                                        <span class="material-symbols-outlined text-lg">person_check</span>
+                                    @if (user.IsActive)
+                                    {
+                                        <button @onclick="() => DeactivateUser(user.Id)" class="size-10 flex items-center justify-center bg-slate-50 dark:bg-slate-800 text-slate-400 hover:text-red-500 hover:bg-white dark:hover:bg-slate-700 hover:shadow-premium rounded-xl transition-all" title="Suspender Acesso">
+                                            <span class="material-symbols-outlined text-xl font-bold">person_off</span>
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button @onclick="() => ActivateUser(user.Id)" class="size-10 flex items-center justify-center bg-slate-50 dark:bg-slate-800 text-slate-400 hover:text-primary hover:bg-white dark:hover:bg-slate-700 hover:shadow-premium rounded-xl transition-all" title="Reativar Acesso">
+                                            <span class="material-symbols-outlined text-xl font-bold">person_check</span>
+                                        </button>
+                                    }
+                                    <button @onclick="() => ResetPassword(user.Id)" class="size-10 flex items-center justify-center bg-slate-50 dark:bg-slate-800 text-slate-400 hover:text-yellow-500 hover:bg-white dark:hover:bg-slate-700 hover:shadow-premium rounded-xl transition-all" title="Redefinir Senha">
+                                        <span class="material-symbols-outlined text-xl font-bold">lock_reset</span>
                                     </button>
-                                }
-                                <button @onclick="() => ResetPassword(user.Id)" class="text-yellow-600 hover:text-yellow-900 dark:text-yellow-400" title="Resetar Senha">
-                                    <span class="material-symbols-outlined text-lg">lock_reset</span>
-                                </button>
+                                </div>
                             </td>
                         </tr>
                     }
@@ -180,7 +199,6 @@
         UserRole.Admin => "Administrador",
         UserRole.Manager => "Gestor",
         UserRole.Driver => "Operador",
-        UserRole.Citizen => "Coordenador",
         _ => role.ToString()
     };
 
@@ -189,7 +207,6 @@
         UserRole.Admin => "bg-purple-100 text-purple-700",
         UserRole.Manager => "bg-blue-100 text-blue-700",
         UserRole.Driver => "bg-green-100 text-green-700",
-        UserRole.Citizen => "bg-yellow-100 text-yellow-700",
         _ => "bg-gray-100 text-gray-700"
     };
 

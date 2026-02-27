@@ -42,6 +42,23 @@ public class RotasController : ControllerBase
             .Include(r => r.RoutePoints)
             .ThenInclude(rp => rp.CollectionPoint)
             .ToListAsync();
+
+        // Recalcular distâncias que estejam a zero (self-healing)
+        bool changed = false;
+        foreach (var route in routes.Where(r => r.TotalDistance <= 0 && r.RoutePoints.Any()))
+        {
+            var points = route.RoutePoints
+                .OrderBy(rp => rp.SequenceOrder)
+                .Select(rp => rp.CollectionPoint)
+                .ToList();
+
+            route.TotalDistance = await _rotaService.CalcularDistanciaTotal(points);
+            _context.Routes.Update(route);
+            changed = true;
+        }
+
+        if (changed) await _context.SaveChangesAsync();
+
         var dtos = routes.Select(r => r.ToDto());
         return Ok(dtos);
     }
@@ -91,6 +108,19 @@ public class RotasController : ControllerBase
                 }
 
                 await _routePointRepo.SaveChangesAsync();
+
+                // Calcular distância total com base nas coordenadas dos pontos, pela ordem definida
+                var orderedPoints = await _context.CollectionPoints
+                    .Where(p => dto.PontoIds.Contains(p.Id))
+                    .ToListAsync();
+                var sortedPoints = dto.PontoIds
+                    .Select(id => orderedPoints.FirstOrDefault(p => p.Id == id))
+                    .Where(p => p != null)
+                    .ToList();
+
+                route.TotalDistance = await _rotaService.CalcularDistanciaTotal(sortedPoints!);
+                _routeRepo.Update(route);
+                await _routeRepo.SaveChangesAsync();
             }
 
             return CreatedAtAction(nameof(GetById), new { id = route.Id }, route.ToDto());
@@ -113,6 +143,20 @@ public class RotasController : ControllerBase
             route.Description = dto.Descricao;
             route.WeekDay = dto.DiaSemana;
             route.StartTime = dto.HorarioInicio;
+
+            // Recalcular distância com base nos pontos actuais da rota
+            if (dto.PontoIds != null && dto.PontoIds.Any())
+            {
+                var orderedPoints = await _context.CollectionPoints
+                    .Where(p => dto.PontoIds.Contains(p.Id))
+                    .ToListAsync();
+                var sortedPoints = dto.PontoIds
+                    .Select(pid => orderedPoints.FirstOrDefault(p => p.Id == pid))
+                    .Where(p => p != null)
+                    .ToList();
+
+                route.TotalDistance = await _rotaService.CalcularDistanciaTotal(sortedPoints!);
+            }
 
             _routeRepo.Update(route);
             await _routeRepo.SaveChangesAsync();

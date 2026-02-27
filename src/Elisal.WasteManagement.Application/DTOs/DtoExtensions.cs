@@ -3,6 +3,8 @@ using Elisal.WasteManagement.Application.DTOs;
 using Elisal.WasteManagement.Domain.Entities;
 using Elisal.WasteManagement.Domain.Enums;
 
+namespace Elisal.WasteManagement.Application.DTOs;
+
 public static class DtoExtensions
 {
     public static CollectionPointDto ToDto(this CollectionPoint collectionPoint)
@@ -120,7 +122,7 @@ public static class DtoExtensions
             RouteId = re.RouteId,
             DriverId = re.DriverId,
             EndTime = re.EndTime,
-            Id = re.RouteId,
+            Id = re.Id,
             PointStatuses = re.PointStatuses.Select(p => p.ToDto()).ToList(),
             StartTime = re.StartTime,
             Status = re.Status
@@ -165,7 +167,7 @@ public static class DtoExtensions
             AmountKg = entity.AmountKg,
             CooperativeId = entity.CooperativeId,
             DateTime = entity.Date,
-            PricePerKg = entity.Value / (decimal)entity.AmountKg,
+            PricePerKg = entity.AmountKg == 0 ? 0 : entity.Value / (decimal)entity.AmountKg,
             Status = entity.Status,
             TotalValue = entity.Value,
             WasteTypeId = entity.WasteTypeId

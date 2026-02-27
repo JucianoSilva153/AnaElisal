@@ -11,10 +11,27 @@ public class DashboardStatsDto
     public int PontosAtivos { get; set; }
     public int VariacaoPontosAtivos { get; set; }
     public int AlertasOperacionais { get; set; }
-    
+
+    // Novos campos para perfis específicos
+    public int RotasAtivasHoje { get; set; }
+    public int MinhasRotasConcluidas { get; set; }
+    public double MeuAproveitamentoKg { get; set; }
+    public int PontosCriticosOcupacao { get; set; } // > 90%
+    public List<PieChartDto> ImpactoAmbientalPessoal { get; set; } = new();
+
     public List<ChartSeriesDto> VolumeMensal { get; set; } = new();
     public List<PieChartDto> DistribuicaoPorTipo { get; set; } = new();
     public List<RecentCollectionDto> ColetasRecentes { get; set; } = new();
+    public ActiveRoutePreviewDto? ProximaRota { get; set; }
+}
+
+public class ActiveRoutePreviewDto
+{
+    public int Id { get; set; }
+    public string Nome { get; set; } = string.Empty;
+    public string Descricao { get; set; } = string.Empty;
+    public int TotalPontos { get; set; }
+    public int PontosConcluidos { get; set; }
 }
 
 public class ChartSeriesDto

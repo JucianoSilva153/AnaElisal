@@ -35,6 +35,7 @@ builder.Services.AddScoped<ICollectionRecordRepository, CollectionRecordReposito
 builder.Services.AddScoped<ICollectionPointRepository, CollectionPointRepository>();
 builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
 builder.Services.AddScoped<IOperationalAlertRepository, OperationalAlertRepository>();
+builder.Services.AddScoped<IRouteExecutionRepository, RouteExecutionRepository>();
 
 // Configurations
 builder.Services.Configure<Elisal.WasteManagement.Application.Common.EmailSettings>(

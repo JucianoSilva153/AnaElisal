@@ -69,7 +69,15 @@
                         <span class="text-sm">Relatórios</span>
                     </a>
                 </AuthorizeView>
-                <AuthorizeView Roles="Admin,Manager,Driver,Citizen">
+                <AuthorizeView Roles="Admin,Manager,Driver">
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                       href="/rotas/execucoes" @onclick="CloseSidebarOnMobile">
+                        <span class="material-symbols-outlined">history</span>
+                        <span class="text-sm">Execuções</span>
+                    </a>
+                </AuthorizeView>
+
+                <AuthorizeView Roles="Admin,Manager,Driver">
                     <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                        href="/rotas" @onclick="CloseSidebarOnMobile">
                         <span class="material-symbols-outlined">alt_route</span>
@@ -155,14 +163,6 @@
         <!-- Dynamic Body -->
         <div class="flex-1 overflow-y-auto">
             @Body
-
-            <div class="mt-auto">
-                <!-- Footer -->
-                <footer
-                    class="py-6 px-4 lg:px-8 text-center text-slate-400 text-[10px] lg:text-xs border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
-                    <p>© 2026 ELISAL SGRS - Sistema de Gestão de Resíduos Sólidos. Luanda, Angola.</p>
-                </footer>
-            </div>
         </div>
 
         <Elisal.WasteManagement.UI.Components.Modals.RecolhaModal @ref="_recolhaModal" NavigateOnSuccess="true"/>

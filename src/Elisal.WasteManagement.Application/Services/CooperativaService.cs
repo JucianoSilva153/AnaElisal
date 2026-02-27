@@ -37,7 +37,7 @@ public class CooperativaService : ICooperativaService
             WasteTypeId = dto.WasteTypeId,
             AmountKg = dto.AmountKg,
             Value = dto.TotalValue,
-            Status = TransactionStatus.Pending
+            Status = dto.Status
         };
 
         await _transactionRepository.AddAsync(transacao);

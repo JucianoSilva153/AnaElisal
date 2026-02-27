@@ -15,17 +15,23 @@ public class DashboardService : IDashboardService
     private readonly IRepository<CollectionPoint> _collectionPointRepository;
     private readonly IRepository<WasteType> _wasteTypeRepository;
     private readonly IRepository<AuditLog> _auditLogRepository;
+    private readonly IRepository<Route> _routeRepository;
+    private readonly IRouteExecutionRepository _routeExecutionRepository;
 
     public DashboardService(
         ICollectionRecordRepository collectionRecordRepository,
         IRepository<CollectionPoint> collectionPointRepository,
         IRepository<WasteType> wasteTypeRepository,
-        IRepository<AuditLog> auditLogRepository)
+        IRepository<AuditLog> auditLogRepository,
+        IRepository<Route> routeRepository,
+        IRouteExecutionRepository routeExecutionRepository)
     {
         _collectionRecordRepository = collectionRecordRepository;
         _collectionPointRepository = collectionPointRepository;
         _wasteTypeRepository = wasteTypeRepository;
         _auditLogRepository = auditLogRepository;
+        _routeRepository = routeRepository;
+        _routeExecutionRepository = routeExecutionRepository;
     }
 
     public async Task<DashboardStatsDto> GetStatsAsync(int? userId = null, string? role = null)
@@ -81,8 +87,54 @@ public class DashboardService : IDashboardService
             TaxaReaproveitamento = Math.Round(taxaReaproveitamento, 1),
             VariacaoTaxaReaproveitamento = Math.Round(variacaoTaxa, 1),
             PontosAtivos = pontosAtivos,
-            AlertasOperacionais = pontosCheios + logsCriticos
+            AlertasOperacionais = pontosCheios + logsCriticos,
+            PontosCriticosOcupacao = pontosCheios
         };
+
+        // Lógica específica por papel
+        if (role == "Driver" && userId.HasValue)
+        {
+            var driverExecutions = (await _routeExecutionRepository.GetAllAsync())
+                .Where(e => e.DriverId == userId.Value);
+
+            stats.MinhasRotasConcluidas = driverExecutions.Count(e => e.Status == RouteExecutionStatus.Completed);
+            stats.MeuAproveitamentoKg = currentTotalKg;
+
+            // Encontrar rota activa com progresso
+            var activeExecution = await _routeExecutionRepository.GetActiveByDriverIdAsync(userId.Value);
+            if (activeExecution != null)
+            {
+                stats.ProximaRota = new ActiveRoutePreviewDto
+                {
+                    Id = activeExecution.RouteId,
+                    Nome = activeExecution.Route.Name,
+                    Descricao = activeExecution.Route.Description,
+                    TotalPontos = activeExecution.PointStatuses.Count,
+                    PontosConcluidos = activeExecution.PointStatuses.Count(ps => ps.IsCompleted)
+                };
+            }
+
+            // Impacto Pessoal
+            foreach (var wt in await _wasteTypeRepository.GetAllAsync())
+            {
+                var weight = currentMonthRecords.Where(r => r.WasteTypeId == wt.Id).Sum(r => r.AmountKg);
+                if (currentTotalKg > 0 && weight > 0)
+                {
+                    stats.ImpactoAmbientalPessoal.Add(new PieChartDto
+                    {
+                        Category = wt.Name,
+                        Percentage = Math.Round((weight / currentTotalKg) * 100, 1),
+                        Color = GetColorForWasteType(wt.Name)
+                    });
+                }
+            }
+        }
+        else if (role == "Manager" || role == "Admin")
+        {
+            var activeExecutions = (await _routeExecutionRepository.GetAllAsync())
+                .Where(e => e.Status == RouteExecutionStatus.InProgress);
+            stats.RotasAtivasHoje = activeExecutions.Count();
+        }
 
         // Charts data
         var last6Months = Enumerable.Range(0, 6).Select(i => startOfMonth.AddMonths(-i)).Reverse();

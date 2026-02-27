@@ -6,43 +6,47 @@
 
 <PageTitle>SGR Elisal - Pontos de Recolha</PageTitle>
 
-<div class="h-full flex flex-col p-4 sm:p-6 space-y-4 sm:space-y-6">
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+<div class="h-full flex flex-col p-6 lg:p-10 space-y-8 animate-fade-in relative overflow-hidden">
+    <div class="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 w-96 h-96 bg-primary/5 blur-[120px] rounded-full pointer-events-none"></div>
+
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-6 relative z-10">
         <div>
-            <h1 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">Pontos de Recolha</h1>
-            <p class="text-slate-500 dark:text-slate-400 text-xs sm:text-sm">Gerencie a localização e status dos ecopontos</p>
+            <h1 class="text-4xl font-black text-slate-900 dark:text-white leading-tight">
+                Centros de <span class="text-gradient-green">Recolha</span>
+            </h1>
+            <p class="text-slate-500 font-medium mt-2">Gestão inteligente e monitoramento de capacidade dos ecopontos.</p>
         </div>
-        <div class="flex items-center gap-2">
-            <div class="bg-gray-100 dark:bg-slate-800 p-1 rounded-lg flex text-xs flex-1 sm:flex-none">
+        <div class="flex items-center gap-4">
+            <div class="bg-slate-100 dark:bg-slate-800 p-1.5 rounded-2xl flex text-xs shadow-inner">
                 <button @onclick="@(() => viewMode = "map")"
-                        class="flex-1 sm:flex-none px-3 py-1.5 rounded-md transition-colors @(viewMode == "map" ? "bg-white dark:bg-slate-600 shadow-sm font-medium text-slate-900 dark:text-white" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300")">
-                    Mapa
+                        class="px-5 py-2 rounded-xl transition-all font-black uppercase tracking-widest @(viewMode == "map" ? "bg-white dark:bg-slate-700 shadow-premium text-primary" : "text-slate-400 hover:text-slate-600")">
+                    MAPA
                 </button>
                 <button @onclick="@(() => viewMode = "list")"
-                        class="flex-1 sm:flex-none px-3 py-1.5 rounded-md transition-colors @(viewMode == "list" ? "bg-white dark:bg-slate-600 shadow-sm font-medium text-slate-900 dark:text-white" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300")">
-                    Lista
+                        class="px-5 py-2 rounded-xl transition-all font-black uppercase tracking-widest @(viewMode == "list" ? "bg-white dark:bg-slate-700 shadow-premium text-primary" : "text-slate-400 hover:text-slate-600")">
+                    LISTA
                 </button>
             </div>
             <AuthorizeView Roles="Admin,Manager">
-                <button @onclick="() => _modal.Show()" class="flex items-center gap-2 px-3 sm:px-4 py-2 bg-primary text-white rounded-lg text-xs sm:text-sm font-semibold hover:bg-primary/90 transition-colors shadow-sm">
-                    <span class="material-symbols-outlined text-lg">add_location</span>
-                    <span class="hidden sm:inline">Novo Ponto</span>
-                    <span class="sm:hidden">Novo</span>
+                <button @onclick="() => _modal.Show()" class="btn-vibrant px-8 py-3 flex items-center gap-2 shadow-green-glow">
+                    <span class="material-symbols-outlined font-bold">add_location</span>
+                    NOVO PONTO
                 </button>
             </AuthorizeView>
         </div>
     </div>
 
     <!-- Filters -->
-    <div class="relative z-10 bg-white dark:bg-slate-900 p-3 sm:p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row gap-3 sm:gap-4">
-        <div class="flex-1">
-            <input type="text" @bind="searchTerm" @bind:event="oninput" placeholder="Filtrar por nome ou bairro..." class="w-full text-xs sm:text-sm rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-primary focus:border-primary"/>
+    <div class="relative z-10 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-50 dark:border-slate-800 shadow-premium flex flex-col sm:flex-row gap-4">
+        <div class="relative flex-1">
+            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+            <input type="text" @bind="searchTerm" @bind:event="oninput" placeholder="Pesquisar por nome, bairro ou município..." class="w-full h-12 pl-12 pr-4 rounded-xl border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary font-bold transition-all"/>
         </div>
         <div class="flex-shrink-0">
-            <select @bind="filterStatus" class="w-full sm:w-auto text-xs sm:text-sm rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white p-2 focus:ring-primary focus:border-primary">
-                <option value="all">Todos os Status</option>
-                <option value="active">Ativos</option>
-                <option value="inactive">Inativos</option>
+            <select @bind="filterStatus" class="h-12 px-6 rounded-xl border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-black uppercase tracking-widest text-[10px] appearance-none cursor-pointer">
+                <option value="all">TODOS OS ESTADOS</option>
+                <option value="active">OPERACIONAIS</option>
+                <option value="inactive">EM MANUTENÇÃO</option>
             </select>
         </div>
     </div>
@@ -51,7 +55,7 @@
     <div class="flex-1 min-h-0 relative z-0">
         @if (viewMode == "map")
         {
-            <div class="absolute inset-0 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800">
+            <div class="absolute inset-0 rounded-3xl overflow-hidden border border-slate-50 dark:border-slate-800 shadow-premium">
                 @if (FilteredPoints != null)
                 {
                     <MapComponent Points="FilteredPoints"/>
@@ -60,47 +64,55 @@
         }
         else
         {
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 overflow-y-auto max-h-full pb-20">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 overflow-y-auto max-h-full pb-20 scrollbar-hide">
                 @if (FilteredPoints == null)
                 {
-                    <p>Carregando...</p>
+                    <div class="col-span-full flex flex-col items-center justify-center py-20 gap-4">
+                        <div class="size-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                        <span class="text-slate-400 font-black uppercase tracking-widest text-[10px]">Lendo Coordenadas...</span>
+                    </div>
                 }
                 else
                 {
                     @foreach (var p in FilteredPoints)
                     {
-                        <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm hover:shadow-md transition-shadow">
-                            <div class="flex justify-between items-start mb-3">
-                                <div class="p-2 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 rounded-lg">
-                                    <span class="material-symbols-outlined text-xl">recycling</span>
+                        <div class="group bg-white dark:bg-slate-900 rounded-3xl border border-slate-50 dark:border-slate-800 p-8 shadow-premium hover-premium transition-all">
+                            <div class="flex justify-between items-start mb-6">
+                                <div class="size-14 rounded-2xl bg-gradient-elisal/10 text-primary flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform">
+                                    <span class="material-symbols-outlined text-3xl font-bold">recycling</span>
                                 </div>
-                                <span class="@(p.IsActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700") px-2 py-0.5 rounded text-xs font-semibold">
+                                <span class="px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest @(p.IsActive ? "bg-primary-subtle text-primary border border-primary/10" : "bg-red-50 text-red-500 border border-red-100")">
                                     @(p.IsActive ? "Ativo" : "Inativo")
                                 </span>
                             </div>
 
-                            <h3 class="font-bold text-slate-900 dark:text-white mb-1 truncate">@p.Name</h3>
-                            <p class="text-sm text-slate-500 dark:text-slate-400 mb-4 h-10 line-clamp-2">@p.Address</p>
+                            <h3 class="font-black text-slate-900 dark:text-white mb-2 truncate text-xl uppercase tracking-tight">@p.Name</h3>
+                            <p class="text-sm font-bold text-slate-400 mb-6 h-10 line-clamp-2 italic leading-tight">@p.Address</p>
 
-                            <div class="space-y-2 mb-4">
-                                <div class="flex justify-between text-xs text-slate-500">
-                                    <span>Ocupação</span>
-                                    <span>@p.CurrentOccupancy.ToString("N0") / @p.Capacity.ToString("N0") kg</span>
+                            <div class="space-y-3 mb-6">
+                                <div class="flex justify-between items-end">
+                                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Nível de Ocupação</span>
+                                    <span class="text-lg font-black text-slate-900 dark:text-white">
+                                        @p.CurrentOccupancy.ToString("N0") <span class="text-[10px] text-slate-400">KG</span>
+                                    </span>
                                 </div>
-                                <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden">
-                                    @{
-                                        var percent = p.Capacity > 0 ? (p.CurrentOccupancy / p.Capacity) * 100 : 0;
-                                        var colorClass = percent > 90 ? "bg-red-500" : percent > 50 ? "bg-yellow-500" : "bg-green-500";
-                                    }
-                                    <div class="@colorClass h-2 rounded-full" style="width: @percent%"></div>
+                                @{
+                                    var percent = p.Capacity > 0 ? (p.CurrentOccupancy / p.Capacity) * 100 : 0;
+                                    var colorClass = percent > 90 ? "bg-red-500" : percent > 50 ? "bg-yellow-500" : "bg-primary shadow-green-glow";
+                                }
+                                <div class="w-full bg-slate-50 dark:bg-slate-800 rounded-full h-4 p-1 shadow-inner overflow-hidden">
+                                    <div class="@colorClass h-full rounded-full transition-all duration-1000" style="width: @percent%"></div>
                                 </div>
+                                <p class="text-right text-[8px] font-black text-slate-300 uppercase tracking-tighter">Capacidade Máxima: @p.Capacity KG</p>
                             </div>
 
-                            <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center text-xs text-slate-400">
-                                <span class="flex items-center gap-1">
-                                    <span class="material-symbols-outlined text-sm">location_city</span> @p.Municipality
+                            <div class="pt-6 border-t border-slate-50 dark:border-slate-800 flex justify-between items-center">
+                                <span class="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                    <span class="material-symbols-outlined text-lg text-primary">location_city</span> @p.Municipality
                                 </span>
-                                <button class="text-primary hover:underline">Detalhes</button>
+                                <button class="px-4 py-2 bg-slate-50 dark:bg-slate-800 rounded-xl text-[10px] font-black uppercase text-slate-600 dark:text-slate-400 hover:bg-primary hover:text-white transition-all tracking-widest">
+                                    DETALHES
+                                </button>
                             </div>
                         </div>
                     }

@@ -39,14 +39,15 @@ public class UsuarioService : IUsuarioService
 
     public async Task<UserDto> CriarUsuarioAsync(RegisterUserDto dto)
     {
-        var existingUser = await _userRepository.GetByEmailAsync(dto.Email);
+        var normalizedEmail = dto.Email.Trim().ToLowerInvariant();
+        var existingUser = await _userRepository.GetByEmailAsync(normalizedEmail);
         if (existingUser != null)
             throw new InvalidOperationException("Email já cadastrado.");
 
         var usuario = new User
         {
             Name = dto.Nome,
-            Email = dto.Email,
+            Email = normalizedEmail,
             PasswordHash = HashSenha(dto.Senha),
             Role = dto.Perfil,
             CreatedAt = DateTime.UtcNow,
@@ -78,12 +79,21 @@ public class UsuarioService : IUsuarioService
         if (user == null)
             throw new InvalidOperationException("Usuário não encontrado.");
 
+        var normalizedEmail = dto.Email.Trim().ToLowerInvariant();
+
+        // Verificar se o email já existe em outro utilizador
+        var existingUser = await _userRepository.GetByEmailAsync(normalizedEmail);
+        if (existingUser != null && existingUser.Id != id)
+            throw new InvalidOperationException("Este email já está a ser utilizado por outro utilizador.");
+
         user.Name = dto.Nome;
+        user.Email = normalizedEmail;
 
         _userRepository.Update(user);
         await _userRepository.SaveChangesAsync();
 
-        await LogActionAsync(id, "Atualizar", "Usuario", "Perfil atualizado.");
+        await LogActionAsync(id, "Atualizar", "Usuario",
+            $"Perfil atualizado. Novo Nome: {user.Name}, Novo Email: {user.Email}");
     }
 
     public async Task DesativarUsuarioAsync(int id)
@@ -144,7 +154,7 @@ public class UsuarioService : IUsuarioService
         if (user == null)
             throw new InvalidOperationException("Usuário não encontrado.");
 
-        if (user.PasswordHash != HashSenha(senhaAtual))
+        if (!BCrypt.Net.BCrypt.Verify(senhaAtual, user.PasswordHash))
             throw new InvalidOperationException("Senha atual incorreta.");
 
         user.PasswordHash = HashSenha(novaSenha);

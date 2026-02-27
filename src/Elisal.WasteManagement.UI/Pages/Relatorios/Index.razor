@@ -8,31 +8,36 @@
 
 <PageTitle>SGR Elisal - Relatórios</PageTitle>
 
-<div class="p-4 sm:p-6 lg:p-8 space-y-6 lg:space-y-8">
-    <div>
-        <h1 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">Relatórios</h1>
-        <p class="text-slate-500 dark:text-slate-400 text-xs sm:text-sm">Gere relatórios personalizados do sistema</p>
+<div class="p-6 lg:p-10 space-y-10 animate-fade-in relative overflow-hidden">
+    <div class="absolute top-0 left-0 -translate-y-1/2 -translate-x-1/2 w-96 h-96 bg-primary/5 blur-[120px] rounded-full pointer-events-none"></div>
+
+    <div class="relative z-10">
+        <h1 class="text-4xl font-black text-slate-900 dark:text-white leading-tight">
+            Central de <span class="text-gradient-green">Inteligência</span>
+        </h1>
+        <p class="text-slate-500 font-medium mt-2">Geração de relatórios analíticos e exportação de dados operacionais.</p>
     </div>
 
     <!-- Report Types Grid -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 relative z-10">
         @foreach (var tipo in tiposRelatorio)
         {
             <button @onclick="() => SelecionarTipo(tipo)"
-                    class="bg-white dark:bg-slate-900 rounded-xl border-2 @(tipoSelecionado == tipo ? "border-primary shadow-md" : "border-slate-200 dark:border-slate-800") p-5 lg:p-6 text-left hover:shadow-lg transition-all group">
-                <div class="flex items-start gap-4">
-                    <div class="p-2.5 sm:p-3 rounded-lg bg-@tipo.Color-50 dark:bg-@tipo.Color-900/20 text-@tipo.Color-600 dark:text-@tipo.Color-400 group-hover:scale-110 transition-transform flex-shrink-0">
-                        <span class="material-symbols-outlined text-2xl sm:text-3xl">@tipo.Icon</span>
+                    class="group bg-white dark:bg-slate-900 rounded-3xl border-2 transition-all p-8 text-left hover-premium @(tipoSelecionado == tipo ? "border-primary shadow-premium ring-4 ring-primary/5 scale-[1.02]" : "border-slate-50 dark:border-slate-800 shadow-sm hover:border-primary/20") relative overflow-hidden">
+
+                @if (tipoSelecionado == tipo)
+                {
+                    <div class="absolute top-0 right-0 p-2">
+                        <span class="material-symbols-outlined text-primary text-2xl font-bold animate-fade-in">check_circle</span>
                     </div>
-                    <div class="flex-1 min-w-0">
-                        <h3 class="font-bold text-slate-900 dark:text-white mb-1 text-sm sm:text-base truncate">@tipo.Nome</h3>
-                        <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 line-clamp-2 sm:line-clamp-none">@tipo.Descricao</p>
-                    </div>
-                    @if (tipoSelecionado == tipo)
-                    {
-                        <span class="material-symbols-outlined text-primary text-xl sm:text-2xl flex-shrink-0">check_circle</span>
-                    }
+                }
+
+                <div class="size-16 rounded-2xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center mb-6 group-hover:bg-primary-subtle transition-colors shadow-inner">
+                    <span class="material-symbols-outlined text-4xl text-@tipo.Color-500 font-bold group-hover:scale-110 transition-transform">@tipo.Icon</span>
                 </div>
+
+                <h3 class="font-black text-slate-900 dark:text-white mb-2 text-lg leading-tight uppercase tracking-tight">@tipo.Nome</h3>
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-relaxed">@tipo.Descricao</p>
             </button>
         }
     </div>
@@ -40,25 +45,36 @@
     <!-- Configuration Form -->
     @if (tipoSelecionado != null)
     {
-        <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-5 lg:p-6 shadow-sm animate-in fade-in slide-in-from-top-4 duration-300">
-            <h2 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white mb-6">Configurar Relatório: @tipoSelecionado.Nome</h2>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6 mb-6">
-                <div class="space-y-2">
-                    <label class="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300">Data Início</label>
-                    <input type="date" @bind="dataInicio" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-primary focus:border-primary"/>
+        <div class="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-premium border border-slate-50 dark:border-slate-800 p-10 lg:p-12 relative z-10 animate-fade-in">
+            <div class="flex items-center gap-4 mb-10 border-l-4 border-primary pl-6">
+                <div>
+                    <span class="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Configuração do Relatório</span>
+                    <h2 class="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight mt-1">@tipoSelecionado.Nome</h2>
                 </div>
-                <div class="space-y-2">
-                    <label class="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300">Data Fim</label>
-                    <input type="date" @bind="dataFim" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-primary focus:border-primary"/>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+                <div class="space-y-3">
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Início do Período</label>
+                    <div class="relative">
+                        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">calendar_today</span>
+                        <input type="date" @bind="dataInicio" class="w-full h-14 pl-12 pr-4 rounded-2xl border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-4 focus:ring-primary/10 focus:border-primary font-bold transition-all"/>
+                    </div>
+                </div>
+                <div class="space-y-3">
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Fim do Período</label>
+                    <div class="relative">
+                        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">event</span>
+                        <input type="date" @bind="dataFim" class="w-full h-14 pl-12 pr-4 rounded-2xl border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-4 focus:ring-primary/10 focus:border-primary font-bold transition-all"/>
+                    </div>
                 </div>
 
                 @if (tipoSelecionado.Id == "transacoes")
                 {
-                    <div class="space-y-2 sm:col-span-2">
-                        <label class="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300">Cooperativa (Opcional)</label>
-                        <select @bind="cooperativaId" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white p-2 text-sm focus:ring-primary focus:border-primary">
-                            <option value="">Todas</option>
+                    <div class="space-y-3 md:col-span-2">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Filtrar por Cooperativa</label>
+                        <select @bind="cooperativaId" class="w-full h-14 px-6 rounded-2xl border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-4 focus:ring-primary/10 focus:border-primary font-bold transition-all appearance-none cursor-pointer">
+                            <option value="">Todas as Cooperativas Registadas</option>
                             @foreach (var coop in cooperativas)
                             {
                                 <option value="@coop.Id">@coop.Name</option>
@@ -69,10 +85,10 @@
 
                 @if (tipoSelecionado.Id == "operadores")
                 {
-                    <div class="space-y-2 sm:col-span-2">
-                        <label class="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300">Operador (Opcional)</label>
-                        <select @bind="usuarioId" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white p-2 text-sm focus:ring-primary focus:border-primary">
-                            <option value="">Todos</option>
+                    <div class="space-y-3 md:col-span-2">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Seleção de Operador</label>
+                        <select @bind="usuarioId" class="w-full h-14 px-6 rounded-2xl border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-4 focus:ring-primary/10 focus:border-primary font-bold transition-all appearance-none cursor-pointer">
+                            <option value="">Visualizar Todos os Operadores</option>
                             @foreach (var user in usuarios)
                             {
                                 <option value="@user.Id">@user.Name</option>
@@ -82,60 +98,73 @@
                 }
             </div>
 
-            <div class="space-y-2 mb-8">
-                <label class="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300">Formato de Saída</label>
-                <div class="flex gap-6">
-                    <label class="flex items-center gap-2 cursor-pointer group">
-                        <input type="radio" name="formato" value="pdf" @onchange='() => formato = "pdf"' checked="@(formato == "pdf")" class="text-primary focus:ring-primary h-4 w-4"/>
-                        <span class="flex items-center gap-1.5 text-sm text-slate-700 dark:text-slate-300 group-hover:text-primary transition-colors">
-                            <span class="material-symbols-outlined text-red-600 text-xl">picture_as_pdf</span> PDF
+            <div class="space-y-4 mb-12">
+                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Formato de Exportação</label>
+                <div class="flex flex-wrap gap-6">
+                    <label class="flex items-center gap-4 cursor-pointer group p-4 rounded-2xl border border-slate-50 dark:border-slate-800 hover:bg-slate-50 transition-all bg-white dark:bg-slate-900">
+                        <input type="radio" name="formato" value="pdf" @onchange='() => formato = "pdf"' checked="@(formato == "pdf")" class="text-primary focus:ring-primary h-5 w-5"/>
+                        <span class="flex items-center gap-3">
+                            <span class="size-10 rounded-xl bg-red-50 flex items-center justify-center">
+                                <span class="material-symbols-outlined text-red-600 font-bold">picture_as_pdf</span>
+                            </span>
+                            <span class="text-sm font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest">Documento PDF</span>
                         </span>
                     </label>
-                    <label class="flex items-center gap-2 cursor-pointer group">
-                        <input type="radio" name="formato" value="excel" @onchange='() => formato = "excel"' checked="@(formato == "excel")" class="text-primary focus:ring-primary h-4 w-4"/>
-                        <span class="flex items-center gap-1.5 text-sm text-slate-700 dark:text-slate-300 group-hover:text-primary transition-colors">
-                            <span class="material-symbols-outlined text-green-600 text-xl">table_view</span> Excel
+                    <label class="flex items-center gap-4 cursor-pointer group p-4 rounded-2xl border border-slate-50 dark:border-slate-800 hover:bg-slate-50 transition-all bg-white dark:bg-slate-900">
+                        <input type="radio" name="formato" value="excel" @onchange='() => formato = "excel"' checked="@(formato == "excel")" class="text-primary focus:ring-primary h-5 w-5"/>
+                        <span class="flex items-center gap-3">
+                            <span class="size-10 rounded-xl bg-green-50 flex items-center justify-center">
+                                <span class="material-symbols-outlined text-green-600 font-bold">table_view</span>
+                            </span>
+                            <span class="text-sm font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest">Planilha EXCEL</span>
                         </span>
                     </label>
                 </div>
             </div>
 
-            <div class="flex flex-col sm:flex-row items-center justify-end gap-3 pt-6 border-t border-slate-200 dark:border-slate-800">
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-6 pt-10 border-t border-slate-50 dark:border-slate-800">
+                <div class="flex items-center gap-3 text-slate-400">
+                    <span class="material-symbols-outlined font-bold">info</span>
+                    <p class="text-[10px] font-bold uppercase tracking-widest">A geração pode levar alguns segundos dependendo do volume de dados.</p>
+                </div>
                 <button @onclick="GerarRelatorio" disabled="@isGenerating"
-                        class="w-full sm:w-auto px-6 py-2.5 rounded-lg bg-primary hover:bg-primary/90 text-white font-bold flex items-center justify-center gap-2 disabled:opacity-50 shadow-sm transition-all hover:translate-y-[-1px] active:translate-y-0 text-sm">
+                        class="btn-vibrant px-12 py-4 flex items-center gap-3 shadow-green-glow disabled:opacity-50 disabled:translate-y-0 group">
                     @if (isGenerating)
                     {
-                        <span class="animate-spin material-symbols-outlined text-xl">progress_activity</span>
-                        <span>Gerando...</span>
+                        <div class="size-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        <span class="font-black uppercase tracking-[0.2em]">PROCESSANDO...</span>
                     }
                     else
                     {
-                        <span class="material-symbols-outlined text-xl">download</span>
-                        <span>Gerar Relatório</span>
+                        <span class="material-symbols-outlined font-bold group-hover:animate-bounce">download</span>
+                        <span class="font-black uppercase tracking-[0.2em]">GERAR DISPONÍVEL</span>
                     }
                 </button>
             </div>
-            @if (isGenerating)
-            {
-                <span class="animate-spin material-symbols-outlined">progress_activity</span>
-                <span>Gerando...</span>
-            }
-            else
-            {
-                <span class="material-symbols-outlined">download</span>
-                <span>Gerar Relatório</span>
-            }
         </div>
 
         @if (!string.IsNullOrEmpty(errorMessage))
         {
-            <div class="mt-4 p-4 rounded-lg bg-red-50 border border-red-200 text-red-700 flex items-center gap-3">
-                <span class="material-symbols-outlined">error</span>
-                <span>@errorMessage</span>
+            <div class="mt-8 p-6 rounded-3xl bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/20 text-red-600 flex items-center gap-4 animate-fade-in">
+                <span class="material-symbols-outlined font-bold text-3xl">error_outline</span>
+                <div>
+                    <p class="text-xs font-black uppercase tracking-widest">Falha na Operação</p>
+                    <p class="text-sm font-bold">@errorMessage</p>
+                </div>
             </div>
         }
     }
 </div>
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="mt-4 p-4 rounded-lg bg-red-50 border border-red-200 text-red-700 flex items-center gap-3">
+        <span class="material-symbols-outlined">error</span>
+        <span>@errorMessage</span>
+    </div>
+}
+
+
 
 @code {
     private TipoRelatorio tipoSelecionado;

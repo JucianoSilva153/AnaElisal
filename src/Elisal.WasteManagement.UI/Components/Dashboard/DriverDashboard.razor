@@ -1,0 +1,172 @@
+@using Elisal.WasteManagement.Application.DTOs
+@inject NavigationManager Navigation
+
+<div class="space-y-6 lg:space-y-8 animate-fade-in">
+    <!-- Driver Intro -->
+    <div class="bg-gradient-elisal rounded-2xl p-6 lg:p-10 text-white shadow-green-glow overflow-hidden relative border border-white/20">
+        <div class="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+            <div class="space-y-2">
+                <h2 class="text-3xl lg:text-4xl font-extrabold tracking-tight">Boa jornada de trabalho!</h2>
+                <p class="text-white/90 text-lg max-w-md font-medium">O seu contributo é essencial para uma cidade mais limpa.</p>
+            </div>
+            <button @onclick="GoToRoutes" class="px-8 py-4 bg-white text-primary-dark rounded-2xl font-bold shadow-premium hover:scale-105 active:scale-95 transition-all flex items-center gap-3">
+                <span class="material-symbols-outlined font-bold">route</span> Ver Minhas Rotas
+            </button>
+        </div>
+        <!-- Decorative icon -->
+        <span class="material-symbols-outlined absolute -right-6 -bottom-6 text-white/10 text-[12rem] select-none">local_shipping</span>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border-b-4 border-b-primary shadow-premium hover-premium flex items-center gap-5">
+            <div class="size-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-inner">
+                <span class="material-symbols-outlined text-3xl font-bold">analytics</span>
+            </div>
+            <div>
+                <p class="text-xs text-slate-500 font-bold uppercase tracking-wider">Volume Mensal</p>
+                <div class="flex items-baseline gap-1">
+                    <p class="text-3xl font-black text-slate-900 dark:text-white">@Stats.MeuAproveitamentoKg</p>
+                    <span class="text-sm font-bold text-slate-400">Kg</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border-b-4 border-b-blue-500 shadow-premium hover-premium flex items-center gap-5">
+            <div class="size-14 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600 shadow-inner">
+                <span class="material-symbols-outlined text-3xl font-bold">task_alt</span>
+            </div>
+            <div>
+                <p class="text-xs text-slate-500 font-bold uppercase tracking-wider">Rotas Concluídas</p>
+                <p class="text-3xl font-black text-slate-900 dark:text-white">@Stats.MinhasRotasConcluidas</p>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border-b-4 border-b-orange-500 shadow-premium hover-premium flex items-center gap-5">
+            <div class="size-14 rounded-2xl bg-orange-50 flex items-center justify-center text-orange-600 shadow-inner">
+                <span class="material-symbols-outlined text-3xl font-bold">priority_high</span>
+            </div>
+            <div>
+                <p class="text-xs text-slate-500 font-bold uppercase tracking-wider">Alertas</p>
+                <p class="text-3xl font-black text-slate-900 dark:text-white">@Stats.AlertasOperacionais</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Rotas Ativas -->
+        <div class="lg:col-span-1 bg-white dark:bg-slate-900 p-8 rounded-3xl border border-primary/20 shadow-premium relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16"></div>
+
+            <h3 class="font-black text-slate-900 dark:text-white text-xl mb-6 flex items-center gap-3 relative">
+                <span class="size-8 rounded-lg bg-primary text-white flex items-center justify-center shadow-green-glow">
+                    <span class="material-symbols-outlined text-sm font-bold">navigation</span>
+                </span>
+                Rota em Curso
+            </h3>
+
+            @if (Stats.ProximaRota != null)
+            {
+                <div class="space-y-6 relative">
+                    <div class="p-5 bg-primary-subtle dark:bg-primary/10 rounded-2xl border border-primary/10">
+                        <p class="text-xs text-primary font-black uppercase tracking-widest">@Stats.ProximaRota.Nome</p>
+                        <p class="text-base font-bold text-slate-700 dark:text-slate-300 mt-2 line-clamp-2">@Stats.ProximaRota.Descricao</p>
+                    </div>
+
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-end">
+                            <p class="text-xs text-slate-500 uppercase font-bold tracking-wider">Progresso da Coleta</p>
+                            <p class="text-2xl font-black text-primary">
+                                @Stats.ProximaRota.PontosConcluidos<span class="text-slate-300 text-lg mx-1">/</span>@Stats.ProximaRota.TotalPontos
+                            </p>
+                        </div>
+                        <div class="w-full bg-slate-100 dark:bg-slate-800 h-3 rounded-full overflow-hidden">
+                            <div class="bg-gradient-elisal h-full rounded-full transition-all duration-1000 shadow-green-glow"
+                                 style="width: @(Stats.ProximaRota.TotalPontos > 0 ? (Stats.ProximaRota.PontosConcluidos * 100 / Stats.ProximaRota.TotalPontos) : 0)%">
+                            </div>
+                        </div>
+                    </div>
+
+                    <button @onclick='() => Navigation.NavigateTo($"/rotas/{Stats.ProximaRota.Id}/executar")'
+                            class="w-full py-4 bg-primary hover:bg-primary-dark text-white rounded-2xl font-black shadow-green-glow hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3">
+                        <span class="material-symbols-outlined font-bold">play_circle</span>
+                        Continuar Jornada
+                    </button>
+                </div>
+            }
+            else
+            {
+                <div class="py-12 text-center space-y-4">
+                    <div class="size-20 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto text-slate-400">
+                        <span class="material-symbols-outlined text-4xl">route</span>
+                    </div>
+                    <p class="text-slate-500 font-medium">Nenhuma rota ativa no momento.</p>
+                    <button @onclick="GoToRoutes" class="px-6 py-2 border-2 border-primary text-primary rounded-xl text-sm font-black hover:bg-primary hover:text-white transition-all">Iniciar Nova Rota</button>
+                </div>
+            }
+        </div>
+
+        <!-- Impacto Ambiental Pessoal -->
+        <div class="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-premium">
+            <h3 class="font-black text-slate-900 dark:text-white text-xl mb-8">O Meu Impacto</h3>
+            <div class="space-y-6">
+                @if (Stats.ImpactoAmbientalPessoal?.Any() == true)
+                {
+                    @foreach (var item in Stats.ImpactoAmbientalPessoal)
+                    {
+                        <div class="space-y-2">
+                            <div class="flex justify-between text-sm font-bold">
+                                <span class="text-slate-600 dark:text-slate-400">@item.Category</span>
+                                <span class="text-slate-900 dark:text-white">@item.Percentage%</span>
+                            </div>
+                            <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2.5 overflow-hidden">
+                                <div class="h-full rounded-full transition-all duration-1000" style="width: @(item.Percentage)%; background-color: @item.Color;"></div>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="py-12 text-center text-slate-400 italic font-medium">Sem dados de coleta este mês.</div>
+                }
+            </div>
+        </div>
+
+        <!-- Recent Coletas -->
+        <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-premium overflow-hidden flex flex-col">
+            <div class="p-6 border-b border-slate-100 dark:border-slate-800">
+                <h3 class="font-black text-slate-900 dark:text-white text-xl">Últimas Coletas</h3>
+            </div>
+            <div class="overflow-y-auto flex-1 h-[320px]">
+                <table class="w-full text-left">
+                    <thead class="bg-slate-50 dark:bg-slate-800/50 text-slate-400 text-[10px] uppercase font-black tracking-widest sticky top-0 z-10">
+                    <tr>
+                        <th class="px-6 py-4">Ponto</th>
+                        <th class="px-6 py-4">Peso</th>
+                        <th class="px-6 py-4 text-right">Data</th>
+                    </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-50 dark:divide-slate-800 text-sm font-medium">
+                    @foreach (var record in Stats.ColetasRecentes.Take(5))
+                    {
+                        <tr class="hover:bg-primary-subtle/50 dark:hover:bg-primary/5 transition-colors group">
+                            <td class="px-6 py-4 text-slate-900 dark:text-white truncate max-w-[140px] group-hover:text-primary">@record.Localizacao</td>
+                            <td class="px-6 py-4 text-slate-600 dark:text-slate-400 font-bold">@record.Peso</td>
+                            <td class="px-6 py-4 text-right text-slate-400 text-xs">@record.DataHora.Split(' ')[0]</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+            <div class="p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800">
+                <button class="w-full text-center text-sm font-black text-primary hover:text-primary-dark transition-colors">Ver Histórico Completo</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public DashboardStatsDto Stats { get; set; } = new();
+
+    private void GoToRoutes() => Navigation.NavigateTo("/rotas");
+}

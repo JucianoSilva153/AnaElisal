@@ -1,0 +1,144 @@
+@page "/rotas/execucoes"
+@using Elisal.WasteManagement.Application.DTOs
+@using Elisal.WasteManagement.Domain.Entities
+@inject HttpClient Http
+@inject IJSRuntime JS
+@attribute [Authorize]
+
+<div class="p-4 lg:p-8 max-w-7xl mx-auto animate-fade-in">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+        <div>
+            <h1 class="text-4xl font-black text-slate-900 dark:text-white leading-tight">
+                Centro de <span class="text-gradient-green">Execuções</span>
+            </h1>
+            <p class="text-slate-500 font-medium mt-2">Monitoramento de rotas em tempo real e histórico operacional.</p>
+        </div>
+        
+        <div class="flex bg-slate-100 dark:bg-slate-800 p-1.5 rounded-2xl shadow-inner">
+            <button @onclick="() => SetTab(true)" class="px-6 py-2.5 rounded-xl text-sm font-black transition-all @(showInProgress ? "bg-white dark:bg-slate-700 text-primary shadow-premium" : "text-slate-500 hover:text-slate-700")">
+                EM CURSO
+            </button>
+            <button @onclick="() => SetTab(false)" class="px-6 py-2.5 rounded-xl text-sm font-black transition-all @(!showInProgress ? "bg-white dark:bg-slate-700 text-primary shadow-premium" : "text-slate-500 hover:text-slate-700")">
+                CONCLUÍDAS
+            </button>
+        </div>
+    </div>
+
+    @if (loading)
+    {
+        <div class="flex flex-col items-center justify-center py-24 space-y-4">
+            <div class="size-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+            <p class="text-slate-500 font-black animate-pulse">CARREGANDO DADOS...</p>
+        </div>
+    }
+    else if (filteredExecutions.Any())
+    {
+        <div class="grid grid-cols-1 gap-6">
+            @foreach (var exec in filteredExecutions)
+            {
+                <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-premium border border-slate-100 dark:border-slate-800 p-6 lg:p-8 hover-premium transition-all relative overflow-hidden group">
+                    @if (exec.Status == RouteExecutionStatus.InProgress)
+                    {
+                        <div class="absolute right-0 top-0 h-full w-2 bg-primary animate-pulse"></div>
+                    }
+
+                    <div class="flex flex-col lg:flex-row lg:items-center gap-8">
+                        <!-- Icon & Main Info -->
+                        <div class="flex items-center gap-6 flex-1">
+                            <div class="size-16 rounded-2xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-primary shadow-inner group-hover:scale-110 transition-transform">
+                                <span class="material-symbols-outlined text-3xl font-bold">@(exec.Status == RouteExecutionStatus.InProgress ? "motion_photos_on" : "task_alt")</span>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">@exec.RouteName</h3>
+                                <div class="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1">
+                                    <span class="flex items-center gap-1.5 text-sm font-bold text-slate-500">
+                                        <span class="material-symbols-outlined text-sm">person</span> @exec.DriverName
+                                    </span>
+                                    <span class="flex items-center gap-1.5 text-sm font-bold text-slate-400">
+                                        <span class="material-symbols-outlined text-sm">schedule</span> @exec.StartTime.ToLocalTime().ToString("dd/MM HH:mm")
+                                    </span>
+                                    @if (exec.EndTime.HasValue)
+                                    {
+                                        <span class="flex items-center gap-1.5 text-sm font-bold text-green-600">
+                                            <span class="material-symbols-outlined text-sm">done_all</span> @exec.Duration
+                                        </span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Progress Section -->
+                        <div class="lg:w-80 flex flex-col gap-3">
+                            <div class="flex justify-between items-baseline mb-1">
+                                <span class="text-xs font-black text-slate-400 uppercase tracking-widest">Progresso da Recolha</span>
+                                <span class="text-lg font-black text-primary">@exec.PercentageComplete%</span>
+                            </div>
+                            <div class="w-full bg-slate-100 dark:bg-slate-800 h-4 rounded-full shadow-inner overflow-hidden flex items-center px-1">
+                                <div class="h-2 rounded-full @(exec.Status == RouteExecutionStatus.InProgress ? "bg-primary shadow-green-glow" : "bg-slate-400") transition-all duration-1000" style="width: @(exec.PercentageComplete)%"></div>
+                            </div>
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-tighter text-right">
+                                @exec.PointsCompleted de @exec.TotalPoints pontos recolhidos
+                            </p>
+                        </div>
+
+                        <!-- Action -->
+                        <div class="flex items-center justify-end">
+                            <a href="/rotas/@exec.RouteId/executar" class="px-6 py-3 rounded-2xl bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-sm font-black hover:bg-primary hover:text-white transition-all shadow-sm flex items-center gap-2">
+                                DETALHES <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="bg-white dark:bg-slate-900 rounded-3xl p-20 flex flex-col items-center justify-center text-center space-y-6 border border-dashed border-slate-200 dark:border-slate-800 shadow-sm">
+            <div class="size-24 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-300">
+                <span class="material-symbols-outlined text-6xl">history</span>
+            </div>
+            <div>
+                <h3 class="text-xl font-black text-slate-900 dark:text-white uppercase">Nada por aqui</h3>
+                <p class="text-slate-500 font-medium max-w-sm mx-auto mt-2">Nenhuma execução encontrada nesta categoria. Inicie uma nova rota para começar!</p>
+            </div>
+            <a href="/rotas" class="btn-vibrant px-8 py-3">IR PARA ROTAS</a>
+        </div>
+    }
+</div>
+
+@code {
+    private List<RouteExecutionSummaryDto> allExecutions = new();
+    private IEnumerable<RouteExecutionSummaryDto> filteredExecutions => 
+        allExecutions.Where(e => showInProgress ? e.Status == RouteExecutionStatus.InProgress : e.Status == RouteExecutionStatus.Completed);
+    
+    private bool showInProgress = true;
+    private bool loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        try 
+        {
+            loading = true;
+            allExecutions = await Http.GetFromJsonAsync<List<RouteExecutionSummaryDto>>("api/routeexecution/history") ?? new();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+        finally 
+        {
+            loading = false;
+        }
+    }
+
+    private void SetTab(bool inProgress)
+    {
+        showInProgress = inProgress;
+    }
+}

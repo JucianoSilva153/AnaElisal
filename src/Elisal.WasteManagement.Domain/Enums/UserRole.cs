@@ -4,6 +4,5 @@ public enum UserRole
 {
     Admin,
     Manager, // Gestor
-    Driver, // Motorista
-    Citizen // Munícipe
+    Driver // Motorista
 }

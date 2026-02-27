@@ -1,0 +1,148 @@
+@using Elisal.WasteManagement.Application.DTOs
+@inject IJSRuntime JS
+
+<div class="space-y-8 animate-fade-in">
+    <!-- KPIs -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="bg-white dark:bg-slate-900 p-8 rounded-2xl shadow-premium hover-premium border-t-4 border-t-primary relative overflow-hidden">
+            <div class="absolute -right-4 -top-4 size-20 bg-primary/5 rounded-full"></div>
+            <div class="flex justify-between items-start mb-4">
+                <span class="text-sm font-black text-slate-400 uppercase tracking-widest">Total Resíduos</span>
+                <span class="@(Stats.VariacaoTotalResiduos >= 0 ? "text-green-600 bg-green-50" : "text-red-600 bg-red-50") text-xs px-3 py-1 rounded-full font-black shadow-sm">
+                    @(Stats.VariacaoTotalResiduos >= 0 ? "↑" : "↓") @Math.Abs(Stats.VariacaoTotalResiduos)%
+                </span>
+            </div>
+            <p class="text-4xl font-black text-slate-900 dark:text-white mb-1">
+                @Stats.TotalResiduosMensal <span class="text-lg font-bold text-slate-400">Ton</span>
+            </p>
+            <p class="text-xs font-bold text-primary italic">Relatório Mensal Elisal</p>
+        </div>
+
+        <div class="bg-white dark:bg-slate-900 p-8 rounded-2xl shadow-premium hover-premium border-t-4 border-t-blue-500 relative overflow-hidden">
+            <div class="absolute -right-4 -top-4 size-20 bg-blue-500/5 rounded-full"></div>
+            <div class="flex justify-between items-start mb-4">
+                <span class="text-sm font-black text-slate-400 uppercase tracking-widest">Reaproveitamento</span>
+                <span class="text-blue-600 bg-blue-50 text-xs px-3 py-1 rounded-full font-black shadow-sm">Meta 50%</span>
+            </div>
+            <p class="text-4xl font-black text-slate-900 dark:text-white mb-4">@Stats.TaxaReaproveitamento%</p>
+            <div class="w-full bg-slate-100 dark:bg-slate-800 h-3 rounded-full overflow-hidden shadow-inner">
+                <div class="bg-gradient-to-r from-blue-400 to-blue-600 h-full rounded-full shadow-lg" style="width: @(Stats.TaxaReaproveitamento)%"></div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-900 p-8 rounded-2xl shadow-premium hover-premium border-t-4 border-t-emerald-500 relative overflow-hidden">
+            <div class="absolute -right-4 -top-4 size-20 bg-emerald-500/5 rounded-full"></div>
+            <div class="flex justify-between items-start mb-4">
+                <span class="text-sm font-black text-slate-400 uppercase tracking-widest">Pontos Ativos</span>
+                <div class="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 rounded-full">
+                    <span class="size-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                    <span class="text-emerald-600 text-[10px] font-black uppercase">Online</span>
+                </div>
+            </div>
+            <p class="text-4xl font-black text-slate-900 dark:text-white mb-1">@Stats.PontosAtivos</p>
+            <p class="text-xs font-bold text-slate-400 uppercase">Rede Operacional</p>
+        </div>
+
+        <div class="bg-gradient-elisal p-8 rounded-2xl shadow-green-glow hover-premium text-white relative overflow-hidden">
+            <span class="material-symbols-outlined absolute -right-4 -bottom-4 text-white/20 text-8xl rotate-12">warning</span>
+            <div class="flex justify-between items-start mb-4">
+                <span class="text-sm font-black text-white/80 uppercase tracking-widest">Incidentes</span>
+                <span class="bg-white/20 backdrop-blur-md text-white text-xs px-3 py-1 rounded-full font-black border border-white/20">Urgente</span>
+            </div>
+            <p class="text-5xl font-black mb-1">@Stats.AlertasOperacionais</p>
+            <p class="text-xs font-bold text-white/90 uppercase tracking-widest">Alertas Críticos</p>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div class="lg:col-span-12 bg-white dark:bg-slate-900 rounded-3xl shadow-premium border border-slate-100 dark:border-slate-800 p-8">
+            <div class="flex items-center justify-between mb-10">
+                <h2 class="text-2xl font-black text-slate-900 dark:text-white flex items-center gap-3">
+                    <span class="size-8 bg-primary rounded-lg flex items-center justify-center shadow-green-glow">
+                        <span class="material-symbols-outlined text-white text-sm font-bold">trending_up</span>
+                    </span>
+                    Performance Operacional
+                </h2>
+                <div class="flex gap-2">
+                    <button class="px-4 py-2 bg-slate-50 dark:bg-slate-800 rounded-xl text-xs font-black text-slate-600 hover:bg-slate-100 transition-colors">Semanal</button>
+                    <button class="px-4 py-2 bg-primary text-white rounded-xl text-xs font-black shadow-green-glow">Mensal</button>
+                </div>
+            </div>
+            <div class="relative h-80 w-full">
+                <canvas id="volumeChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-premium border border-slate-100 dark:border-slate-800 p-8">
+            <h2 class="text-xl font-black text-slate-900 dark:text-white mb-8 border-l-4 border-primary pl-4">Categorias de Resíduos</h2>
+            <div class="space-y-6">
+                @foreach (var item in Stats.DistribuicaoPorTipo)
+                {
+                    <div class="space-y-3 p-4 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                        <div class="flex justify-between text-sm font-black">
+                            <span class="text-slate-500 uppercase">@item.Category</span>
+                            <span class="text-slate-900 dark:text-white text-lg">@item.Percentage%</span>
+                        </div>
+                        <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-3 overflow-hidden shadow-inner">
+                            <div class="h-full rounded-full transition-all duration-1000 shadow-md" style="width: @(item.Percentage)%; background-color: @item.Color;"></div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-premium border border-slate-100 dark:border-slate-800 overflow-hidden flex flex-col">
+            <div class="p-8 border-b border-slate-50 dark:border-slate-800">
+                <h2 class="text-xl font-black text-slate-900 dark:text-white flex items-center justify-between">
+                    Atividades de Recolha
+                    <span class="text-xs font-bold text-primary hover:underline cursor-pointer">Ver Tudo</span>
+                </h2>
+            </div>
+            <div class="flex-1 overflow-y-auto max-h-[400px]">
+                <div class="divide-y divide-slate-50 dark:divide-slate-800">
+                    @foreach (var record in Stats.ColetasRecentes)
+                    {
+                        <div class="flex items-center gap-5 p-6 hover:bg-primary-subtle transition-colors group">
+                            <div class="size-14 rounded-2xl bg-white shadow-premium border border-slate-100 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                                <span class="material-symbols-outlined text-2xl font-bold">local_shipping</span>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <h4 class="text-base font-black text-slate-900 dark:text-white truncate">@record.Localizacao</h4>
+                                <div class="flex items-center gap-2 mt-1">
+                                    <span class="text-[10px] font-black text-slate-400 uppercase">@record.DataHora</span>
+                                    <span class="size-1 bg-slate-300 rounded-full"></span>
+                                    <span class="text-[10px] font-black text-primary uppercase">@record.Tipo</span>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-lg font-black text-slate-900 dark:text-white">@record.Peso</p>
+                                <div class="flex items-center justify-end gap-1.5">
+                                    <span class="size-1.5 bg-green-500 rounded-full shadow-green-glow"></span>
+                                    <span class="text-[10px] text-green-600 font-extrabold uppercase tracking-widest">OK</span>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public DashboardStatsDto Stats { get; set; } = new();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && Stats != null)
+        {
+            var labels = Stats.VolumeMensal.Select(s => s.Label).ToArray();
+            var values = Stats.VolumeMensal.Select(s => s.Value).ToArray();
+            await JS.InvokeVoidAsync("dashboardCharts.renderLineChart", "volumeChart", labels, values);
+        }
+    }
+
+}

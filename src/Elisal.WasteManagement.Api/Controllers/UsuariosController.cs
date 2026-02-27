@@ -79,10 +79,41 @@ public class UsuariosController : ControllerBase
         return Ok(dtos);
     }
 
+    /// <summary>
+    /// Retorna os dados do utilizador autenticado. Acessível por qualquer papel.
+    /// </summary>
+    [HttpGet("me")]
+    [Authorize]
+    public async Task<IActionResult> GetMe()
+    {
+        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
+            return Unauthorized();
+
+        var user = await _userRepository.GetByIdAsync(userId);
+        if (user == null) return NotFound();
+
+        return Ok(new UserDto
+        {
+            Id = user.Id,
+            Name = user.Name,
+            Email = user.Email,
+            Role = user.Role,
+            IsActive = user.IsActive
+        });
+    }
+
     [HttpGet("{id}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     public async Task<IActionResult> GetById(int id)
     {
+        // Permite ao próprio utilizador aceder aos seus dados, ou a um Admin aceder a qualquer um
+        var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        var isAdmin = User.IsInRole("Admin");
+
+        if (!isAdmin && currentUserId != id.ToString())
+            return Forbid();
+
         var user = await _userRepository.GetByIdAsync(id);
         if (user == null) return NotFound();
 

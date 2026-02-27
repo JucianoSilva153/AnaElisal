@@ -4,46 +4,47 @@
 @using Elisal.WasteManagement.Domain.Enums
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components.Authorization
+@inject NotificationService Notification
 
 <PageTitle>SGR Elisal - Transações</PageTitle>
 
-<div class="p-4 sm:p-6 lg:p-8 space-y-6 lg:space-y-8">
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+<div class="p-6 lg:p-10 space-y-10 animate-fade-in">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
         <div>
-            <h1 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">Transações com Cooperativas</h1>
-            <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">Histórico de vendas de material reciclável</p>
+            <h1 class="text-4xl font-black text-slate-900 dark:text-white leading-tight">
+                Fluxo de <span class="text-gradient-green">Transações</span>
+            </h1>
+            <p class="text-slate-500 font-medium mt-2">Histórico financeiro e comercial de venda de materiais recicláveis.</p>
         </div>
-        <div class="flex flex-wrap gap-2 sm:gap-3">
-            <button class="flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-600 dark:text-slate-300 text-xs sm:text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
-                <span class="material-symbols-outlined text-lg">download</span>
-                Relatório
+        <div class="flex flex-wrap gap-3">
+            <button class="flex items-center justify-center gap-2 px-6 py-3 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl text-slate-600 dark:text-slate-300 text-sm font-black hover:shadow-premium transition-all">
+                <span class="material-symbols-outlined text-lg font-bold">download</span>
+                <span class="hidden sm:inline">RELATÓRIO</span>
             </button>
             <AuthorizeView Roles="Admin,Manager">
-                <button @onclick="() => _transacaoModal.Show()"
-                        class="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg text-sm font-bold transition-colors shadow-sm">
-                    <span class="material-symbols-outlined text-lg">add_circle</span>
-                    <span class="hidden sm:inline">Nova Transação</span>
-                    <span class="sm:hidden">Nova</span>
+                <button @onclick="() => _transacaoModal.Show()" class="btn-vibrant px-8 py-3 flex items-center gap-2 shadow-green-glow">
+                    <span class="material-symbols-outlined font-bold">add_circle</span>
+                    NOVA TRANSAÇÃO
                 </button>
             </AuthorizeView>
         </div>
     </div>
 
     <!-- Filtros -->
-    <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-4">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div>
-                <label class="block text-[10px] font-semibold text-slate-500 uppercase mb-1">Data Início</label>
-                <input type="date" @bind="startDate" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white p-2 text-sm focus:ring-primary focus:border-primary"/>
+    <div class="bg-white dark:bg-slate-900 p-8 rounded-3xl shadow-premium border border-slate-50 dark:border-slate-800">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="space-y-2">
+                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Início do Período</label>
+                <input type="date" @bind="startDate" class="w-full h-12 px-4 rounded-xl border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary font-bold transition-all"/>
             </div>
-            <div>
-                <label class="block text-[10px] font-semibold text-slate-500 uppercase mb-1">Data Fim</label>
-                <input type="date" @bind="endDate" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white p-2 text-sm focus:ring-primary focus:border-primary"/>
+            <div class="space-y-2">
+                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Fim do Período</label>
+                <input type="date" @bind="endDate" class="w-full h-12 px-4 rounded-xl border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary font-bold transition-all"/>
             </div>
-            <div class="sm:col-span-2 lg:col-span-1">
-                <label class="block text-[10px] font-semibold text-slate-500 uppercase mb-1">Cooperativa</label>
-                <select @bind="selectedCoopId" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white p-2 text-sm focus:ring-primary focus:border-primary">
-                    <option value="0">Todas</option>
+            <div class="space-y-2">
+                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Cooperativa Destino</label>
+                <select @bind="selectedCoopId" class="w-full h-12 px-4 rounded-xl border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary font-bold transition-all appearance-none cursor-pointer">
+                    <option value="0">Todas as Unidades</option>
                     @if (cooperativas != null)
                     {
                         @foreach (var c in cooperativas)
@@ -53,52 +54,83 @@
                     }
                 </select>
             </div>
-            <div class="flex items-end lg:col-span-1">
-                <button @onclick="LoadData" class="w-full px-4 py-2 bg-slate-900 dark:bg-slate-700 text-white rounded-lg text-sm font-medium hover:bg-slate-800 dark:hover:bg-slate-600 transition-colors flex items-center justify-center gap-2">
-                    <span class="material-symbols-outlined text-lg">search</span> Filtrar
+            <div class="flex items-end">
+                <button @onclick="LoadData" class="w-full h-12 bg-slate-900 dark:bg-slate-700 text-white rounded-xl text-sm font-black hover:bg-black transition-all flex items-center justify-center gap-2 shadow-lg uppercase tracking-widest">
+                    <span class="material-symbols-outlined text-lg font-bold">search</span> Pesquisar
                 </button>
             </div>
         </div>
     </div>
 
     <!-- Tabela -->
-    <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-premium border border-slate-50 dark:border-slate-800 overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full text-left">
-                <thead class="bg-slate-50 dark:bg-slate-800/50">
+                <thead class="bg-slate-50 dark:bg-slate-800/50 text-slate-400 text-[10px] font-black uppercase tracking-widest border-b border-slate-100 dark:border-slate-800">
                 <tr>
-                    <th class="text-left px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Data</th>
-                    <th class="text-left px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Cooperativa</th>
-                    <th class="text-left px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Tipo Resíduo</th>
-                    <th class="text-right px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Qtd (Kg)</th>
-                    <th class="text-right px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Valor</th>
-                    <th class="text-center px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Estado</th>
+                    <th class="px-8 py-5">Data Operação</th>
+                    <th class="px-8 py-5">Cooperativa</th>
+                    <th class="px-8 py-5">Tipo Resíduo</th>
+                    <th class="px-8 py-5 text-right">Qtd (Kg)</th>
+                    <th class="px-8 py-5 text-right">Valor Total</th>
+                    <th class="px-8 py-5 text-center">Status</th>
                 </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-                @if (transacoes != null)
+                <tbody class="divide-y divide-slate-50 dark:divide-slate-800/50 text-sm">
+                @if (transacoes == null)
+                {
+                    <tr>
+                        <td colspan="6" class="px-8 py-12 text-center">
+                            <div class="flex flex-col items-center gap-3">
+                                <div class="size-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                                <span class="text-slate-400 font-black uppercase tracking-widest text-[10px]">Lendo Transações...</span>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                else if (transacoes.Count == 0)
+                {
+                    <tr>
+                        <td colspan="6" class="px-8 py-20 text-center">
+                            <div class="flex flex-col items-center gap-4">
+                                <span class="material-symbols-outlined text-slate-200 text-6xl font-light">receipt_long</span>
+                                <p class="text-slate-400 font-bold uppercase tracking-widest text-xs">Sem movimentações no período</p>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                else
                 {
                     @foreach (var t in transacoes)
                     {
-                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                            <td class="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">@t.DateTime.ToString("dd/MM/yyyy")</td>
-                            <td class="px-6 py-4 text-sm font-medium text-slate-900 dark:text-white">
-                                @(cooperativas?.FirstOrDefault(c => c.Id == t.CooperativeId)?.Name ?? "—")
+                        <tr class="hover:bg-primary-subtle/30 transition-colors">
+                            <td class="px-8 py-5 whitespace-nowrap text-slate-500 font-bold italic">@t.DateTime.ToString("dd/MM/yyyy")</td>
+                            <td class="px-8 py-5">
+                                <span class="font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                                    @(cooperativas?.FirstOrDefault(c => c.Id == t.CooperativeId)?.Name ?? "SEM IDENTIFICAÇÃO")
+                                </span>
                             </td>
-                            <td class="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">
-                                @(wasteTypes?.FirstOrDefault(w => w.Id == t.WasteTypeId)?.Name ?? "—")
+                            <td class="px-8 py-5">
+                                <span class="px-3 py-1 bg-white dark:bg-slate-800 text-primary border border-primary/10 rounded-lg text-[10px] font-black uppercase tracking-tighter shadow-sm">
+                                    @(wasteTypes?.FirstOrDefault(w => w.Id == t.WasteTypeId)?.Name ?? "OUTROS")
+                                </span>
                             </td>
-                            <td class="px-6 py-4 text-sm text-right text-slate-600 dark:text-slate-400">@t.AmountKg.ToString("N1")</td>
-                            <td class="px-6 py-4 text-sm text-right font-medium text-slate-900 dark:text-white">@t.TotalValue.ToString("C0")</td>
-                            <td class="px-6 py-4 text-center">
+                            <td class="px-8 py-5 text-right font-black text-slate-900 dark:text-white">@t.AmountKg.ToString("N1")</td>
+                            <td class="px-8 py-5 text-right">
+                                <div class="flex flex-col items-end leading-none">
+                                    <span class="text-lg font-black text-primary">@t.TotalValue.ToString("C0")</span>
+                                    <span class="text-[8px] font-black text-slate-300 uppercase">Kwanza</span>
+                                </div>
+                            </td>
+                            <td class="px-8 py-5 text-center">
                                 <AuthorizeView Roles="Admin,Manager">
                                     <Authorized>
-                                        <button @onclick="() => ToggleStatus(t)" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium cursor-pointer transition-colors @GetStatusClass(t.Status)" title="Clique para alterar status">
+                                        <button @onclick="() => ToggleStatus(t)" class="px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest cursor-pointer transition-all shadow-sm @GetStatusClass(t.Status)" title="Clique para alterar status">
                                             @GetStatusText(t.Status)
                                         </button>
                                     </Authorized>
                                     <NotAuthorized>
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium @GetStatusClass(t.Status)">
+                                        <span class="px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest @GetStatusClass(t.Status)">
                                             @GetStatusText(t.Status)
                                         </span>
                                     </NotAuthorized>
@@ -168,11 +200,17 @@
             var response = await Http.PutAsJsonAsync($"api/cooperativas/transacoes/{transaction.Id}/status", new { Status = nextStatus });
             if (response.IsSuccessStatusCode)
             {
+                Notification.ShowSuccess($"Transação {transaction.Id} atualizada para {GetStatusText(transaction.Status switch { TransactionStatus.Pending => TransactionStatus.Completed, TransactionStatus.Completed => TransactionStatus.Cancelled, _ => TransactionStatus.Pending })}");
                 await LoadData();
             }
+            else
+            {
+                Notification.ShowError("Erro ao atualizar o estado da transação.");
+            }
         }
-        catch
+        catch (Exception ex)
         {
+            Notification.ShowError($"Erro de conexão: {ex.Message}");
         }
     }
 

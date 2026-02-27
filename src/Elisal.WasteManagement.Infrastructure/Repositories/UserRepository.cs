@@ -14,6 +14,7 @@ public class UserRepository : Repository<User>, IUserRepository
 
     public async Task<User?> GetByEmailAsync(string email)
     {
-        return await _dbSet.FirstOrDefaultAsync(u => u.Email == email);
+        var normalizedEmail = email?.Trim().ToLowerInvariant();
+        return await _dbSet.FirstOrDefaultAsync(u => u.Email.ToLower() == normalizedEmail);
     }
 }

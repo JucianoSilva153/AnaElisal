@@ -38,7 +38,7 @@ public class RotaService : IRotaService
             var nearest = remaining
                 .OrderBy(p => CalcularDistancia(current.Latitude, current.Longitude, p.Latitude, p.Longitude))
                 .First();
-            
+
             optimized.Add(nearest);
             remaining.Remove(nearest);
             current = nearest;
@@ -56,11 +56,30 @@ public class RotaService : IRotaService
         for (int i = 0; i < pontos.Count - 1; i++)
         {
             totalDistance += CalcularDistancia(
-                pontos[i].Latitude, 
+                pontos[i].Latitude,
                 pontos[i].Longitude,
                 pontos[i + 1].Latitude,
                 pontos[i + 1].Longitude);
         }
+
+        return totalDistance;
+    }
+
+    public async Task<double> CalcularDistanciaTotal(List<CollectionPoint> pontos)
+    {
+        if (pontos == null || pontos.Count <= 1)
+            return 0;
+
+        double totalDistance = 0;
+        for (int i = 0; i < pontos.Count - 1; i++)
+        {
+            totalDistance += CalcularDistancia(
+                pontos[i].Latitude,
+                pontos[i].Longitude,
+                pontos[i + 1].Latitude,
+                pontos[i + 1].Longitude);
+        }
+
         return totalDistance;
     }
 
