@@ -1,6 +1,7 @@
 window.mapFunctions = {
     maps: {},
     markers: {},
+    driverMarkers: {},
     routes: {},
     helpers: {},
 
@@ -27,6 +28,7 @@ window.mapFunctions = {
 
         this.maps[mapId] = map;
         this.markers[mapId] = [];
+        this.driverMarkers[mapId] = {};
         this.routes[mapId] = null;
         return map;
     },
@@ -92,6 +94,46 @@ window.mapFunctions = {
             if (!this.markers[mapId]) this.markers[mapId] = [];
             this.markers[mapId].push({ id: p.id, marker: marker });
         });
+    },
+
+    updateDriverMarker: function (mapId, driverId, driverName, lat, lng) {
+        const map = this.maps[mapId];
+        if (!map) return;
+
+        if (!this.driverMarkers[mapId]) {
+            this.driverMarkers[mapId] = {};
+        }
+
+        let marker = this.driverMarkers[mapId][driverId];
+        if (marker) {
+            marker.setLatLng([lat, lng]);
+        } else {
+            // Criar novo marcador para o camião/motorista
+            const truckIcon = L.divIcon({
+                className: 'truck-marker',
+                html: `<div style="
+                    background-color: #f59e0b;
+                    width: 40px;
+                    height: 40px;
+                    border-radius: 50%;
+                    border: 3px solid white;
+                    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.5);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: white;
+                ">
+                    <span class="material-symbols-outlined" style="font-size: 20px;">local_shipping</span>
+                </div>`,
+                iconSize: [40, 40],
+                iconAnchor: [20, 20]
+            });
+            marker = L.marker([lat, lng], { icon: truckIcon })
+                .addTo(map)
+                .bindPopup(`<b>Motorista: ${driverName}</b><br>Em Movimento`);
+
+            this.driverMarkers[mapId][driverId] = marker;
+        }
     },
 
     drawRoute: function (mapId, points) {
@@ -165,6 +207,7 @@ window.mapFunctions = {
             this.maps[mapId].remove();
             delete this.maps[mapId];
             delete this.markers[mapId];
+            delete this.driverMarkers[mapId];
             delete this.routes[mapId];
             delete this.helpers[mapId];
         }

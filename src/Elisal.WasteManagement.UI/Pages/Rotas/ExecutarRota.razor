@@ -4,6 +4,12 @@
 @inject IJSRuntime JS
 @using Elisal.WasteManagement.Domain.Entities
 @using Elisal.WasteManagement.Application.DTOs
+@using Microsoft.AspNetCore.SignalR.Client
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.Extensions.Configuration
+@inject IConfiguration Configuration
+@inject AuthenticationStateProvider AuthStateProvider
+@implements IAsyncDisposable
 
 <PageTitle>SGR Elisal - Executar Rota</PageTitle>
 
@@ -142,9 +148,36 @@
     private bool showSuccess = false;
     private int completedCount => pointStatuses.Count(ps => ps.IsCompleted);
 
+    private HubConnection? hubConnection;
+    private DotNetObjectReference<ExecutarRota>? dotNetRef;
+    private int driverId;
+    private string driverName = "";
+
     protected override async Task OnInitializedAsync()
     {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            driverName = user.Identity.Name ?? "Unknown";
+            var idClaim = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (int.TryParse(idClaim, out var id)) driverId = id;
+        }
+
+        var apiUrl = Configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7087";
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl($"{apiUrl}/locationHub")
+            .WithAutomaticReconnect()
+            .Build();
+
+        await hubConnection.StartAsync();
+
         await LoadData();
+
+        if (executionId > 0 && executionStartTime.HasValue)
+        {
+            await StartLocationTracking();
+        }
     }
 
     private async Task LoadData()
@@ -214,6 +247,7 @@
             }
 
             await LoadData();
+            await StartLocationTracking();
         }
     }
 
@@ -249,6 +283,7 @@
         var response = await Http.PostAsync($"api/routeexecution/{executionId}/finish", null);
         if (response.IsSuccessStatusCode)
         {
+            await StopLocationTracking();
             showSuccess = true;
             StateHasChanged();
             await Task.Delay(2000);
@@ -258,6 +293,48 @@
         {
             isFinishing = false;
             StateHasChanged();
+        }
+    }
+
+    private async Task StartLocationTracking()
+    {
+        if (hubConnection?.State == HubConnectionState.Connected)
+        {
+            dotNetRef = DotNetObjectReference.Create(this);
+            await JS.InvokeVoidAsync("locationTracker.startTracking", dotNetRef);
+        }
+    }
+
+    private async Task StopLocationTracking()
+    {
+        await JS.InvokeVoidAsync("locationTracker.stopTracking");
+        dotNetRef?.Dispose();
+    }
+
+    [JSInvokable]
+    public async Task OnLocationChanged(double latitude, double longitude)
+    {
+        if (hubConnection?.State == HubConnectionState.Connected && executionId > 0)
+        {
+            var update = new LocationUpdateDto
+            {
+                RouteExecutionId = executionId,
+                DriverId = driverId,
+                DriverName = driverName,
+                Latitude = latitude,
+                Longitude = longitude,
+                Timestamp = DateTime.UtcNow
+            };
+            await hubConnection.SendAsync("UpdateLocation", update);
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await StopLocationTracking();
+        if (hubConnection is not null)
+        {
+            await hubConnection.DisposeAsync();
         }
     }
 

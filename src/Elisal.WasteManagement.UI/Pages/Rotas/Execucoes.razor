@@ -1,8 +1,12 @@
 @page "/rotas/execucoes"
 @using Elisal.WasteManagement.Application.DTOs
 @using Elisal.WasteManagement.Domain.Entities
+@using Microsoft.AspNetCore.SignalR.Client
+@using Microsoft.Extensions.Configuration
 @inject HttpClient Http
 @inject IJSRuntime JS
+@inject IConfiguration Configuration
+@implements IAsyncDisposable
 @attribute [Authorize]
 
 <div class="p-4 lg:p-8 max-w-7xl mx-auto animate-fade-in">
@@ -13,12 +17,12 @@
             </h1>
             <p class="text-slate-500 font-medium mt-2">Monitoramento de rotas em tempo real e histórico operacional.</p>
         </div>
-        
+
         <div class="flex bg-slate-100 dark:bg-slate-800 p-1.5 rounded-2xl shadow-inner">
-            <button @onclick="() => SetTab(true)" class="px-6 py-2.5 rounded-xl text-sm font-black transition-all @(showInProgress ? "bg-white dark:bg-slate-700 text-primary shadow-premium" : "text-slate-500 hover:text-slate-700")">
+            <button @onclick="async () => await SetTab(true)" class="px-6 py-2.5 rounded-xl text-sm font-black transition-all @(showInProgress ? "bg-white dark:bg-slate-700 text-primary shadow-premium" : "text-slate-500 hover:text-slate-700")">
                 EM CURSO
             </button>
-            <button @onclick="() => SetTab(false)" class="px-6 py-2.5 rounded-xl text-sm font-black transition-all @(!showInProgress ? "bg-white dark:bg-slate-700 text-primary shadow-premium" : "text-slate-500 hover:text-slate-700")">
+            <button @onclick="async () => await SetTab(false)" class="px-6 py-2.5 rounded-xl text-sm font-black transition-all @(!showInProgress ? "bg-white dark:bg-slate-700 text-primary shadow-premium" : "text-slate-500 hover:text-slate-700")">
                 CONCLUÍDAS
             </button>
         </div>
@@ -33,6 +37,20 @@
     }
     else if (filteredExecutions.Any())
     {
+        @if (showInProgress)
+        {
+            <div class="mb-8 bg-white dark:bg-slate-900 rounded-3xl shadow-premium border border-slate-100 dark:border-slate-800 p-4 relative overflow-hidden h-[400px]">
+                <div class="absolute top-6 left-6 z-[1000] bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-4 py-2 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 flex items-center gap-3">
+                    <span class="relative flex h-3 w-3">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                    </span>
+                    <span class="font-bold text-slate-900 dark:text-white text-sm tracking-wide">MAPA AO VIVO</span>
+                </div>
+                <div id="liveMap" class="w-full h-full rounded-2xl z-0"></div>
+            </div>
+        }
+
         <div class="grid grid-cols-1 gap-6">
             @foreach (var exec in filteredExecutions)
             {
@@ -109,20 +127,53 @@
 
 @code {
     private List<RouteExecutionSummaryDto> allExecutions = new();
-    private IEnumerable<RouteExecutionSummaryDto> filteredExecutions => 
+
+    private IEnumerable<RouteExecutionSummaryDto> filteredExecutions =>
         allExecutions.Where(e => showInProgress ? e.Status == RouteExecutionStatus.InProgress : e.Status == RouteExecutionStatus.Completed);
-    
+
     private bool showInProgress = true;
     private bool loading = true;
+    private HubConnection? hubConnection;
 
     protected override async Task OnInitializedAsync()
     {
+        var apiUrl = Configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7087";
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl($"{apiUrl}/locationHub")
+            .WithAutomaticReconnect()
+            .Build();
+
+        hubConnection.On<LocationUpdateDto>("LocationUpdated", async (update) =>
+        {
+            if (showInProgress)
+            {
+                await JS.InvokeVoidAsync("mapFunctions.updateDriverMarker", "liveMap", update.DriverId, update.DriverName, update.Latitude, update.Longitude);
+            }
+        });
+
+        await hubConnection.StartAsync();
+
         await LoadData();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender || showInProgress)
+        {
+            // Inicializar o mapa (Luanda center: -8.83833, 13.23444)
+            try
+            {
+                await JS.InvokeVoidAsync("mapFunctions.initMap", "liveMap", -8.83833, 13.23444, 12);
+            }
+            catch
+            {
+            }
+        }
     }
 
     private async Task LoadData()
     {
-        try 
+        try
         {
             loading = true;
             allExecutions = await Http.GetFromJsonAsync<List<RouteExecutionSummaryDto>>("api/routeexecution/history") ?? new();
@@ -131,14 +182,35 @@
         {
             Console.WriteLine(ex.Message);
         }
-        finally 
+        finally
         {
             loading = false;
         }
     }
 
-    private void SetTab(bool inProgress)
+    private async Task SetTab(bool inProgress)
     {
         showInProgress = inProgress;
+        if (inProgress)
+        {
+            StateHasChanged(); // Render the map div
+            await Task.Delay(50); // Give DOM time to update
+            try
+            {
+                await JS.InvokeVoidAsync("mapFunctions.initMap", "liveMap", -8.83833, 13.23444, 12);
+            }
+            catch
+            {
+            }
+        }
     }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (hubConnection is not null)
+        {
+            await hubConnection.DisposeAsync();
+        }
+    }
+
 }
