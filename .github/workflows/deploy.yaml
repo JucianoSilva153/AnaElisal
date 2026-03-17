@@ -76,6 +76,7 @@ jobs:
         push: true
         tags: ${{ steps.meta-ui.outputs.tags }}
         labels: ${{ steps.meta-ui.outputs.labels }}
+        no-cache: true
 
   deploy:
     needs: build-and-push-images
