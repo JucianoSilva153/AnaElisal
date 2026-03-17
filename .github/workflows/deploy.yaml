@@ -93,14 +93,19 @@ jobs:
         script: |
           cd /www/wwwroot/elisal-sgrs
           
-          # 1. Garante que saca as imagens mais recentes do Registry, ignorando o cache local da VPS
-          docker compose pull
+          # Login no GHCR
+          echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
           
-          # 2. Sobe os serviços forçando a recriação e parando containers antigos
-          # A flag --force-recreate garante que o Docker ignore o estado atual do container
-          docker compose up -d --force-recreate
+          # Pull latest images
+          docker-compose pull
           
-          # 3. Limpa imagens "dangling" (sem tag) que ficaram do pull anterior
-          docker image prune -f
+          # Stop current services
+          docker-compose down
+          
+          # Start with new images
+          docker-compose -f docker-compose.yml up -d
+          
+          # Clean up
+          docker system prune -f
           
           echo "Deploy completed successfully!"
