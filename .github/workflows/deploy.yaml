@@ -94,10 +94,10 @@ jobs:
           cd /www/wwwroot/elisal-sgrs
           
           # Login no GHCR
-          echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+          echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin || exit 1
           
           # Pull latest images
-          docker-compose pull
+          docker-compose pull || exit 1
           
           # Stop current services
           docker-compose down
@@ -105,7 +105,12 @@ jobs:
           # Start with new images
           docker-compose -f docker-compose.yml up -d
           
+          # Verifica se os containers subiram
+          docker-compose ps | grep -E "Up|running" || exit 1
+          
           # Clean up
           docker system prune -f
+          
+          echo "Deploy completed successfully!"
           
           echo "Deploy completed successfully!"
