@@ -24,6 +24,12 @@ public class ElisalDbContext : DbContext
     public DbSet<OperationalAlert> OperationalAlerts { get; set; }
     public DbSet<CollectionRecordWasteType> CollectionRecordWasteTypes { get; set; }
 
+    // Módulo GRS — Gestão de Resíduos Sólidos
+    public DbSet<SortingCenter> SortingCenters { get; set; }
+    public DbSet<WasteReception> WasteReceptions { get; set; }
+    public DbSet<SortingBatch> SortingBatches { get; set; }
+    public DbSet<SortingBatchOutput> SortingBatchOutputs { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

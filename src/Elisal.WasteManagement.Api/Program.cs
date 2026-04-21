@@ -37,6 +37,9 @@ builder.Services.AddScoped<ICollectionPointRepository, CollectionPointRepository
 builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
 builder.Services.AddScoped<IOperationalAlertRepository, OperationalAlertRepository>();
 builder.Services.AddScoped<IRouteExecutionRepository, RouteExecutionRepository>();
+builder.Services.AddScoped<ISortingCenterRepository, SortingCenterRepository>();
+builder.Services.AddScoped<IWasteReceptionRepository, WasteReceptionRepository>();
+builder.Services.AddScoped<ISortingBatchRepository, SortingBatchRepository>();
 
 // Configurations
 builder.Services.Configure<Elisal.WasteManagement.Application.Common.EmailSettings>(
@@ -53,6 +56,7 @@ builder.Services.AddScoped<IRotaService, RotaService>();
 builder.Services.AddScoped<IOperationalAlertService, OperationalAlertService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<IWasteManagementService, WasteManagementService>();
 
 // SignalR
 builder.Services.AddSignalR();

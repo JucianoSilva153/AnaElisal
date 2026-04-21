@@ -21,4 +21,20 @@ public class RouteExecutionRepository : Repository<RouteExecution>, IRouteExecut
             .Include(e => e.PointStatuses)
             .FirstOrDefaultAsync(e => e.DriverId == driverId && e.Status == RouteExecutionStatus.InProgress);
     }
+
+    public async Task<IEnumerable<RouteExecution>> GetCompletedWithoutReceptionAsync()
+    {
+        // Fetch receptions to find which RouteExecutions are already processed
+        var linkedRouteIds = await _context.WasteReceptions
+            .Where(r => r.RouteExecutionId.HasValue)
+            .Select(r => r.RouteExecutionId!.Value)
+            .ToListAsync();
+
+        return await _dbSet
+            .Include(e => e.Route)
+            .Include(e => e.Driver)
+            .Where(e => e.Status == RouteExecutionStatus.Completed && !linkedRouteIds.Contains(e.Id))
+            .OrderByDescending(e => e.EndTime)
+            .ToListAsync();
+    }
 }

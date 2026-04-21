@@ -23,6 +23,12 @@ public class DashboardStatsDto
     public List<PieChartDto> DistribuicaoPorTipo { get; set; } = new();
     public List<RecentCollectionDto> ColetasRecentes { get; set; } = new();
     public ActiveRoutePreviewDto? ProximaRota { get; set; }
+
+    // Módulo GRS — Indicadores Ambientais
+    public double TaxaAproveitamentoReal { get; set; }
+    public double Co2EvitadoTon { get; set; }
+    public int RecepcoesPendentesTriagem { get; set; }
+    public double TaxaDesvioAterro { get; set; }
 }
 
 public class ActiveRoutePreviewDto

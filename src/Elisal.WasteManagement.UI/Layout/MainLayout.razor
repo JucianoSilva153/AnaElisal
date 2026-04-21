@@ -1,4 +1,4 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
 @inject NavigationManager Navigation
 @inject Elisal.WasteManagement.UI.Services.LocalStorageService LocalStorage
 @inject AuthenticationStateProvider AuthStateProvider
@@ -82,6 +82,30 @@
                        href="/rotas" @onclick="CloseSidebarOnMobile">
                         <span class="material-symbols-outlined">alt_route</span>
                         <span class="text-sm">Rotas</span>
+                    </a>
+                </AuthorizeView>
+
+                @* ── Módulo GRS — Gestão de Resíduos Sólidos ── *@
+                <div class="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                    <p class="px-3 py-1 text-[9px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-[0.2em]">Gestão de Resíduos</p>
+                </div>
+                <AuthorizeView Roles="Admin,Manager,Driver">
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                       href="/gestao-residuos" @onclick="CloseSidebarOnMobile">
+                        <span class="material-symbols-outlined">inventory_2</span>
+                        <span class="text-sm">Recepção & Triagem</span>
+                    </a>
+                </AuthorizeView>
+                <AuthorizeView Roles="Admin,Manager">
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                       href="/gestao-residuos/indicadores" @onclick="CloseSidebarOnMobile">
+                        <span class="material-symbols-outlined">eco</span>
+                        <span class="text-sm">Indicadores Ambientais</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                       href="/gestao-residuos/centros" @onclick="CloseSidebarOnMobile">
+                        <span class="material-symbols-outlined">factory</span>
+                        <span class="text-sm">Centros de Triagem</span>
                     </a>
                 </AuthorizeView>
 

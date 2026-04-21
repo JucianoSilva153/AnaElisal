@@ -1,4 +1,4 @@
-﻿using Elisal.WasteManagement.Domain.Entities;
+using Elisal.WasteManagement.Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -18,7 +18,8 @@ namespace Elisal.WasteManagement.Application.DTOs
         public DateTime? EndTime { get; set; }
         public RouteExecutionStatus Status { get; set; } = RouteExecutionStatus.InProgress;
 
-        public IEnumerable<RoutePointExecutionStatusDto> PointStatuses { get; set; } = new List<RoutePointExecutionStatusDto>();
+        public IEnumerable<RoutePointExecutionStatusDto> PointStatuses { get; set; } =
+            new List<RoutePointExecutionStatusDto>();
     }
 
     public class RoutePointExecutionStatusDto
@@ -32,6 +33,5 @@ namespace Elisal.WasteManagement.Application.DTOs
 
     public class CreateRouteExecutionDto
     {
-
     }
 }

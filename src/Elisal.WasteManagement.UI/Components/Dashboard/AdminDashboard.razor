@@ -54,6 +54,47 @@
         </div>
     </div>
 
+    <!-- Impacto Ambiental (GRS) -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="bg-white dark:bg-slate-900 px-8 py-6 rounded-3xl shadow-premium border border-emerald-50 dark:border-emerald-900/20 flex items-center gap-6">
+            <div class="size-16 rounded-2xl bg-emerald-50 dark:bg-emerald-950 flex items-center justify-center flex-shrink-0 shadow-inner">
+                <span class="material-symbols-outlined text-emerald-600 text-3xl">eco</span>
+            </div>
+            <div>
+                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">CO₂ Evitado</span>
+                <p class="text-3xl font-black text-slate-900 dark:text-white">@Stats.Co2EvitadoTon.ToString("N2") <span class="text-sm font-bold text-slate-400">Ton</span></p>
+                <p class="text-[10px] font-bold text-emerald-500 mt-1 italic">Impacto positivo acumulado</p>
+            </div>
+        </div>
+        
+        <div class="bg-white dark:bg-slate-900 px-8 py-6 rounded-3xl shadow-premium border border-blue-50 dark:border-blue-900/20 flex items-center gap-6">
+            <div class="size-16 rounded-2xl bg-blue-50 dark:bg-blue-950 flex items-center justify-center flex-shrink-0 shadow-inner">
+                <span class="material-symbols-outlined text-blue-600 text-3xl">recycling</span>
+            </div>
+            <div>
+                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Desvio de Aterro</span>
+                <p class="text-3xl font-black text-slate-900 dark:text-white">@Stats.TaxaDesvioAterro.ToString("N1")%</p>
+                <div class="flex items-center gap-2 mt-1">
+                    <div class="flex-1 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden w-24">
+                        <div class="h-full bg-blue-500 rounded-full" style="width: @(Stats.TaxaDesvioAterro)%"></div>
+                    </div>
+                    <span class="text-[10px] font-black text-blue-500">REAL</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-900 px-8 py-6 rounded-3xl shadow-premium border border-amber-50 dark:border-amber-900/20 flex items-center gap-6">
+            <div class="size-16 rounded-2xl bg-amber-50 dark:bg-amber-950 flex items-center justify-center flex-shrink-0 shadow-inner">
+                <span class="material-symbols-outlined text-amber-600 text-3xl">pending_actions</span>
+            </div>
+            <div>
+                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pendentes Triagem</span>
+                <p class="text-3xl font-black text-slate-900 dark:text-white">@Stats.RecepcoesPendentesTriagem</p>
+                <p class="text-[10px] font-bold text-amber-500 mt-1 uppercase tracking-tighter">Aguardando processamento</p>
+            </div>
+        </div>
+    </div>
+
     <!-- Charts -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div class="lg:col-span-12 bg-white dark:bg-slate-900 rounded-3xl shadow-premium border border-slate-100 dark:border-slate-800 p-8">

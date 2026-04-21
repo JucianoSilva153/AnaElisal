@@ -1,0 +1,217 @@
+@page "/gestao-residuos/indicadores"
+@inject HttpClient Http
+@using Elisal.WasteManagement.Application.DTOs
+@inject NotificationService Notification
+
+<PageTitle>SGR Elisal - Indicadores Ambientais</PageTitle>
+
+<div class="p-6 lg:p-10 space-y-8 animate-fade-in">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+        <div>
+            <h1 class="text-4xl font-black text-slate-900 dark:text-white leading-tight">
+                Indicadores <span class="text-gradient-green">Ambientais</span>
+            </h1>
+            <p class="text-slate-500 font-medium mt-2">Impacto ambiental, taxas de desvio de aterro e CO₂ evitado.</p>
+        </div>
+        <div class="flex gap-3">
+            <input type="date" @bind="startDate" class="h-12 px-4 rounded-xl border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-bold text-sm" />
+            <input type="date" @bind="endDate" class="h-12 px-4 rounded-xl border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-bold text-sm" />
+            <button @onclick="LoadData" class="h-12 px-6 bg-slate-900 dark:bg-slate-700 text-white rounded-xl text-sm font-black hover:bg-black transition-all">
+                <span class="material-symbols-outlined text-lg">refresh</span>
+            </button>
+        </div>
+    </div>
+
+    @if (data == null)
+    {
+        <div class="flex justify-center py-20">
+            <div class="size-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+        </div>
+    }
+    else
+    {
+        @* ── KPI Cards Ambientais ── *@
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            @* CO₂ Evitado *@
+            <div class="bg-gradient-to-br from-emerald-500 to-green-600 rounded-3xl p-6 text-white shadow-xl">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="size-12 rounded-2xl bg-white/20 flex items-center justify-center">
+                        <span class="material-symbols-outlined">eco</span>
+                    </div>
+                    <span class="text-[10px] font-black uppercase tracking-widest opacity-80">CO₂ Evitado</span>
+                </div>
+                <p class="text-4xl font-black">@data.Co2AvoidedTons.ToString("N2")</p>
+                <p class="text-sm font-bold opacity-80 mt-1">Toneladas</p>
+            </div>
+
+            @* Taxa Desvio Aterro *@
+            <div class="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-3xl p-6 text-white shadow-xl">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="size-12 rounded-2xl bg-white/20 flex items-center justify-center">
+                        <span class="material-symbols-outlined">trending_up</span>
+                    </div>
+                    <span class="text-[10px] font-black uppercase tracking-widest opacity-80">Desvio Aterro</span>
+                </div>
+                <p class="text-4xl font-black">@data.LandfillDiversionRate.ToString("N1")<span class="text-lg">%</span></p>
+                <p class="text-sm font-bold opacity-80 mt-1">dos resíduos desviados</p>
+            </div>
+
+            @* Aproveitamento *@
+            <div class="bg-gradient-to-br from-amber-500 to-orange-600 rounded-3xl p-6 text-white shadow-xl">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="size-12 rounded-2xl bg-white/20 flex items-center justify-center">
+                        <span class="material-symbols-outlined">recycling</span>
+                    </div>
+                    <span class="text-[10px] font-black uppercase tracking-widest opacity-80">Aproveitamento</span>
+                </div>
+                <p class="text-4xl font-black">@data.OverallApprovalRate.ToString("N1")<span class="text-lg">%</span></p>
+                <p class="text-sm font-bold opacity-80 mt-1">materiais aproveitados</p>
+            </div>
+
+            @* Total Processado *@
+            <div class="bg-gradient-to-br from-slate-700 to-slate-900 rounded-3xl p-6 text-white shadow-xl">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="size-12 rounded-2xl bg-white/20 flex items-center justify-center">
+                        <span class="material-symbols-outlined">scale</span>
+                    </div>
+                    <span class="text-[10px] font-black uppercase tracking-widest opacity-80">Total Triado</span>
+                </div>
+                <p class="text-4xl font-black">@data.TotalSortedTons.ToString("N1")</p>
+                <p class="text-sm font-bold opacity-80 mt-1">Toneladas</p>
+            </div>
+        </div>
+
+        @* ── Detalhe por Destino ── *@
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            @* Breakdown por destino *@
+            <div class="bg-white dark:bg-slate-900 rounded-3xl p-8 shadow-premium border border-slate-50 dark:border-slate-800">
+                <h2 class="text-lg font-black text-slate-900 dark:text-white mb-6">Distribuição por Destino Final</h2>
+                @if (data.DestinationBreakdown.Any())
+                {
+                    <div class="space-y-4">
+                        @foreach (var dest in data.DestinationBreakdown.OrderByDescending(d => d.Percentage))
+                        {
+                            <div>
+                                <div class="flex items-center justify-between mb-2">
+                                    <div class="flex items-center gap-3">
+                                        <div class="size-3 rounded-full" style="background-color: @dest.Color"></div>
+                                        <span class="text-sm font-black text-slate-900 dark:text-white">@dest.Destination</span>
+                                    </div>
+                                    <div class="flex items-center gap-3">
+                                        <span class="text-sm font-bold text-slate-500">@dest.WeightTons.ToString("N2") T</span>
+                                        <span class="text-sm font-black text-slate-900 dark:text-white">@dest.Percentage.ToString("N1")%</span>
+                                    </div>
+                                </div>
+                                <div class="h-3 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                                    <div class="h-full rounded-full transition-all duration-700" style="width: @dest.Percentage.ToString("N0")%; background-color: @dest.Color"></div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p class="text-slate-400 text-center py-8">Sem dados de triagem no período.</p>
+                }
+            </div>
+
+            @* Volumes por tipo de destino *@
+            <div class="bg-white dark:bg-slate-900 rounded-3xl p-8 shadow-premium border border-slate-50 dark:border-slate-800">
+                <h2 class="text-lg font-black text-slate-900 dark:text-white mb-6">Volume por Categoria</h2>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-emerald-50 dark:bg-emerald-950/30 rounded-2xl p-5 text-center">
+                        <span class="material-symbols-outlined text-emerald-600 text-3xl">recycling</span>
+                        <p class="text-2xl font-black text-slate-900 dark:text-white mt-3">@data.RecyclingTons.ToString("N2")</p>
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Reciclagem (T)</p>
+                    </div>
+                    <div class="bg-lime-50 dark:bg-lime-950/30 rounded-2xl p-5 text-center">
+                        <span class="material-symbols-outlined text-lime-600 text-3xl">compost</span>
+                        <p class="text-2xl font-black text-slate-900 dark:text-white mt-3">@data.CompostingTons.ToString("N2")</p>
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Compostagem (T)</p>
+                    </div>
+                    <div class="bg-red-50 dark:bg-red-950/30 rounded-2xl p-5 text-center">
+                        <span class="material-symbols-outlined text-red-600 text-3xl">delete_forever</span>
+                        <p class="text-2xl font-black text-slate-900 dark:text-white mt-3">@data.LandfillTons.ToString("N2")</p>
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Aterro (T)</p>
+                    </div>
+                    <div class="bg-orange-50 dark:bg-orange-950/30 rounded-2xl p-5 text-center">
+                        <span class="material-symbols-outlined text-orange-600 text-3xl">local_fire_department</span>
+                        <p class="text-2xl font-black text-slate-900 dark:text-white mt-3">@data.IncinerationTons.ToString("N2")</p>
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Incineração (T)</p>
+                    </div>
+                    <div class="bg-blue-50 dark:bg-blue-950/30 rounded-2xl p-5 text-center">
+                        <span class="material-symbols-outlined text-blue-600 text-3xl">autorenew</span>
+                        <p class="text-2xl font-black text-slate-900 dark:text-white mt-3">@data.InternalReuseTons.ToString("N2")</p>
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Reuso Interno (T)</p>
+                    </div>
+                    <div class="bg-purple-50 dark:bg-purple-950/30 rounded-2xl p-5 text-center">
+                        <span class="material-symbols-outlined text-purple-600 text-3xl">warning</span>
+                        <p class="text-2xl font-black text-slate-900 dark:text-white mt-3">@data.HazardousDisposalTons.ToString("N2")</p>
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Perigosos (T)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @* ── Tendência Mensal ── *@
+        @if (data.MonthlyTrend.Any())
+        {
+            <div class="bg-white dark:bg-slate-900 rounded-3xl p-8 shadow-premium border border-slate-50 dark:border-slate-800">
+                <h2 class="text-lg font-black text-slate-900 dark:text-white mb-6">Tendência de Recepção Mensal (Toneladas)</h2>
+                <div class="flex items-end gap-4 h-48">
+                    @{ var maxVal = data.MonthlyTrend.Max(m => m.Value); }
+                    @foreach (var month in data.MonthlyTrend)
+                    {
+                        var heightPct = maxVal > 0 ? (month.Value / maxVal * 100) : 0;
+                        <div class="flex-1 flex flex-col items-center gap-2">
+                            <span class="text-xs font-black text-slate-900 dark:text-white">@month.Value.ToString("N1")</span>
+                            <div class="w-full bg-primary/20 rounded-t-xl relative" style="height: @heightPct.ToString("N0")%">
+                                <div class="absolute inset-0 bg-primary rounded-t-xl"></div>
+                            </div>
+                            <span class="text-[10px] font-black text-slate-400 uppercase">@month.Label</span>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+        @* ── Resumo Textual ── *@
+        <div class="bg-gradient-to-r from-primary/5 to-emerald-500/5 rounded-3xl p-8 border border-primary/10">
+            <div class="flex items-start gap-4">
+                <div class="size-12 rounded-2xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <span class="material-symbols-outlined text-primary">info</span>
+                </div>
+                <div>
+                    <h3 class="text-lg font-black text-slate-900 dark:text-white">Resumo do Período</h3>
+                    <p class="text-sm text-slate-600 dark:text-slate-300 mt-2 leading-relaxed">
+                        No período seleccionado, foram recepcionadas <strong>@data.TotalReceivedTons.ToString("N2") toneladas</strong> de resíduos,
+                        das quais <strong>@data.TotalSortedTons.ToString("N2") toneladas</strong> foram triadas.
+                        A taxa de desvio de aterro é de <strong>@data.LandfillDiversionRate.ToString("N1")%</strong>
+                        e o CO₂ evitado estimado é de <strong>@data.Co2AvoidedTons.ToString("N2") toneladas</strong>.
+                        @if (data.PendingReceptions > 0)
+                        {
+                            <span class="text-amber-600 font-bold"> Existem @data.PendingReceptions recepções pendentes de triagem.</span>
+                        }
+                    </p>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private EnvironmentalIndicatorsDto? data;
+    private DateTime startDate = DateTime.Today.AddMonths(-6);
+    private DateTime endDate = DateTime.Today;
+
+    protected override async Task OnInitializedAsync() => await LoadData();
+
+    private async Task LoadData()
+    {
+        try
+        {
+            data = await Http.GetFromJsonAsync<EnvironmentalIndicatorsDto>($"api/gestao-residuos/indicadores?inicio={startDate:yyyy-MM-dd}&fim={endDate:yyyy-MM-dd}");
+        }
+        catch { data = new EnvironmentalIndicatorsDto(); }
+    }
+}
