@@ -141,7 +141,9 @@
 {
     <div class="fixed inset-0 z-[60] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4" @onclick="() => _outputModal = false">
         <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-lg p-8 space-y-6" @onclick:stopPropagation="true">
-            <h2 class="text-xl font-black text-slate-900 dark:text-white">Adicionar Material Triado</h2>
+            <EditForm Model="@newOutput" OnValidSubmit="SalvarOutput">
+                <DataAnnotationsValidator />
+                <h2 class="text-xl font-black text-slate-900 dark:text-white mb-6">Adicionar Material Triado</h2>
             <div class="space-y-4">
                 <div class="space-y-2">
                     <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tipo de Resíduo</label>
@@ -149,10 +151,12 @@
                         <option value="0">Selecionar...</option>
                         @if (wasteTypes != null) { @foreach (var wt in wasteTypes) { <option value="@wt.Id">@wt.Name</option> } }
                     </select>
+                    <ValidationMessage For="@(() => newOutput.WasteTypeId)" class="text-[10px] text-red-500 font-bold" />
                 </div>
                 <div class="space-y-2">
                     <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Peso (Kg)</label>
-                    <input type="number" step="0.1" @bind="newOutput.WeightKg" class="w-full h-12 px-4 rounded-xl border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-bold" />
+                    <InputNumber @bind-Value="newOutput.WeightKg" class="w-full h-12 px-4 rounded-xl border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-bold" />
+                    <ValidationMessage For="@(() => newOutput.WeightKg)" class="text-[10px] text-red-500 font-bold" />
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div class="space-y-2">
@@ -177,9 +181,10 @@
                     </div>
                 </div>
             </div>
-            <button @onclick="SalvarOutput" disabled="@_saving" class="w-full h-14 btn-vibrant rounded-2xl font-black text-sm uppercase tracking-widest shadow-green-glow">
-                ADICIONAR
-            </button>
+                <button type="submit" disabled="@_saving" class="w-full h-14 btn-vibrant rounded-2xl font-black text-sm uppercase tracking-widest shadow-green-glow mt-6">
+                    ADICIONAR
+                </button>
+            </EditForm>
         </div>
     </div>
 }
@@ -260,9 +265,7 @@
 
     private async Task SalvarOutput()
     {
-        if (newOutput.WasteTypeId == 0) { Notification.ShowError("Selecione um tipo de resíduo."); return; }
-        if (newOutput.WeightKg <= 0) { Notification.ShowError("Peso inválido."); return; }
-
+        // Validações adicionais se necessário
         _saving = true;
         try
         {

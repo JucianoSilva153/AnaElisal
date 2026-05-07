@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using Elisal.WasteManagement.Domain.Enums;
 
 namespace Elisal.WasteManagement.Application.DTOs;
@@ -45,11 +46,24 @@ public class SortingBatchOutputDto
 
 public class CreateSortingBatchOutputDto
 {
+    [Required]
     public int SortingBatchId { get; set; }
+
+    [Required(ErrorMessage = "Selecione o tipo de resíduo")]
+    [Range(1, int.MaxValue, ErrorMessage = "Tipo de resíduo inválido")]
     public int WasteTypeId { get; set; }
+
+    [Required(ErrorMessage = "O peso é obrigatório")]
+    [Range(0.01, 100000, ErrorMessage = "O peso deve ser superior a 0")]
     public double WeightKg { get; set; }
+
+    [Required]
     public QualityGrade QualityGrade { get; set; }
+
+    [Required]
     public WasteDestinationType DestinationType { get; set; }
+
+    [MaxLength(250)]
     public string Notes { get; set; } = string.Empty;
 }
 

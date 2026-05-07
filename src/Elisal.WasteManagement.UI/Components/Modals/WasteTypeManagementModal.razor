@@ -43,8 +43,9 @@
                                     </div>
                                     <div class="space-y-1.5">
                                         <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Nome</label>
-                                        <div class="flex items-center gap-3">
+                                        <div class="flex flex-col gap-1 w-full">
                                             <InputText @bind-Value="model.Name" type="text" class="h-10 w-full rounded-lg border-slate-200 dark:border-slate-700 cursor-pointer p-1 bg-white dark:bg-slate-800"/>
+                                            <ValidationMessage For="@(() => model.Name)" class="text-[10px] text-red-500 font-bold" />
                                         </div>
                                     </div>
                                     <div class="flex items-center gap-6 h-10">

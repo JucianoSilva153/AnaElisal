@@ -2,6 +2,7 @@
 @inject HttpClient Http
 @inject AuthenticationStateProvider AuthStateProvider
 @inject Elisal.WasteManagement.UI.Services.LocalStorageService LocalStorage
+@using System.ComponentModel.DataAnnotations
 @using Elisal.WasteManagement.Application.DTOs
 @using Elisal.WasteManagement.Domain.Entities
 @using Microsoft.AspNetCore.Authorization
@@ -110,26 +111,39 @@
                     <span class="material-symbols-outlined text-primary font-bold">lock_open</span>
                     <h3 class="font-black text-slate-900 dark:text-white uppercase tracking-widest text-xs">Segurança de Acesso</h3>
                 </div>
-                <div class="p-8 space-y-6">
-                    <div class="space-y-2">
-                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Senha Atual</label>
-                        <input type="password" @bind="currentPassword" class="w-full h-12 px-5 rounded-2xl border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold transition-all"/>
+                <div class="p-8">
+                    <div class="mb-6">
+                        <h3 class="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Alterar Senha</h3>
+                        <p class="text-xs text-slate-500 font-medium mt-1">Mantenha a sua conta segura com uma senha forte.</p>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="space-y-2">
-                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nova Senha</label>
-                            <input type="password" @bind="newPassword" class="w-full h-12 px-5 rounded-2xl border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold transition-all"/>
+
+                    <EditForm Model="@passwordModel" OnValidSubmit="UpdatePassword">
+                        <DataAnnotationsValidator/>
+                        <div class="grid grid-cols-1 gap-6">
+                            <div class="space-y-2">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Senha Atual</label>
+                                <InputText type="password" @bind-Value="passwordModel.SenhaAtual" class="w-full h-12 px-5 rounded-2xl border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold transition-all shadow-inner" placeholder="••••••••"/>
+                                <ValidationMessage For="@(() => passwordModel.SenhaAtual)" class="text-[10px] text-red-500 font-bold"/>
+                            </div>
+
+                            <div class="space-y-2">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nova Senha</label>
+                                <InputText type="password" @bind-Value="passwordModel.NovaSenha" class="w-full h-12 px-5 rounded-2xl border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold transition-all shadow-inner" placeholder="No mínimo 6 caracteres"/>
+                                <ValidationMessage For="@(() => passwordModel.NovaSenha)" class="text-[10px] text-red-500 font-bold"/>
+                            </div>
+
+                            <div class="space-y-2">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Confirmar Nova Senha</label>
+                                <InputText type="password" @bind-Value="passwordModel.ConfirmarSenha" class="w-full h-12 px-5 rounded-2xl border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold transition-all shadow-inner" placeholder="Repita a nova senha"/>
+                                <ValidationMessage For="@(() => passwordModel.ConfirmarSenha)" class="text-[10px] text-red-500 font-bold"/>
+                            </div>
+
+                            <button type="submit" class="w-full py-4 bg-slate-900 dark:bg-slate-700 text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-black dark:hover:bg-slate-600 transition-all shadow-lg flex items-center justify-center gap-2">
+                                <span class="material-symbols-outlined text-lg">lock_reset</span>
+                                ATUALIZAR SENHA
+                            </button>
                         </div>
-                        <div class="space-y-2">
-                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Confirmar Nova Senha</label>
-                            <input type="password" @bind="confirmPassword" class="w-full h-12 px-5 rounded-2xl border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold transition-all"/>
-                        </div>
-                    </div>
-                    <div class="pt-4 flex justify-end">
-                        <button @onclick="UpdatePassword" class="px-8 py-3 bg-slate-900 text-white dark:bg-white dark:text-slate-900 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:scale-105 active:scale-95 transition-all shadow-lg">
-                            REDEFINIR ACESSO
-                        </button>
-                    </div>
+                    </EditForm>
                 </div>
             </div>
         </div>
@@ -138,9 +152,7 @@
 
 @code {
     private UserDto user = new();
-    private string currentPassword = "";
-    private string newPassword = "";
-    private string confirmPassword = "";
+    private ChangePasswordModel passwordModel = new();
     private bool showSuccess = false;
     private string errorMessage = "";
 
@@ -193,19 +205,18 @@
         showSuccess = false;
         errorMessage = "";
 
-        if (newPassword != confirmPassword)
-        {
-            errorMessage = "As novas senhas não coincidem.";
-            return;
-        }
-
         try
         {
-            var response = await Http.PostAsJsonAsync($"api/usuarios/{user.Id}/alterar-senha", new { SenhaAtual = currentPassword, NovaSenha = newPassword });
+            var dto = new ChangePasswordDto
+            {
+                SenhaAtual = passwordModel.SenhaAtual,
+                NovaSenha = passwordModel.NovaSenha
+            };
+            var response = await Http.PostAsJsonAsync($"api/usuarios/{user.Id}/alterar-senha", dto);
             if (response.IsSuccessStatusCode)
             {
                 showSuccess = true;
-                currentPassword = newPassword = confirmPassword = "";
+                passwordModel = new();
             }
             else
             {
@@ -227,6 +238,20 @@
             UserRole.Driver => "Operador",
             _ => role?.ToString() ?? "Utilizador"
         };
+    }
+
+    public class ChangePasswordModel
+    {
+        [Required(ErrorMessage = "Senha atual é obrigatória")]
+        public string SenhaAtual { get; set; } = "";
+
+        [Required(ErrorMessage = "Nova senha é obrigatória")]
+        [MinLength(6, ErrorMessage = "A nova senha deve ter no mínimo 6 caracteres")]
+        public string NovaSenha { get; set; } = "";
+
+        [Required(ErrorMessage = "Confirmação de senha é obrigatória")]
+        [Compare(nameof(NovaSenha), ErrorMessage = "As senhas não coincidem")]
+        public string ConfirmarSenha { get; set; } = "";
     }
 
 }
