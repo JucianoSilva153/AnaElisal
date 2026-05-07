@@ -14,7 +14,7 @@
                         <div class="size-10 rounded-xl bg-primary text-white flex items-center justify-center shadow-green-glow">
                             <span class="material-symbols-outlined font-bold">domain</span>
                         </div>
-                        <h3 class="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight" id="modal-title">Gestão de <span class="text-gradient-green">Cooperativa</span></h3>
+                        <h3 class="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight" id="modal-title">Gestão de <span class="text-gradient-green">Empresa Parceira</span></h3>
                     </div>
                     <button @onclick="Close" class="size-10 rounded-xl flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all">
                         <span class="material-symbols-outlined font-bold">close</span>
@@ -26,7 +26,7 @@
                     {
                         <div class="mb-8 p-5 rounded-2xl bg-primary/10 border border-primary/20 text-primary flex items-center gap-4 animate-bounce-subtle">
                             <span class="material-symbols-outlined font-bold">check_circle</span>
-                            <span class="font-black uppercase tracking-widest text-[10px]">Entidade cooperativa registada com sucesso!</span>
+                            <span class="font-black uppercase tracking-widest text-[10px]">Empresa parceira registada com sucesso!</span>
                         </div>
                     }
                     @if (!string.IsNullOrEmpty(errorMessage))
@@ -43,7 +43,7 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
                             <div class="space-y-2">
                                 <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Razão Social / Nome</label>
-                                <InputText @bind-Value="model.Name" class="w-full h-12 px-5 rounded-2xl border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold transition-all shadow-inner" placeholder="Ex: Cooperativa Verde Luanda"/>
+                                <InputText @bind-Value="model.Name" class="w-full h-12 px-5 rounded-2xl border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold transition-all shadow-inner" placeholder="Ex: Empresa Parceira Verde Luanda"/>
                                 <ValidationMessage For="@(() => model.Name)" class="text-[10px] font-bold text-red-500 italic mt-1"/>
                             </div>
 
@@ -167,7 +167,7 @@
             }
             else
             {
-                errorMessage = "Erro ao salvar cooperativa.";
+                errorMessage = "Erro ao salvar empresa parceira.";
             }
         }
         catch (Exception ex)

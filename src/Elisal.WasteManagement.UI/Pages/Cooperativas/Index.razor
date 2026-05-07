@@ -3,19 +3,19 @@
 @using Elisal.WasteManagement.Domain.Entities
 @using Elisal.WasteManagement.UI.Components.Modals
 
-<PageTitle>SGR Elisal - Cooperativas</PageTitle>
+<PageTitle>SGR Elisal - Empresas Parceiras</PageTitle>
 
 <div class="p-6 lg:p-10 space-y-10 animate-fade-in">
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
         <div>
             <h1 class="text-4xl font-black text-slate-900 dark:text-white leading-tight">
-                Gestão de <span class="text-gradient-green">Cooperativas</span>
+                Gestão de <span class="text-gradient-green">Empresas Parceiras</span>
             </h1>
             <p class="text-slate-500 font-medium mt-2">Parceiros estratégicos de reciclagem e tratamento de resíduos.</p>
         </div>
         <button @onclick="() => _coopModal.Show()" class="btn-vibrant px-8 py-3 flex items-center gap-3 shadow-green-glow">
             <span class="material-symbols-outlined font-bold">add_business</span>
-            NOVA COOPERATIVA
+            NOVA EMPRESA PARCEIRA
         </button>
     </div>
 
@@ -33,7 +33,7 @@
                 <span class="material-symbols-outlined text-6xl">storefront</span>
             </div>
             <div>
-                <h3 class="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Sem Cooperativas</h3>
+                <h3 class="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Sem Empresas Parceiras</h3>
                 <p class="text-slate-500 font-medium max-w-sm mx-auto mt-2">Nenhum parceiro registado no sistema. Comece a colaborar hoje mesmo!</p>
             </div>
         </div>
