@@ -3,6 +3,7 @@
 @using Elisal.WasteManagement.Application.DTOs
 @using Elisal.WasteManagement.Domain.Enums
 @inject NotificationService Notification
+@using Microsoft.AspNetCore.Components.Authorization
 
 <PageTitle>SGR Elisal - Gestão de Resíduos</PageTitle>
 
@@ -20,10 +21,12 @@
                 <span class="material-symbols-outlined text-lg font-bold">eco</span>
                 <span class="hidden sm:inline">INDICADORES</span>
             </a>
-            <button @onclick="() => _recepcaoModal = true" class="btn-vibrant px-8 py-3 flex items-center gap-2 shadow-green-glow">
-                <span class="material-symbols-outlined font-bold">add_circle</span>
-                NOVA RECEPÇÃO
-            </button>
+            <AuthorizeView Roles="Driver">
+                <button @onclick="() => _recepcaoModal = true" class="btn-vibrant px-8 py-3 flex items-center gap-2 shadow-green-glow">
+                    <span class="material-symbols-outlined font-bold">add_circle</span>
+                    NOVA RECEPÇÃO
+                </button>
+            </AuthorizeView>
         </div>
     </div>
 
@@ -114,9 +117,11 @@
                         </div>
                         <h3 class="font-black text-slate-900 dark:text-white truncate">@rota.RouteName</h3>
                         <p class="text-xs text-slate-500 mt-1">@rota.DriverName</p>
-                        <button @onclick="() => PrepareReceptionFromRoute(rota)" class="mt-4 w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-amber-glow">
-                            REGISTAR RECEPÇÃO
-                        </button>
+                        <AuthorizeView Roles="Driver">
+                            <button @onclick="() => PrepareReceptionFromRoute(rota)" class="mt-4 w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-amber-glow">
+                                REGISTAR RECEPÇÃO
+                            </button>
+                        </AuthorizeView>
                     </div>
                 }
             </div>
@@ -190,7 +195,12 @@
                                 }
                                 else
                                 {
-                                    <button @onclick="() => StartTriagem(r.Id)" class="px-3 py-1 bg-amber-50 text-amber-700 hover:bg-amber-100 rounded-lg text-[10px] font-black uppercase cursor-pointer transition-all">Pendente</button>
+                                    <AuthorizeView Roles="Driver">
+                                        <button @onclick="() => StartTriagem(r.Id)" class="px-3 py-1 bg-amber-50 text-amber-700 hover:bg-amber-100 rounded-lg text-[10px] font-black uppercase cursor-pointer transition-all">Pendente</button>
+                                    </AuthorizeView>
+                                    <AuthorizeView Roles="Admin,Manager">
+                                        <span class="px-3 py-1 bg-slate-50 text-slate-500 rounded-lg text-[10px] font-black uppercase">Pendente</span>
+                                    </AuthorizeView>
                                 }
                             </td>
                         </tr>

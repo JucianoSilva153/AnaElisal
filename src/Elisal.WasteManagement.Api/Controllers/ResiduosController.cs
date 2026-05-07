@@ -24,6 +24,7 @@ public class ResiduosController : ControllerBase
     }
 
     [HttpPost("recolha")]
+    [Authorize(Roles = "Driver")]
     public async Task<IActionResult> RegistarRecolha([FromBody] CreateCollectionRecordDto dto)
     {
         try

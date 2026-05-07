@@ -133,6 +133,7 @@
                         </div>
                         <div class="flex-1 min-w-0">
                             <p class="text-sm font-semibold truncate text-slate-900 dark:text-white">@context.User.Identity?.Name</p>
+                            <p class="text-[10px] text-slate-500 font-medium uppercase tracking-wider">@GetRoleDisplay(context.User)</p>
                             <button @onclick="Logout" class="text-[10px] text-red-500 font-bold uppercase hover:underline">Sair do Sistema</button>
                         </div>
                     </div>
@@ -152,15 +153,6 @@
                     <span class="material-symbols-outlined">menu</span>
                 </button>
 
-                <div class="relative w-full max-w-xl hidden sm:block">
-                    <span
-                        class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">
-                        search
-                    </span>
-                    <input
-                        class="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:ring-2 focus:ring-primary focus:border-primary text-sm transition-all outline-none text-slate-900 dark:text-white"
-                        placeholder="Pesquisar registros, frotas ou alertas..." type="text"/>
-                </div>
 
                 <!-- Mobile Logo (Icon only) -->
                 <div class="lg:hidden sm:hidden flex items-center justify-center bg-primary p-2 rounded-lg text-white">
@@ -170,11 +162,7 @@
 
             <div class="flex items-center gap-2 lg:gap-4">
                 <NotificationBell/>
-                <button
-                    class="p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
-                    <span class="material-symbols-outlined">dark_mode</span>
-                </button>
-                <AuthorizeView Roles="Admin,Manager,Driver">
+                <AuthorizeView Roles="Driver">
                     <button @onclick="() => _recolhaModal.Show()"
                             class="p-2 lg:px-4 lg:py-2 bg-primary hover:bg-primary/90 text-white rounded-lg text-sm font-semibold transition-colors flex items-center gap-2">
                         <span class="material-symbols-outlined text-xl lg:text-lg">add_circle</span>
@@ -218,6 +206,18 @@
         await LocalStorage.RemoveItemAsync("user");
         await ((Elisal.WasteManagement.UI.Services.ApiAuthenticationStateProvider)AuthStateProvider).MarkUserAsLoggedOut();
         Navigation.NavigateTo("login");
+    }
+
+    private string GetRoleDisplay(System.Security.Claims.ClaimsPrincipal user)
+    {
+        var role = user.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+        return role switch
+        {
+            "Admin" => "Administrador",
+            "Manager" => "Gestor",
+            "Driver" => "Operador",
+            _ => role ?? "Utilizador"
+        };
     }
 
 }

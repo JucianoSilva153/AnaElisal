@@ -63,7 +63,7 @@ public class GestaoResiduosController : ControllerBase
     #region Recepções
 
     [HttpPost("recepcoes")]
-    [Authorize(Roles = "Admin,Manager,Driver")]
+    [Authorize(Roles = "Driver")]
     public async Task<IActionResult> RegistarRecepcao([FromBody] CreateWasteReceptionDto dto)
     {
         try
@@ -113,7 +113,7 @@ public class GestaoResiduosController : ControllerBase
     #region Triagens
 
     [HttpPost("triagens")]
-    [Authorize(Roles = "Admin,Manager,Driver")]
+    [Authorize(Roles = "Driver")]
     public async Task<IActionResult> IniciarTriagem([FromBody] CreateSortingBatchDto dto)
     {
         try
@@ -129,7 +129,7 @@ public class GestaoResiduosController : ControllerBase
     }
 
     [HttpPost("triagens/{id}/outputs")]
-    [Authorize(Roles = "Admin,Manager,Driver")]
+    [Authorize(Roles = "Driver")]
     public async Task<IActionResult> RegistarOutput(int id, [FromBody] CreateSortingBatchOutputDto dto)
     {
         try

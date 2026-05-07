@@ -103,6 +103,7 @@ public class RouteExecutionController : ControllerBase
     }
 
     [HttpPut("{executionId}/point")]
+    [Authorize(Roles = "Driver")]
     public async Task<IActionResult> UpdatePointStatus(int executionId, [FromBody] UpdatePointStatusDto dto)
     {
         var status = await _context.RoutePointExecutionStatuses
@@ -119,6 +120,7 @@ public class RouteExecutionController : ControllerBase
     }
 
     [HttpPost("{executionId}/finish")]
+    [Authorize(Roles = "Driver")]
     public async Task<IActionResult> FinishExecution(int executionId)
     {
         var execution = await _context.RouteExecutions
