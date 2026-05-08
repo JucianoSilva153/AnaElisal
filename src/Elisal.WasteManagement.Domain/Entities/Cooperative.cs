@@ -24,4 +24,4 @@ public class Cooperative
 
     [MaxLength(500)]
     public string AcceptedWasteTypes { get; set; } = string.Empty;
-}
+}   
