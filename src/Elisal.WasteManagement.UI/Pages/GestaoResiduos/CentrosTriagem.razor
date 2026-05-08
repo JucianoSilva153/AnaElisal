@@ -102,7 +102,7 @@
                 </div>
                 <div class="space-y-2">
                     <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Contacto</label>
-                    <input type="text" @bind="_editCenter.Contact" class="w-full h-12 px-4 rounded-xl border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-bold" />
+                    <input type="number" @bind="_editCenter.Contact" class="w-full h-12 px-4 rounded-xl border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-bold" />
                 </div>
             </div>
             <button @onclick="SaveCenter" disabled="@_saving" class="w-full h-14 btn-vibrant rounded-2xl font-black text-sm uppercase tracking-widest shadow-green-glow">
@@ -135,6 +135,12 @@
     private async Task SaveCenter()
     {
         if (string.IsNullOrWhiteSpace(_editCenter.Name)) { Notification.ShowError("Nome é obrigatório."); return; }
+        if (string.IsNullOrWhiteSpace(_editCenter.Address)) { Notification.ShowError("Endereço é obrigatório."); return; }
+        if (string.IsNullOrWhiteSpace(_editCenter.Municipality)) { Notification.ShowError("Município é obrigatório."); return; }
+        if (_editCenter.CapacityTonsPerDay <= 0) { Notification.ShowError("Capacidade deve ser maior que zero."); return; }
+        if (string.IsNullOrWhiteSpace(_editCenter.Contact)) { Notification.ShowError("Contacto é obrigatório."); return; }
+        if (_editCenter.Contact.Length != 9) { Notification.ShowError("Contacto deve ser válido."); return; }
+
         _saving = true;
         try
         {

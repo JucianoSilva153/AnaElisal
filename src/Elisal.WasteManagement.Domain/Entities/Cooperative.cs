@@ -12,7 +12,7 @@ public class Cooperative
     [MaxLength(150)]
     public string Name { get; set; } = string.Empty;
 
-    [MaxLength(50)]
+    [MaxLength(9), MinLength(9)]
     public string Contact { get; set; } = string.Empty;
 
     [EmailAddress]
@@ -24,4 +24,4 @@ public class Cooperative
 
     [MaxLength(500)]
     public string AcceptedWasteTypes { get; set; } = string.Empty;
-}
+}   
