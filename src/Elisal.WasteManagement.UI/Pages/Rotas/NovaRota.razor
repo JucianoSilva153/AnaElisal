@@ -101,8 +101,8 @@
     private string routeName = "";
     private string weekDay = "";
     private DateTime startTime;
-    private List<CollectionPoint> allPoints = new();
-    private List<CollectionPoint> selectedPoints = new();
+    private List<CollectionPointDto> allPoints = new();
+    private List<CollectionPointDto> selectedPoints = new();
     private List<UserDto> drivers = new();
     private int? assignedDriverId;
     private double totalDistance = 0;
@@ -111,7 +111,7 @@
     {
         try
         {
-            allPoints = await Http.GetFromJsonAsync<List<CollectionPoint>>("api/pontosrecolha") ?? new();
+            allPoints = await Http.GetFromJsonAsync<List<CollectionPointDto>>("api/pontosrecolha") ?? new();
             drivers = await Http.GetFromJsonAsync<List<UserDto>>("api/usuarios/perfil/Driver") ?? new();
 
             if (Id.HasValue)
@@ -126,8 +126,9 @@
                     totalDistance = route.TotalDistance;
                     selectedPoints = route.RoutePoints
                         .OrderBy(rp => rp.SequenceOrder)
-                        .Select(rp => rp.CollectionPoint!)
+                        .Select(rp => rp.CollectionPoint)
                         .Where(p => p != null)
+                        .Cast<CollectionPointDto>()
                         .ToList();
                 }
             }
@@ -139,7 +140,7 @@
         }
     }
 
-    private void AddPoint(CollectionPoint point)
+    private void AddPoint(CollectionPointDto point)
     {
         if (!selectedPoints.Contains(point))
         {
@@ -147,7 +148,7 @@
         }
     }
 
-    private void RemovePoint(CollectionPoint point)
+    private void RemovePoint(CollectionPointDto point)
     {
         selectedPoints.Remove(point);
     }
