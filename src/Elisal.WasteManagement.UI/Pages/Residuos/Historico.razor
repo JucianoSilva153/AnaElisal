@@ -121,7 +121,7 @@
                                 </div>
                             </td>
                             <td class="px-8 py-5">
-                                <span class="text-lg font-black text-slate-900 dark:text-white">@r.AmountKg.ToString("N1")</span>
+                                <span class="text-lg font-black text-slate-900 dark:text-white">@((r.AmountKg ?? 0).ToString("N1"))</span>
                             </td>
                             <td class="px-8 py-5 text-right">
                                 <AuthorizeView Roles="Admin,Manager">

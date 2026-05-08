@@ -7,7 +7,7 @@
 
 @if (IsVisible)
 {
-    <div class="fixed inset-0 z-[100] overflow-y-auto animate-fade-in" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="fixed inset-0 z-[9999] overflow-y-auto animate-fade-in" aria-labelledby="modal-title" role="dialog" aria-modal="true">
         <!-- Backdrop -->
         <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-md transition-opacity" @onclick="Close"></div>
 
@@ -47,7 +47,7 @@
                     <EditForm Model="@collectionModel" OnValidSubmit="HandleSubmit">
                         <DataAnnotationsValidator/>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                        <div class="grid grid-cols-1 gap-8 mb-8">
                             <!-- Data e Hora -->
                             <div class="space-y-2">
                                 <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Cronometria do Evento</label>
@@ -56,16 +56,8 @@
                                 <ValidationMessage For="@(() => collectionModel.DateTime)" class="text-[10px] font-bold text-red-500 italic mt-1"/>
                             </div>
 
-                            <!-- Quantidade -->
-                            <div class="space-y-2">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Volume de Resíduos (KG)</label>
-                                <InputNumber @bind-Value="collectionModel.AmountKg"
-                                             class="w-full h-12 px-5 rounded-2xl border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold transition-all shadow-inner"/>
-                                <ValidationMessage For="@(() => collectionModel.AmountKg)" class="text-[10px] font-bold text-red-500 italic mt-1"/>
-                            </div>
-
                             <!-- Ponto de Recolha -->
-                            <div class="space-y-2 md:col-span-2">
+                            <div class="space-y-2">
                                 <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Unidade de Recolha Origem</label>
                                 <InputSelect @bind-Value="collectionModel.CollectionPointId"
                                              class="w-full h-12 px-5 rounded-2xl border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold transition-all appearance-none cursor-pointer">
@@ -80,29 +72,6 @@
                                 </InputSelect>
                                 <ValidationMessage For="@(() => collectionModel.CollectionPointId)"
                                                    class="text-[10px] font-bold text-red-500 italic mt-1"/>
-                            </div>
-
-                            <!-- Tipo de Residuo -->
-                            <div class="space-y-4 md:col-span-2">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Classificação de Resíduos</label>
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 p-6 bg-slate-50 dark:bg-slate-800 rounded-[1.5rem] border border-slate-100 dark:border-slate-700 shadow-inner">
-                                    @if (wasteTypes != null)
-                                    {
-                                        @foreach (var w in wasteTypes)
-                                        {
-                                            <label class="flex items-center gap-4 p-3 rounded-xl bg-white dark:bg-slate-900 border border-transparent hover:border-primary/20 hover:shadow-premium transition-all cursor-pointer group">
-                                                <input type="checkbox" checked="@collectionModel.WasteTypeIds.Contains(w.Id)"
-                                                       @onchange='(e) => ToggleWasteType(w.Id, (bool)e.Value)'
-                                                       class="size-5 rounded-lg text-primary focus:ring-primary border-slate-200 dark:border-slate-700 dark:bg-slate-800 cursor-pointer"/>
-                                                <div class="flex items-center gap-3">
-                                                    <div class="size-4 rounded-full border-2 border-white shadow-sm" style="background-color: @w.ColorCode"></div>
-                                                    <span class="text-xs font-black text-slate-600 dark:text-slate-300 uppercase tracking-tight group-hover:text-primary">@w.Name</span>
-                                                </div>
-                                            </label>
-                                        }
-                                    }
-                                </div>
-                                <ValidationMessage For="@(() => collectionModel.WasteTypeIds)" class="text-[10px] font-bold text-red-500 italic mt-1"/>
                             </div>
                         </div>
 
@@ -147,15 +116,19 @@
     public bool IsVisible { get; private set; }
     private CollectionRecordModel collectionModel = new();
     private List<CollectionPoint> points = new();
-    private List<WasteType> wasteTypes = new();
     private bool showSuccess = false;
     private string errorMessage = "";
     private bool _isSaving = false;
 
-    public void Show()
+    public void Show(int? selectedPointId = null)
     {
         IsVisible = true;
-        collectionModel = new CollectionRecordModel(); // Reset
+        collectionModel = new CollectionRecordModel();
+        if (selectedPointId.HasValue)
+        {
+            collectionModel.CollectionPointId = selectedPointId.Value;
+        }
+        
         showSuccess = false;
         errorMessage = "";
         _isSaving = false;
@@ -177,8 +150,6 @@
             if (points == null || points.Count == 0)
                 points = await Http.GetFromJsonAsync<List<CollectionPoint>>("api/pontosRecolha") ?? new();
 
-            if (wasteTypes == null || wasteTypes.Count == 0)
-                wasteTypes = await Http.GetFromJsonAsync<List<WasteType>>("api/residuos/tipos") ?? new();
             StateHasChanged();
         }
         catch
@@ -203,12 +174,11 @@
             var record = new CreateCollectionRecordDto
             {
                 DateTime = collectionModel.DateTime,
-                AmountKg = collectionModel.AmountKg,
+                AmountKg = null, // Operator doesn't provide weight
                 CollectionPointId = collectionModel.CollectionPointId,
                 Notes = collectionModel.Notes,
                 UserId = Convert.ToInt32(authState.User.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)?.Value ?? "0"),
-                WasteTypeId = collectionModel.WasteTypeIds.FirstOrDefault(),
-                WasteTypeIds = collectionModel.WasteTypeIds
+                WasteTypeId = null // Operator doesn't provide type
             };
 
             var response = await Http.PostAsJsonAsync("api/residuos/recolha", record);
@@ -254,27 +224,8 @@
         [Range(1, int.MaxValue, ErrorMessage = "Selecione um ponto.")]
         public int CollectionPointId { get; set; }
 
-        [MinLength(1, ErrorMessage = "Selecione pelo menos um tipo de resíduo.")]
-        public List<int> WasteTypeIds { get; set; } = new();
-
-        [Required]
-        [Range(0.1, 100000, ErrorMessage = "Qtd deve ser maior que 0.")]
-        public double AmountKg { get; set; }
-
         public string Notes { get; set; } = string.Empty;
     }
-
-    private void ToggleWasteType(int id, bool isChecked)
-    {
-        if (isChecked)
-        {
-            if (!collectionModel.WasteTypeIds.Contains(id))
-                collectionModel.WasteTypeIds.Add(id);
-        }
-        else
-        {
-            collectionModel.WasteTypeIds.Remove(id);
-        }
-    }
+}
 
 }

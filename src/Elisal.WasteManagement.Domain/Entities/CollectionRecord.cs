@@ -10,13 +10,13 @@ public class CollectionRecord
 
     [Required] public DateTime DateTime { get; set; } = DateTime.UtcNow;
 
-    [Required] public double AmountKg { get; set; }
+    public double? AmountKg { get; set; }
 
     [MaxLength(500)] public string Notes { get; set; } = string.Empty;
 
-    [Required] public int WasteTypeId { get; set; }
+    public int? WasteTypeId { get; set; }
 
-    [ForeignKey(nameof(WasteTypeId))] public WasteType WasteType { get; set; } = null!;
+    [ForeignKey(nameof(WasteTypeId))] public WasteType? WasteType { get; set; }
 
     [Required] public int CollectionPointId { get; set; }
 

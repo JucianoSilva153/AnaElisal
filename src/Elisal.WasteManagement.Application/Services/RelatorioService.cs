@@ -161,7 +161,7 @@ public class RelatorioService : IRelatorioService
     private void ComposeProducaoSync(ColumnDescriptor col, List<CollectionRecord> records)
     {
         col.Item().Text($"Total de Recolhas: {records.Count}").FontSize(12).Bold();
-        col.Item().Text($"Total Coletado: {records.Sum(r => r.AmountKg):N2} Kg").FontSize(12).Bold();
+        col.Item().Text($"Total Coletado: {records.Sum(r => r.AmountKg ?? 0):N2} Kg").FontSize(12).Bold();
 
         col.Item().PaddingTop(10).Table(table =>
         {
@@ -190,7 +190,7 @@ public class RelatorioService : IRelatorioService
                 table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(5)
                     .Text(record.WasteType?.Name ?? "N/A");
                 table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(5)
-                    .Text(record.AmountKg.ToString("N2"));
+                    .Text((record.AmountKg ?? 0).ToString("N2"));
             }
         });
     }
@@ -247,7 +247,7 @@ public class RelatorioService : IRelatorioService
             ws.Cell(row, 1).Value = r.DateTime;
             ws.Cell(row, 2).Value = r.CollectionPoint?.Name ?? $"Ponto #{r.CollectionPointId}";
             ws.Cell(row, 3).Value = r.WasteType?.Name ?? "N/A";
-            ws.Cell(row, 4).Value = r.AmountKg;
+            ws.Cell(row, 4).Value = r.AmountKg ?? 0;
             row++;
         }
     }
@@ -276,7 +276,7 @@ public class RelatorioService : IRelatorioService
     private void ComposeOperadoresSync(ColumnDescriptor col, List<CollectionRecord> records)
     {
         var grouped = records.GroupBy(r => r.User?.Name ?? "N/A")
-            .Select(g => new { Nome = g.Key, Qtd = g.Count(), Peso = g.Sum(r => r.AmountKg) })
+            .Select(g => new { Nome = g.Key, Qtd = g.Count(), Peso = g.Sum(r => r.AmountKg ?? 0) })
             .OrderByDescending(x => x.Peso);
 
         col.Item().PaddingTop(10).Table(table =>
@@ -307,7 +307,7 @@ public class RelatorioService : IRelatorioService
     private void ComposeDesempenhoPontoSync(ColumnDescriptor col, List<CollectionRecord> records)
     {
         var grouped = records.GroupBy(r => r.CollectionPoint?.Name ?? "N/A")
-            .Select(g => new { Local = g.Key, Qtd = g.Count(), Peso = g.Sum(r => r.AmountKg) })
+            .Select(g => new { Local = g.Key, Qtd = g.Count(), Peso = g.Sum(r => r.AmountKg ?? 0) })
             .OrderByDescending(x => x.Peso);
 
         col.Item().PaddingTop(10).Table(table =>
@@ -342,7 +342,7 @@ public class RelatorioService : IRelatorioService
         if (filtros.UsuarioId.HasValue) records = records.Where(r => r.UserId == filtros.UsuarioId.Value).ToList();
 
         var grouped = records.GroupBy(r => r.User?.Name ?? "N/A")
-            .Select(g => new { Nome = g.Key, Qtd = g.Count(), Peso = g.Sum(r => r.AmountKg) });
+            .Select(g => new { Nome = g.Key, Qtd = g.Count(), Peso = g.Sum(r => r.AmountKg ?? 0) });
 
         ws.Cell(5, 1).Value = "Operador";
         ws.Cell(5, 2).Value = "Total Recolhas";
@@ -364,7 +364,7 @@ public class RelatorioService : IRelatorioService
         var records = (await (_recordRepo as ICollectionRecordRepository).GetByPeriodAsync(inicio, fim)).ToList();
 
         var grouped = records.GroupBy(r => r.CollectionPoint?.Name ?? "N/A")
-            .Select(g => new { Local = g.Key, Qtd = g.Count(), Peso = g.Sum(r => r.AmountKg) });
+            .Select(g => new { Local = g.Key, Qtd = g.Count(), Peso = g.Sum(r => r.AmountKg ?? 0) });
 
         ws.Cell(5, 1).Value = "Ponto de Recolha";
         ws.Cell(5, 2).Value = "Frequência";

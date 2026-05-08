@@ -113,30 +113,15 @@ public class RouteExecutionController : ControllerBase
 
         if (status == null) return NotFound();
 
-        // Validação GPS para pontos inacessíveis
-        if (dto.IsSkipped && !status.IsSkipped)
-        {
-            if (!dto.DriverLatitude.HasValue || !dto.DriverLongitude.HasValue)
-            {
-                return BadRequest("Localização do motorista é necessária para marcar ponto como inacessível.");
-            }
-
-            if (status.CollectionPoint == null) return BadRequest("Dados do ponto de recolha não encontrados.");
-
-            var distance = HaversineDistance(
-                dto.DriverLatitude.Value, dto.DriverLongitude.Value,
-                status.CollectionPoint.Latitude, status.CollectionPoint.Longitude);
-
-            if (distance > 50) // 50 metros
-            {
-                return BadRequest($"Está demasiado longe do ponto ({distance:F0}m). Deve estar a menos de 50m para o marcar como inacessível.");
-            }
-        }
-
         status.IsCompleted = dto.IsCompleted;
         status.CompletedAt = dto.IsCompleted ? DateTime.UtcNow : null;
-        status.IsSkipped = dto.IsSkipped;
-        status.SkipReason = dto.SkipReason;
+        
+        // IsSkipped is handled automatically by the system and cannot be set manually by the driver.
+        if (dto.IsCompleted)
+        {
+            status.IsSkipped = false;
+            status.SkipReason = null;
+        }
 
         await _context.SaveChangesAsync();
         return NoContent();

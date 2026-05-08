@@ -27,15 +27,12 @@ public class ResiduoService : IResiduoService
 
     public async Task<CollectionRecordDto> RegistarRecolhaAsync(CreateCollectionRecordDto dto)
     {
-        if (dto.AmountKg <= 0)
-            throw new ArgumentException("Quantidade deve ser maior que zero.");
-
         var registoRecolha = new CollectionRecord
         {
             DateTime = dto.DateTime == default ? DateTime.UtcNow : dto.DateTime,
             AmountKg = dto.AmountKg,
             Notes = dto.Notes,
-            WasteTypeId = dto.WasteTypeIds?.FirstOrDefault() ?? dto.WasteTypeId,
+            WasteTypeId = (dto.WasteTypeIds != null && dto.WasteTypeIds.Any()) ? dto.WasteTypeIds.First() : dto.WasteTypeId,
             CollectionPointId = dto.CollectionPointId,
             UserId = dto.UserId,
             RecordWasteTypes =
@@ -60,7 +57,7 @@ public class ResiduoService : IResiduoService
     public async Task<double> ObterTotalPorTipoAsync(int tipoResiduoId, DateTime dataInicio, DateTime dataFim)
     {
         var records = await _collectionRecordRepository.GetByPeriodAsync(dataInicio, dataFim);
-        return records.Where(r => r.WasteTypeId == tipoResiduoId).Sum(r => r.AmountKg);
+        return records.Where(r => r.WasteTypeId == tipoResiduoId).Sum(r => r.AmountKg ?? 0);
     }
 
     public async Task<double> CalcularTaxaReciclagemAsync(DateTime dataInicio, DateTime dataFim)
@@ -68,8 +65,8 @@ public class ResiduoService : IResiduoService
         var records = await _collectionRecordRepository.GetByPeriodAsync(dataInicio, dataFim);
         if (!records.Any()) return 0;
 
-        var totalWeight = records.Sum(r => r.AmountKg);
-        var recyclableWeight = records.Where(r => r.WasteType != null && r.WasteType.IsRecyclable).Sum(r => r.AmountKg);
+        var totalWeight = records.Sum(r => r.AmountKg ?? 0);
+        var recyclableWeight = records.Where(r => r.WasteType != null && r.WasteType.IsRecyclable).Sum(r => r.AmountKg ?? 0);
 
         if (totalWeight == 0) return 0;
 

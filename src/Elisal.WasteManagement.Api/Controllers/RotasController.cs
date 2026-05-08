@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Elisal.WasteManagement.Application.DTOs;
 using Elisal.WasteManagement.Application.Interfaces;
@@ -38,11 +39,19 @@ public class RotasController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        var routes = await _context.Routes
+        var query = _context.Routes
             .Include(r => r.AssignedDriver)
             .Include(r => r.RoutePoints)
             .ThenInclude(rp => rp.CollectionPoint)
-            .ToListAsync();
+            .Where(r => r.IsActive);
+            
+        if (User.IsInRole("Driver"))
+        {
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+            query = query.Where(r => r.AssignedDriverId == userId);
+        }
+
+        var routes = await query.ToListAsync();
 
         // Recalcular distâncias que estejam a zero (self-healing)
         bool changed = false;
@@ -72,12 +81,20 @@ public class RotasController : ControllerBase
             .Include(r => r.RoutePoints)
             .ThenInclude(rp => rp.CollectionPoint)
             .FirstOrDefaultAsync(r => r.Id == id);
+            
         if (route == null) return NotFound();
+
+        if (User.IsInRole("Driver"))
+        {
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+            if (route.AssignedDriverId != userId) return Forbid();
+        }
 
         return Ok(route.ToDto());
     }
 
     [HttpPost]
+    [Authorize(Roles = "Admin,Manager")]
     public async Task<IActionResult> Create([FromBody] CreateRouteDto dto)
     {
         try
@@ -135,6 +152,7 @@ public class RotasController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize(Roles = "Admin,Manager")]
     public async Task<IActionResult> Update(int id, [FromBody] CreateRouteDto dto)
     {
         try
@@ -174,6 +192,7 @@ public class RotasController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin,Manager")]
     public async Task<IActionResult> Delete(int id)
     {
         try
@@ -194,6 +213,7 @@ public class RotasController : ControllerBase
     }
 
     [HttpPost("otimizar")]
+    [Authorize(Roles = "Admin,Manager")]
     public async Task<IActionResult> OptimizeRoute([FromBody] int[] pontoIds)
     {
         try
@@ -216,6 +236,15 @@ public class RotasController : ControllerBase
     [HttpGet("{id}/pontos")]
     public async Task<IActionResult> GetRoutePoints(int id)
     {
+        var route = await _context.Routes.FindAsync(id);
+        if (route == null) return NotFound();
+
+        if (User.IsInRole("Driver"))
+        {
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+            if (route.AssignedDriverId != userId) return Forbid();
+        }
+
         var routePoints = await _context.RoutePoints
             .Include(rp => rp.CollectionPoint)
             .Where(rp => rp.RouteId == id)

@@ -54,19 +54,19 @@ public class DashboardService : IDashboardService
             ? allLastRecords.Where(r => r.UserId == userId.Value).ToList()
             : allLastRecords;
 
-        var totalResiduos = currentMonthRecords.Sum(r => r.AmountKg) / 1000.0; // Ton
-        var lastTotalResiduos = lastMonthRecords.Sum(r => r.AmountKg) / 1000.0;
+        var totalResiduos = currentMonthRecords.Sum(r => r.AmountKg ?? 0) / 1000.0; // Ton
+        var lastTotalResiduos = lastMonthRecords.Sum(r => r.AmountKg ?? 0) / 1000.0;
         var variacaoResiduos =
             lastTotalResiduos == 0 ? 0 : ((totalResiduos - lastTotalResiduos) / lastTotalResiduos) * 100;
 
         var currentRecyclable = currentMonthRecords.Where(r => r.WasteType != null && r.WasteType.IsRecyclable)
-            .Sum(r => r.AmountKg);
-        var currentTotalKg = currentMonthRecords.Sum(r => r.AmountKg);
+            .Sum(r => r.AmountKg ?? 0);
+        var currentTotalKg = currentMonthRecords.Sum(r => r.AmountKg ?? 0);
         var taxaReaproveitamento = currentTotalKg == 0 ? 0 : (currentRecyclable / currentTotalKg) * 100;
 
         var lastRecyclable = lastMonthRecords.Where(r => r.WasteType != null && r.WasteType.IsRecyclable)
-            .Sum(r => r.AmountKg);
-        var lastTotalKg = lastMonthRecords.Sum(r => r.AmountKg);
+            .Sum(r => r.AmountKg ?? 0);
+        var lastTotalKg = lastMonthRecords.Sum(r => r.AmountKg ?? 0);
         var lastTaxa = lastTotalKg == 0 ? 0 : (lastRecyclable / lastTotalKg) * 100;
         var variacaoTaxa = taxaReaproveitamento - lastTaxa;
 
@@ -117,7 +117,7 @@ public class DashboardService : IDashboardService
             // Impacto Pessoal
             foreach (var wt in await _wasteTypeRepository.GetAllAsync())
             {
-                var weight = currentMonthRecords.Where(r => r.WasteTypeId == wt.Id).Sum(r => r.AmountKg);
+                var weight = currentMonthRecords.Where(r => r.WasteTypeId == wt.Id).Sum(r => r.AmountKg ?? 0);
                 if (currentTotalKg > 0 && weight > 0)
                 {
                     stats.ImpactoAmbientalPessoal.Add(new PieChartDto
@@ -150,14 +150,14 @@ public class DashboardService : IDashboardService
             stats.VolumeMensal.Add(new ChartSeriesDto
             {
                 Label = month.ToString("MMM"),
-                Value = Math.Round(filteredMonthRecords.Sum(r => r.AmountKg) / 1000.0, 1)
+                Value = Math.Round(filteredMonthRecords.Sum(r => r.AmountKg ?? 0) / 1000.0, 1)
             });
         }
 
         var wasteTypes = await _wasteTypeRepository.GetAllAsync();
         foreach (var wt in wasteTypes)
         {
-            var wtWeight = currentMonthRecords.Where(r => r.WasteTypeId == wt.Id).Sum(r => r.AmountKg);
+            var wtWeight = currentMonthRecords.Where(r => r.WasteTypeId == wt.Id).Sum(r => r.AmountKg ?? 0);
             if (currentTotalKg > 0)
             {
                 stats.DistribuicaoPorTipo.Add(new PieChartDto
@@ -187,7 +187,7 @@ public class DashboardService : IDashboardService
                 DataHora = r.DateTime.ToString("dd MMM, HH:mm"),
                 Localizacao = r.CollectionPoint?.Name ?? "N/A",
                 Tipo = r.WasteType?.Name ?? "N/A",
-                Peso = $"{r.AmountKg / 1000.0:F1} Ton",
+                Peso = $"{(r.AmountKg ?? 0) / 1000.0:F1} Ton",
                 Status = "Concluído"
             });
         }

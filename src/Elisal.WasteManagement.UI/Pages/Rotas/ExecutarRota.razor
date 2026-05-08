@@ -160,18 +160,12 @@
                                     </p>
                                 }
                             </div>
-                            <div class="flex flex-col items-center gap-1.5">
-                                <label class="flex items-center cursor-pointer" title="Marcar como concluído">
-                                    <input type="checkbox" checked="@ps.IsCompleted" @onchange="@(e => TogglePoint(ps, (bool)e.Value!))"
-                                           disabled="@(executionId == 0 || isUpdating || ps.IsSkipped)"
-                                           class="w-5 h-5 text-primary rounded focus:ring-primary disabled:opacity-50"/>
-                                </label>
-                                <button @onclick="@(() => SkipPoint(ps))"
-                                        disabled="@(executionId == 0 || isUpdating || ps.IsCompleted)"
-                                        class="p-0.5 rounded text-amber-500 hover:bg-amber-100 dark:hover:bg-amber-900/30 disabled:opacity-30 transition-colors"
-                                        title="@(ps.IsSkipped ? "Desmarcar inacessível" : "Marcar como inacessível")">
-                                    <span class="material-symbols-outlined text-base leading-none">@(ps.IsSkipped ? "undo" : "block")</span>
-                                </button>
+                            <div class="flex flex-col items-center justify-center">
+                                 <label class="flex items-center cursor-pointer" title="Marcar como concluído">
+                                     <input type="checkbox" checked="@ps.IsCompleted" @onchange="@(e => TogglePoint(ps, (bool)e.Value!))"
+                                            disabled="@(executionId == 0 || isUpdating || ps.IsSkipped)"
+                                            class="w-5 h-5 text-primary rounded focus:ring-primary disabled:opacity-50"/>
+                                 </label>
                             </div>
                         </div>
                     }
@@ -188,6 +182,8 @@
         </div>
     </div>
 </div>
+
+<Elisal.WasteManagement.UI.Components.Modals.RecolhaModal @ref="recolhaModal" OnRecordSaved="OnCollectionSaved" />
 
 @code {
     [Parameter] public int Id { get; set; }
@@ -207,6 +203,8 @@
     private string errorMessage = string.Empty;
     private double? currentLat;
     private double? currentLon;
+    private Elisal.WasteManagement.UI.Components.Modals.RecolhaModal recolhaModal = null!;
+    private RoutePointExecutionStatus? pendingPointStatus;
 
     private HubConnection? hubConnection;
     private DotNetObjectReference<ExecutarRota>? dotNetRef;
@@ -332,13 +330,35 @@
     private async Task TogglePoint(RoutePointExecutionStatus ps, bool completed)
     {
         if (isUpdating) return;
-        isUpdating = true;
 
+        if (completed)
+        {
+            pendingPointStatus = ps;
+            recolhaModal.Show(ps.CollectionPointId);
+            return;
+        }
+
+        await UpdatePointStatus(ps, false);
+    }
+
+    private async Task OnCollectionSaved()
+    {
+        if (pendingPointStatus != null)
+        {
+            await UpdatePointStatus(pendingPointStatus, true);
+            pendingPointStatus = null;
+        }
+    }
+
+    private async Task UpdatePointStatus(RoutePointExecutionStatus ps, bool completed)
+    {
+        isUpdating = true;
+        
         ps.IsCompleted = completed;
         if (completed)
         {
             ps.CompletedAt = DateTime.UtcNow;
-            ps.IsSkipped = false; // remover estado inacessível ao concluir
+            ps.IsSkipped = false;
         }
         else
             ps.CompletedAt = null;
@@ -351,62 +371,6 @@
             IsCompleted = completed,
             IsSkipped = false
         });
-
-        isUpdating = false;
-        StateHasChanged();
-    }
-
-    private async Task SkipPoint(RoutePointExecutionStatus ps)
-    {
-        if (isUpdating || ps.IsCompleted) return;
-        
-        // Se já está marcado como inacessível, permitir desmarcar sem validação GPS
-        if (ps.IsSkipped)
-        {
-            isUpdating = true;
-            ps.IsSkipped = false;
-            StateHasChanged();
-
-            await Http.PutAsJsonAsync($"api/routeexecution/{executionId}/point", new UpdatePointStatusDto
-            {
-                CollectionPointId = ps.CollectionPointId,
-                IsCompleted = false,
-                IsSkipped = false
-            });
-
-            isUpdating = false;
-            StateHasChanged();
-            return;
-        }
-
-        // Validação para marcar como inacessível
-        if (!currentLat.HasValue || !currentLon.HasValue)
-        {
-            errorMessage = "Aguardando sinal GPS para validar proximidade.";
-            return;
-        }
-
-        isUpdating = true;
-        errorMessage = string.Empty;
-
-        var response = await Http.PutAsJsonAsync($"api/routeexecution/{executionId}/point", new UpdatePointStatusDto
-        {
-            CollectionPointId = ps.CollectionPointId,
-            IsCompleted = false,
-            IsSkipped = true,
-            DriverLatitude = currentLat,
-            DriverLongitude = currentLon
-        });
-
-        if (response.IsSuccessStatusCode)
-        {
-            ps.IsSkipped = true;
-        }
-        else
-        {
-            var msg = await response.Content.ReadAsStringAsync();
-            errorMessage = !string.IsNullOrEmpty(msg) ? msg : "Erro ao validar proximidade GPS.";
-        }
 
         isUpdating = false;
         StateHasChanged();
