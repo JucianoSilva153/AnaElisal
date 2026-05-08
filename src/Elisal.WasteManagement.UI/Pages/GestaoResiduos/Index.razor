@@ -230,7 +230,7 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div class="space-y-2">
                         <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Centro de Triagem</label>
-                        <select @bind="newReception.SortingCenterId" class="w-full h-12 px-4 rounded-xl border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-bold transition-all">
+                        <InputSelect @bind-Value="newReception.SortingCenterId" class="w-full h-12 px-4 rounded-xl border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-bold transition-all">
                             <option value="0">Selecionar...</option>
                             @if (centros != null)
                             {
@@ -239,12 +239,12 @@
                                     <option value="@c.Id">@c.Name</option>
                                 }
                             }
-                        </select>
+                        </InputSelect>
                         <ValidationMessage For="@(() => newReception.SortingCenterId)" class="text-[10px] text-red-500 font-bold" />
                     </div>
                     <div class="space-y-2">
                         <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Origem (Rota)</label>
-                        <select @bind="newReception.RouteExecutionId" class="w-full h-12 px-4 rounded-xl border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-bold transition-all">
+                        <InputSelect @bind-Value="newReception.RouteExecutionId" class="w-full h-12 px-4 rounded-xl border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-bold transition-all">
                             <option value="">Avulsa / Manual</option>
                             @if (rotasAguardando != null)
                             {
@@ -253,7 +253,7 @@
                                     <option value="@r.Id">@r.RouteName (@r.DriverName)</option>
                                 }
                             }
-                        </select>
+                        </InputSelect>
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
@@ -343,7 +343,7 @@
 
         if (newReception.GrossWeightKg <= newReception.TareWeightKg)
         {
-            Notification.ShowError("O peso bruto deve ser superior à tara.");
+            Notification.ShowError("Inconsistência de Pesagem: O peso bruto deve ser superior à tara para que o peso líquido seja válido.");
             return;
         }
 

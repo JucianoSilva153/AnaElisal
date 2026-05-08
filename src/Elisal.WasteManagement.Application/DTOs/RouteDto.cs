@@ -12,6 +12,8 @@ public class RouteDto
     public TimeSpan StartTime { get; set; }
     public bool IsActive { get; set; }
     public double TotalDistance { get; set; }
+    public int? AssignedDriverId { get; set; }
+    public string? AssignedDriverName { get; set; }
     public List<RoutePointDto> RoutePoints { get; set; } = new();
 }
 
@@ -22,6 +24,7 @@ public class CreateRouteDto
     public string DiaSemana { get; set; } = "";
     public TimeSpan HorarioInicio { get; set; }
     public double TotalDistance { get; set; }
+    public int? AssignedDriverId { get; set; }
     public int[] PontoIds { get; set; } = Array.Empty<int>();
 }
 

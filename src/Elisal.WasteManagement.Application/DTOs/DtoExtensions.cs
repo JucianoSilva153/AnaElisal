@@ -98,6 +98,8 @@ public static class DtoExtensions
             StartTime = route.StartTime,
             IsActive = route.IsActive,
             TotalDistance = route.TotalDistance,
+            AssignedDriverId = route.AssignedDriverId,
+            AssignedDriverName = route.AssignedDriver?.Name,
             RoutePoints = route.RoutePoints?.Select(rp => rp.ToDto()).ToList() ?? new()
         };
     }

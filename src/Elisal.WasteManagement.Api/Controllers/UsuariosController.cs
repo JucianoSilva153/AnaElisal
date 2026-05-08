@@ -3,9 +3,12 @@ using System.Threading.Tasks;
 using Elisal.WasteManagement.Application.DTOs;
 using Elisal.WasteManagement.Application.Interfaces;
 using Elisal.WasteManagement.Domain.Entities;
+using Elisal.WasteManagement.Domain.Enums;
 using Elisal.WasteManagement.Domain.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Elisal.WasteManagement.Api.Controllers;
 
@@ -25,27 +28,16 @@ public class UsuariosController : ControllerBase
         _auditLogRepository = auditLogRepository;
     }
 
-    [HttpPost("login")]
-    [AllowAnonymous]
-    public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
+    [HttpGet("perfil/{perfil}")]
+    [Authorize]
+    public async Task<IActionResult> GetByPerfil(UserRole perfil)
     {
-        try
-        {
-            var user = await _usuarioService.AutenticarAsync(loginDto.Email, loginDto.Senha);
-            if (user == null)
-                return Unauthorized(new { Message = "Email ou senha inválidos." });
-
-            // In a real app, generate JWT Token here
-            return Ok(new { Message = "Login realizado com sucesso", UserId = user.Id, Role = user.Role.ToString() });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { Message = "Erro interno ao processar login", Details = ex.Message });
-        }
+        var users = await _usuarioService.ObterPorPerfilAsync(perfil);
+        return Ok(users);
     }
 
     [HttpPost("registar")]
-    [AllowAnonymous]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Registar([FromBody] RegisterUserDto dto)
     {
         try

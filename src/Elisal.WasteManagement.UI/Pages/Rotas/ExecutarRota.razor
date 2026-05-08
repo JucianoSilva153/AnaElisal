@@ -26,7 +26,11 @@
         {
             <div class="text-right">
                 <p class="text-sm text-slate-500">Progresso</p>
-                <p class="text-2xl font-bold text-primary">@completedCount/@pointStatuses.Count</p>
+                <p class="text-2xl font-bold text-primary">@processedCount/@pointStatuses.Count</p>
+                @if (skippedCount > 0)
+                {
+                    <p class="text-xs text-amber-500 font-semibold mt-0.5">@skippedCount inacess.</p>
+                }
             </div>
         }
     </div>
@@ -38,7 +42,7 @@
             <span class="material-symbols-outlined text-green-600 text-2xl">check_circle</span>
             <div>
                 <p class="font-semibold text-green-800 dark:text-green-200">Rota concluída com sucesso!</p>
-                <p class="text-sm text-green-600 dark:text-green-400">Todos os pontos foram visitados. A redirecionar...</p>
+                <p class="text-sm text-green-600 dark:text-green-400">Rota processada com sucesso. A redirecionar...</p>
             </div>
         </div>
     }
@@ -51,6 +55,37 @@
             <p class="text-sm text-blue-800 dark:text-blue-200">
                 Execução iniciada às <strong>@executionStartTime.Value.ToLocalTime().ToString("HH:mm")</strong> — progresso guardado automaticamente
             </p>
+        </div>
+    }
+
+    @* Banner de conflito de recolha detectado automaticamente *@
+    @if (!string.IsNullOrEmpty(conflictMessage))
+    {
+        <div class="p-4 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 flex items-center gap-3">
+            <span class="material-symbols-outlined text-amber-500 text-2xl">warning</span>
+            <div class="flex-1">
+                <p class="font-semibold text-amber-800 dark:text-amber-200 text-sm">@conflictMessage</p>
+                <p class="text-xs text-amber-600 dark:text-amber-400 mt-0.5">O ponto foi marcado como inacessível automaticamente pelo sistema.</p>
+            </div>
+            <button @onclick="() => conflictMessage = string.Empty"
+                    class="text-amber-400 hover:text-amber-600 transition-colors">
+                <span class="material-symbols-outlined text-base">close</span>
+            </button>
+        </div>
+    }
+
+    @* Erros de API (ex: validação GPS) *@
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 flex items-center gap-3">
+            <span class="material-symbols-outlined text-red-500 text-2xl">error</span>
+            <div class="flex-1">
+                <p class="font-semibold text-red-800 dark:text-red-200 text-sm">@errorMessage</p>
+            </div>
+            <button @onclick="() => errorMessage = string.Empty"
+                    class="text-red-400 hover:text-red-600 transition-colors">
+                <span class="material-symbols-outlined text-base">close</span>
+            </button>
         </div>
     }
 
@@ -93,11 +128,15 @@
                     @foreach (var ps in pointStatuses)
                     {
                         var cp = ps.CollectionPoint;
-                        <div class="flex items-start gap-3 p-4 rounded-lg @(ps.IsCompleted ? "bg-green-50 dark:bg-green-900/20" : "bg-slate-50 dark:bg-slate-800") border @(ps.IsCompleted ? "border-green-200 dark:border-green-800" : "border-slate-200 dark:border-slate-700") transition-colors">
-                            <div class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center @(ps.IsCompleted ? "bg-green-500 text-white" : "bg-slate-300 dark:bg-slate-600 text-slate-700 dark:text-slate-300") font-bold transition-colors">
+                        <div class="flex items-start gap-3 p-4 rounded-lg @(ps.IsCompleted ? "bg-green-50 dark:bg-green-900/20" : ps.IsSkipped ? "bg-amber-50 dark:bg-amber-900/20" : "bg-slate-50 dark:bg-slate-800") border @(ps.IsCompleted ? "border-green-200 dark:border-green-800" : ps.IsSkipped ? "border-amber-200 dark:border-amber-800" : "border-slate-200 dark:border-slate-700") transition-colors">
+                            <div class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center @(ps.IsCompleted ? "bg-green-500 text-white" : ps.IsSkipped ? "bg-amber-500 text-white" : "bg-slate-300 dark:bg-slate-600 text-slate-700 dark:text-slate-300") font-bold transition-colors">
                                 @if (ps.IsCompleted)
                                 {
                                     <span class="material-symbols-outlined text-sm">check</span>
+                                }
+                                else if (ps.IsSkipped)
+                                {
+                                    <span class="material-symbols-outlined text-sm">block</span>
                                 }
                                 else
                                 {
@@ -113,18 +152,33 @@
                                         Concluído às @ps.CompletedAt.Value.ToLocalTime().ToString("HH:mm")
                                     </p>
                                 }
+                                @if (ps.IsSkipped)
+                                {
+                                    <p class="text-xs text-amber-600 dark:text-amber-400 mt-1 flex items-center gap-1">
+                                        <span class="material-symbols-outlined text-xs">block</span>
+                                        Inacessível@(!string.IsNullOrEmpty(ps.SkipReason) ? $": {ps.SkipReason}" : "")
+                                    </p>
+                                }
                             </div>
-                            <label class="flex items-center cursor-pointer">
-                                <input type="checkbox" checked="@ps.IsCompleted" @onchange="@(e => TogglePoint(ps, (bool)e.Value!))"
-                                       disabled="@(executionId == 0 || isUpdating)"
-                                       class="w-5 h-5 text-primary rounded focus:ring-primary disabled:opacity-50"/>
-                            </label>
+                            <div class="flex flex-col items-center gap-1.5">
+                                <label class="flex items-center cursor-pointer" title="Marcar como concluído">
+                                    <input type="checkbox" checked="@ps.IsCompleted" @onchange="@(e => TogglePoint(ps, (bool)e.Value!))"
+                                           disabled="@(executionId == 0 || isUpdating || ps.IsSkipped)"
+                                           class="w-5 h-5 text-primary rounded focus:ring-primary disabled:opacity-50"/>
+                                </label>
+                                <button @onclick="@(() => SkipPoint(ps))"
+                                        disabled="@(executionId == 0 || isUpdating || ps.IsCompleted)"
+                                        class="p-0.5 rounded text-amber-500 hover:bg-amber-100 dark:hover:bg-amber-900/30 disabled:opacity-30 transition-colors"
+                                        title="@(ps.IsSkipped ? "Desmarcar inacessível" : "Marcar como inacessível")">
+                                    <span class="material-symbols-outlined text-base leading-none">@(ps.IsSkipped ? "undo" : "block")</span>
+                                </button>
+                            </div>
                         </div>
                     }
                 }
             </div>
 
-            @if (executionId > 0 && pointStatuses.Any() && pointStatuses.All(ps => ps.IsCompleted))
+            @if (executionId > 0 && pointStatuses.Any() && pointStatuses.All(ps => ps.IsCompleted || ps.IsSkipped))
             {
                 <button @onclick="FinishRoute" disabled="@isFinishing" class="w-full mt-6 px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 flex items-center justify-center gap-2 disabled:opacity-70 transition-colors">
                     <span class="material-symbols-outlined">@(isFinishing ? "hourglass_empty" : "check_circle")</span>
@@ -147,6 +201,12 @@
     private bool isFinishing = false;
     private bool showSuccess = false;
     private int completedCount => pointStatuses.Count(ps => ps.IsCompleted);
+    private int skippedCount  => pointStatuses.Count(ps => ps.IsSkipped);
+    private int processedCount => pointStatuses.Count(ps => ps.IsCompleted || ps.IsSkipped);
+    private string conflictMessage = string.Empty;
+    private string errorMessage = string.Empty;
+    private double? currentLat;
+    private double? currentLon;
 
     private HubConnection? hubConnection;
     private DotNetObjectReference<ExecutarRota>? dotNetRef;
@@ -171,6 +231,24 @@
             .Build();
 
         await hubConnection.StartAsync();
+
+        // Receber notificação de conflito de recolha em tempo real
+        hubConnection.On<PointConflictNotification>("PointMarkedInaccessible", async (notification) =>
+        {
+            // Filtrar: só processar se for para esta execução
+            if (notification.AffectedExecutionId != executionId) return;
+
+            var ps = pointStatuses.FirstOrDefault(
+                p => p.CollectionPointId == notification.CollectionPointId);
+
+            if (ps != null && !ps.IsSkipped && !ps.IsCompleted)
+            {
+                ps.IsSkipped = true;
+                ps.SkipReason = notification.Reason;
+                conflictMessage = $"⚠️ Conflito detectado: o ponto '{notification.PointName}' já está a ser recolhido por outro motorista.";
+                await InvokeAsync(StateHasChanged);
+            }
+        });
 
         await LoadData();
 
@@ -258,7 +336,10 @@
 
         ps.IsCompleted = completed;
         if (completed)
+        {
             ps.CompletedAt = DateTime.UtcNow;
+            ps.IsSkipped = false; // remover estado inacessível ao concluir
+        }
         else
             ps.CompletedAt = null;
 
@@ -267,8 +348,65 @@
         await Http.PutAsJsonAsync($"api/routeexecution/{executionId}/point", new UpdatePointStatusDto
         {
             CollectionPointId = ps.CollectionPointId,
-            IsCompleted = completed
+            IsCompleted = completed,
+            IsSkipped = false
         });
+
+        isUpdating = false;
+        StateHasChanged();
+    }
+
+    private async Task SkipPoint(RoutePointExecutionStatus ps)
+    {
+        if (isUpdating || ps.IsCompleted) return;
+        
+        // Se já está marcado como inacessível, permitir desmarcar sem validação GPS
+        if (ps.IsSkipped)
+        {
+            isUpdating = true;
+            ps.IsSkipped = false;
+            StateHasChanged();
+
+            await Http.PutAsJsonAsync($"api/routeexecution/{executionId}/point", new UpdatePointStatusDto
+            {
+                CollectionPointId = ps.CollectionPointId,
+                IsCompleted = false,
+                IsSkipped = false
+            });
+
+            isUpdating = false;
+            StateHasChanged();
+            return;
+        }
+
+        // Validação para marcar como inacessível
+        if (!currentLat.HasValue || !currentLon.HasValue)
+        {
+            errorMessage = "Aguardando sinal GPS para validar proximidade.";
+            return;
+        }
+
+        isUpdating = true;
+        errorMessage = string.Empty;
+
+        var response = await Http.PutAsJsonAsync($"api/routeexecution/{executionId}/point", new UpdatePointStatusDto
+        {
+            CollectionPointId = ps.CollectionPointId,
+            IsCompleted = false,
+            IsSkipped = true,
+            DriverLatitude = currentLat,
+            DriverLongitude = currentLon
+        });
+
+        if (response.IsSuccessStatusCode)
+        {
+            ps.IsSkipped = true;
+        }
+        else
+        {
+            var msg = await response.Content.ReadAsStringAsync();
+            errorMessage = !string.IsNullOrEmpty(msg) ? msg : "Erro ao validar proximidade GPS.";
+        }
 
         isUpdating = false;
         StateHasChanged();
@@ -314,6 +452,9 @@
     [JSInvokable]
     public async Task OnLocationChanged(double latitude, double longitude)
     {
+        currentLat = latitude;
+        currentLon = longitude;
+
         if (hubConnection?.State == HubConnectionState.Connected && executionId > 0)
         {
             var update = new LocationUpdateDto
@@ -350,6 +491,14 @@
         public int RouteId { get; set; }
         public DateTime StartTime { get; set; }
         public RouteExecutionStatus Status { get; set; }
+    }
+
+    private class PointConflictNotification
+    {
+        public int AffectedExecutionId { get; set; }
+        public int CollectionPointId { get; set; }
+        public string PointName { get; set; } = string.Empty;
+        public string Reason { get; set; } = string.Empty;
     }
 
 }

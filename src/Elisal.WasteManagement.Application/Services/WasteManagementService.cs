@@ -103,7 +103,7 @@ public class WasteManagementService : IWasteManagementService
         if (dto.GrossWeightKg <= 0)
             throw new ArgumentException("Peso bruto deve ser maior que zero.");
         if (dto.GrossWeightKg <= dto.TareWeightKg)
-            throw new ArgumentException("Peso bruto deve ser maior que a tara.");
+            throw new ArgumentException("Inconsistência de Pesagem: O peso bruto deve ser superior à tara para calcular o peso líquido.");
 
         var reception = new WasteReception
         {

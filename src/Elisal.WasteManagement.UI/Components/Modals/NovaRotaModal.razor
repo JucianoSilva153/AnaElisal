@@ -69,6 +69,17 @@
                                         <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Janela de Início</label>
                                         <input type="time" @bind="startTime" class="w-full h-12 px-5 rounded-2xl border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold transition-all"/>
                                     </div>
+
+                                    <div class="space-y-2">
+                                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Operador Responsável</label>
+                                        <InputSelect @bind-Value="model.AssignedDriverId" class="w-full h-12 px-5 rounded-2xl border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold transition-all">
+                                            <option value="">-- Selecione --</option>
+                                            @foreach (var driver in drivers)
+                                            {
+                                                <option value="@driver.Id">@driver.Name</option>
+                                            }
+                                        </InputSelect>
+                                    </div>
                                 </div>
 
                                 <!-- Selected Points List -->
@@ -176,6 +187,7 @@
     private string errorMessage = "";
     private double totalDistance = 0;
     private TimeOnly startTime;
+    private List<UserDto> drivers = new();
 
     public async Task Show(int? routeId = null)
     {
@@ -208,6 +220,7 @@
         try
         {
             allPoints = await Http.GetFromJsonAsync<List<CollectionPoint>>("api/pontosrecolha") ?? new();
+            drivers = await Http.GetFromJsonAsync<List<UserDto>>("api/usuarios/perfil/Driver") ?? new();
 
             if (RouteId.HasValue)
             {
@@ -216,6 +229,7 @@
                 {
                     model.Nome = route.Name;
                     model.DiaSemana = route.WeekDay;
+                    model.AssignedDriverId = route.AssignedDriverId;
                     startTime = TimeOnly.FromTimeSpan(route.StartTime);
 
                     selectedPointIds = route.RoutePoints
@@ -329,6 +343,7 @@
                 Descricao = "",
                 DiaSemana = model.DiaSemana,
                 HorarioInicio = startTime,
+                AssignedDriverId = model.AssignedDriverId,
                 PontoIds = selectedPointIds.ToArray()
             };
 
@@ -370,6 +385,8 @@
         [Required(ErrorMessage = "Dia da semana é obrigatório")]
         [MaxLength(20)]
         public string DiaSemana { get; set; } = "";
+
+        public int? AssignedDriverId { get; set; }
     }
 
     public class OptimizationResult

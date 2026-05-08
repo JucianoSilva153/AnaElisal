@@ -14,6 +14,7 @@ public class RouteExecutionSummaryDto
     public DateTime? EndTime { get; set; }
     public RouteExecutionStatus Status { get; set; }
     public int PointsCompleted { get; set; }
+    public int PointsSkipped { get; set; }
     public int TotalPoints { get; set; }
     
     public double PercentageComplete => TotalPoints == 0 ? 0 : Math.Round((double)PointsCompleted / TotalPoints * 100, 1);

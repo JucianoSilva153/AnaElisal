@@ -51,7 +51,12 @@
                                     </div>
                                     <div>
                                         <p class="font-black text-slate-900 dark:text-white uppercase tracking-tight">@route.Name</p>
-                                        <p class="text-[10px] font-bold text-slate-400 italic">@route.Description</p>
+                                        <div class="flex items-center gap-1.5 mt-0.5">
+                                            <span class="material-symbols-outlined text-[10px] text-primary font-bold">person</span>
+                                            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                                                @(string.IsNullOrEmpty(route.AssignedDriverName) ? "Não Atribuído" : route.AssignedDriverName)
+                                            </p>
+                                        </div>
                                     </div>
                                 </div>
                             </td>

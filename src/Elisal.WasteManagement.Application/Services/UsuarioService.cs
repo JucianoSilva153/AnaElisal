@@ -7,6 +7,7 @@ using Elisal.WasteManagement.Application.Interfaces;
 using Elisal.WasteManagement.Domain.Entities;
 using Elisal.WasteManagement.Domain.Interfaces;
 using Elisal.WasteManagement.Application.DTOs;
+using Elisal.WasteManagement.Domain.Enums;
 
 namespace Elisal.WasteManagement.Application.Services;
 
@@ -174,6 +175,12 @@ public class UsuarioService : IUsuarioService
     public string HashSenha(string senha)
     {
         return BCrypt.Net.BCrypt.HashPassword(senha, 12);
+    }
+
+    public async Task<IEnumerable<UserDto>> ObterPorPerfilAsync(UserRole perfil)
+    {
+        var users = await _userRepository.GetByRoleAsync(perfil);
+        return users.Select(u => u.ToDto());
     }
 
     private async Task LogActionAsync(int userId, string action, string table, string details)

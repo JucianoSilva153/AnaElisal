@@ -5,6 +5,7 @@ using Elisal.WasteManagement.Domain.Interfaces;
 using Elisal.WasteManagement.Infrastructure.Persistence;
 using Elisal.WasteManagement.Infrastructure.Repositories;
 using Elisal.WasteManagement.Infrastructure.Services;
+using Elisal.WasteManagement.Application.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
@@ -40,6 +41,7 @@ builder.Services.AddScoped<IRouteExecutionRepository, RouteExecutionRepository>(
 builder.Services.AddScoped<ISortingCenterRepository, SortingCenterRepository>();
 builder.Services.AddScoped<IWasteReceptionRepository, WasteReceptionRepository>();
 builder.Services.AddScoped<ISortingBatchRepository, SortingBatchRepository>();
+builder.Services.AddScoped<IRoutePointExecutionStatusRepository, RoutePointExecutionStatusRepository>();
 
 // Configurations
 builder.Services.Configure<Elisal.WasteManagement.Application.Common.EmailSettings>(
@@ -54,6 +56,8 @@ builder.Services.AddScoped<ICooperativaService, CooperativaService>();
 builder.Services.AddScoped<IRelatorioService, RelatorioService>();
 builder.Services.AddScoped<IRotaService, RotaService>();
 builder.Services.AddScoped<IOperationalAlertService, OperationalAlertService>();
+builder.Services.AddScoped<IRouteConflictService, RouteConflictService>();
+builder.Services.AddSingleton<IDriverLocationTracker, DriverLocationTracker>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IWasteManagementService, WasteManagementService>();

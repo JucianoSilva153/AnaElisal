@@ -33,6 +33,16 @@
                         <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Horário Início</label>
                         <input type="time" @bind-value="startTime" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white p-2" />
                     </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Operador Responsável</label>
+                        <select @bind="assignedDriverId" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white p-2">
+                            <option value="">-- Selecione um Operador --</option>
+                            @foreach (var driver in drivers)
+                            {
+                                <option value="@driver.Id">@driver.Name</option>
+                            }
+                        </select>
+                    </div>
                 </div>
             </div>
 
@@ -93,6 +103,8 @@
     private DateTime startTime;
     private List<CollectionPoint> allPoints = new();
     private List<CollectionPoint> selectedPoints = new();
+    private List<UserDto> drivers = new();
+    private int? assignedDriverId;
     private double totalDistance = 0;
 
     protected override async Task OnInitializedAsync()
@@ -100,10 +112,30 @@
         try
         {
             allPoints = await Http.GetFromJsonAsync<List<CollectionPoint>>("api/pontosrecolha") ?? new();
+            drivers = await Http.GetFromJsonAsync<List<UserDto>>("api/usuarios/perfil/Driver") ?? new();
+
+            if (Id.HasValue)
+            {
+                var route = await Http.GetFromJsonAsync<RouteDto>($"api/rotas/{Id}");
+                if (route != null)
+                {
+                    routeName = route.Name;
+                    weekDay = route.WeekDay;
+                    startTime = DateTime.Today.Add(route.StartTime);
+                    assignedDriverId = route.AssignedDriverId;
+                    totalDistance = route.TotalDistance;
+                    selectedPoints = route.RoutePoints
+                        .OrderBy(rp => rp.SequenceOrder)
+                        .Select(rp => rp.CollectionPoint!)
+                        .Where(p => p != null)
+                        .ToList();
+                }
+            }
         }
         catch
         {
             allPoints = new();
+            drivers = new();
         }
     }
 
@@ -151,9 +183,10 @@
                 Nome = routeName,
                 Descricao = "",
                 DiaSemana = weekDay,
-                HorarioInicio = TimeSpan.Parse(startTime.Hour.ToString()),
+                HorarioInicio = new TimeSpan(startTime.Hour, startTime.Minute, 0),
                 PontoIds = selectedPoints.Select(p => p.Id).ToArray(),
-                TotalDistance = totalDistance
+                TotalDistance = totalDistance,
+                AssignedDriverId = assignedDriverId
             };
 
             if (Id.HasValue)

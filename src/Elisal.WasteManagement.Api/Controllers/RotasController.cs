@@ -39,6 +39,7 @@ public class RotasController : ControllerBase
     public async Task<IActionResult> GetAll()
     {
         var routes = await _context.Routes
+            .Include(r => r.AssignedDriver)
             .Include(r => r.RoutePoints)
             .ThenInclude(rp => rp.CollectionPoint)
             .ToListAsync();
@@ -67,6 +68,7 @@ public class RotasController : ControllerBase
     public async Task<IActionResult> GetById(int id)
     {
         var route = await _context.Routes
+            .Include(r => r.AssignedDriver)
             .Include(r => r.RoutePoints)
             .ThenInclude(rp => rp.CollectionPoint)
             .FirstOrDefaultAsync(r => r.Id == id);
@@ -86,6 +88,7 @@ public class RotasController : ControllerBase
                 Description = dto.Descricao,
                 WeekDay = dto.DiaSemana,
                 StartTime = dto.HorarioInicio,
+                AssignedDriverId = dto.AssignedDriverId,
                 IsActive = true
             };
 
@@ -143,6 +146,7 @@ public class RotasController : ControllerBase
             route.Description = dto.Descricao;
             route.WeekDay = dto.DiaSemana;
             route.StartTime = dto.HorarioInicio;
+            route.AssignedDriverId = dto.AssignedDriverId;
 
             // Recalcular distância com base nos pontos actuais da rota
             if (dto.PontoIds != null && dto.PontoIds.Any())

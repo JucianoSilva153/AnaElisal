@@ -1,5 +1,8 @@
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Elisal.WasteManagement.Domain.Entities;
+using Elisal.WasteManagement.Domain.Enums;
 using Elisal.WasteManagement.Domain.Interfaces;
 using Elisal.WasteManagement.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -16,5 +19,10 @@ public class UserRepository : Repository<User>, IUserRepository
     {
         var normalizedEmail = email?.Trim().ToLowerInvariant();
         return await _dbSet.FirstOrDefaultAsync(u => u.Email.ToLower() == normalizedEmail);
+    }
+
+    public async Task<IEnumerable<User>> GetByRoleAsync(UserRole role)
+    {
+        return await _dbSet.Where(u => u.Role == role && u.IsActive).ToListAsync();
     }
 }

@@ -48,6 +48,8 @@ public class RoutePointExecutionStatus
 
     public bool IsCompleted { get; set; } = false;
     public DateTime? CompletedAt { get; set; }
+    public bool IsSkipped { get; set; } = false;
+    public string? SkipReason { get; set; }
 }
 
 public enum RouteExecutionStatus

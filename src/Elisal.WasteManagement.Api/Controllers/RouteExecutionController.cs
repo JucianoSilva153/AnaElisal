@@ -107,16 +107,51 @@ public class RouteExecutionController : ControllerBase
     public async Task<IActionResult> UpdatePointStatus(int executionId, [FromBody] UpdatePointStatusDto dto)
     {
         var status = await _context.RoutePointExecutionStatuses
+            .Include(s => s.CollectionPoint)
             .FirstOrDefaultAsync(s =>
                 s.RouteExecutionId == executionId && s.CollectionPointId == dto.CollectionPointId);
 
         if (status == null) return NotFound();
 
+        // Validação GPS para pontos inacessíveis
+        if (dto.IsSkipped && !status.IsSkipped)
+        {
+            if (!dto.DriverLatitude.HasValue || !dto.DriverLongitude.HasValue)
+            {
+                return BadRequest("Localização do motorista é necessária para marcar ponto como inacessível.");
+            }
+
+            if (status.CollectionPoint == null) return BadRequest("Dados do ponto de recolha não encontrados.");
+
+            var distance = HaversineDistance(
+                dto.DriverLatitude.Value, dto.DriverLongitude.Value,
+                status.CollectionPoint.Latitude, status.CollectionPoint.Longitude);
+
+            if (distance > 50) // 50 metros
+            {
+                return BadRequest($"Está demasiado longe do ponto ({distance:F0}m). Deve estar a menos de 50m para o marcar como inacessível.");
+            }
+        }
+
         status.IsCompleted = dto.IsCompleted;
         status.CompletedAt = dto.IsCompleted ? DateTime.UtcNow : null;
+        status.IsSkipped = dto.IsSkipped;
+        status.SkipReason = dto.SkipReason;
 
         await _context.SaveChangesAsync();
         return NoContent();
+    }
+
+    private double HaversineDistance(double lat1, double lon1, double lat2, double lon2)
+    {
+        const double R = 6371000; // metros
+        var dLat = (lat2 - lat1) * Math.PI / 180;
+        var dLon = (lon2 - lon1) * Math.PI / 180;
+        var a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +
+                Math.Cos(lat1 * Math.PI / 180) * Math.Cos(lat2 * Math.PI / 180) *
+                Math.Sin(dLon / 2) * Math.Sin(dLon / 2);
+        var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
+        return R * c;
     }
 
     [HttpPost("{executionId}/finish")]
@@ -182,6 +217,7 @@ public class RouteExecutionController : ControllerBase
                 EndTime = e.EndTime,
                 Status = e.Status,
                 PointsCompleted = e.PointStatuses.Count(ps => ps.IsCompleted),
+                PointsSkipped = e.PointStatuses.Count(ps => ps.IsSkipped),
                 TotalPoints = e.PointStatuses.Count
             })
             .ToListAsync();

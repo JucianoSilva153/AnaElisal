@@ -26,5 +26,8 @@ public class Route
     public bool IsActive { get; set; } = true;
     public double TotalDistance { get; set; }
 
+    public int? AssignedDriverId { get; set; }
+    public User? AssignedDriver { get; set; }
+
     public ICollection<RoutePoint> RoutePoints { get; set; } = new List<RoutePoint>();
 }

@@ -147,10 +147,10 @@
             <div class="space-y-4">
                 <div class="space-y-2">
                     <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tipo de Resíduo</label>
-                    <select @bind="newOutput.WasteTypeId" class="w-full h-12 px-4 rounded-xl border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-bold">
+                    <InputSelect @bind-Value="newOutput.WasteTypeId" class="w-full h-12 px-4 rounded-xl border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-bold">
                         <option value="0">Selecionar...</option>
                         @if (wasteTypes != null) { @foreach (var wt in wasteTypes) { <option value="@wt.Id">@wt.Name</option> } }
-                    </select>
+                    </InputSelect>
                     <ValidationMessage For="@(() => newOutput.WasteTypeId)" class="text-[10px] text-red-500 font-bold" />
                 </div>
                 <div class="space-y-2">
@@ -161,23 +161,23 @@
                 <div class="grid grid-cols-2 gap-4">
                     <div class="space-y-2">
                         <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Qualidade</label>
-                        <select @bind="newOutput.QualityGrade" class="w-full h-12 px-4 rounded-xl border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-bold">
+                        <InputSelect @bind-Value="newOutput.QualityGrade" class="w-full h-12 px-4 rounded-xl border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-bold">
                             <option value="@QualityGrade.A">Alta (A)</option>
                             <option value="@QualityGrade.B">Média (B)</option>
                             <option value="@QualityGrade.C">Baixa (C)</option>
                             <option value="@QualityGrade.Rejected">Rejeitado</option>
-                        </select>
+                        </InputSelect>
                     </div>
                     <div class="space-y-2">
                         <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Destino</label>
-                        <select @bind="newOutput.DestinationType" class="w-full h-12 px-4 rounded-xl border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-bold">
+                        <InputSelect @bind-Value="newOutput.DestinationType" class="w-full h-12 px-4 rounded-xl border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-bold">
                             <option value="@WasteDestinationType.Recycling">Reciclagem</option>
                             <option value="@WasteDestinationType.Composting">Compostagem</option>
                             <option value="@WasteDestinationType.Landfill">Aterro</option>
                             <option value="@WasteDestinationType.Incineration">Incineração</option>
                             <option value="@WasteDestinationType.InternalReuse">Reuso Interno</option>
                             <option value="@WasteDestinationType.HazardousDisposal">Perigosos</option>
-                        </select>
+                        </InputSelect>
                     </div>
                 </div>
             </div>
