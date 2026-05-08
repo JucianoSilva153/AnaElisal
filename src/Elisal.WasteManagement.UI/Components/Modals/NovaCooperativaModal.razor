@@ -48,8 +48,8 @@
                             </div>
 
                             <div class="space-y-2">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Ponto Focal / Contacto</label>
-                                <InputText @bind-Value="model.Contact" class="w-full h-12 px-5 rounded-2xl border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold transition-all shadow-inner" placeholder="Ex: João Silva / +244..."/>
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Contacto</label>
+                                <InputNumber @bind-Value="model.Contact" class="w-full h-12 px-5 rounded-2xl border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold transition-all shadow-inner" placeholder="Ex:+244..."/>
                                 <ValidationMessage For="@(() => model.Contact)" class="text-[10px] font-bold text-red-500 italic mt-1"/>
                             </div>
 

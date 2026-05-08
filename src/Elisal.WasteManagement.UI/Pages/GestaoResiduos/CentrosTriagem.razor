@@ -135,6 +135,12 @@
     private async Task SaveCenter()
     {
         if (string.IsNullOrWhiteSpace(_editCenter.Name)) { Notification.ShowError("Nome é obrigatório."); return; }
+        if (string.IsNullOrWhiteSpace(_editCenter.Address)) { Notification.ShowError("Endereço é obrigatório."); return; }
+        if (string.IsNullOrWhiteSpace(_editCenter.Municipality)) { Notification.ShowError("Município é obrigatório."); return; }
+        if (_editCenter.CapacityTonsPerDay <= 0) { Notification.ShowError("Capacidade deve ser maior que zero."); return; }
+        if (string.IsNullOrWhiteSpace(_editCenter.Contact)) { Notification.ShowError("Contacto é obrigatório."); return; }
+        if (_editCenter.Contact.Length != 9) { Notification.ShowError("Contacto deve ser válido."); return; }
+
         _saving = true;
         try
         {

@@ -12,8 +12,8 @@ public class Cooperative
     [MaxLength(150)]
     public string Name { get; set; } = string.Empty;
 
-    [MaxLength(50)]
-    public string Contact { get; set; } = string.Empty;
+    [MaxLength(9), MinLength(9)]
+    public int Contact { get; set; } = 0;
 
     [EmailAddress]
     [MaxLength(150)]
