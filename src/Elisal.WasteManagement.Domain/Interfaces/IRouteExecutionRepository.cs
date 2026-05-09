@@ -7,5 +7,5 @@ namespace Elisal.WasteManagement.Domain.Interfaces;
 public interface IRouteExecutionRepository : IRepository<RouteExecution>
 {
     Task<RouteExecution?> GetActiveByDriverIdAsync(int driverId);
-    Task<IEnumerable<RouteExecution>> GetCompletedWithoutReceptionAsync();
+    Task<IEnumerable<RouteExecution>> GetCompletedWithoutReceptionAsync(int? driverId = null);
 }

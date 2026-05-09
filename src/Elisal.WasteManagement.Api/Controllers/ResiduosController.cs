@@ -29,6 +29,12 @@ public class ResiduosController : ControllerBase
     {
         try
         {
+            var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (int.TryParse(userIdStr, out var userId))
+            {
+                dto.UserId = userId;
+            }
+
             var result = await _residuoService.RegistarRecolhaAsync(dto);
             return CreatedAtAction(nameof(RegistarRecolha), null, result); // Usually GetById but simplifying
         }

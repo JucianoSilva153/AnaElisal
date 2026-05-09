@@ -22,7 +22,7 @@ public class RouteExecutionRepository : Repository<RouteExecution>, IRouteExecut
             .FirstOrDefaultAsync(e => e.DriverId == driverId && e.Status == RouteExecutionStatus.InProgress);
     }
 
-    public async Task<IEnumerable<RouteExecution>> GetCompletedWithoutReceptionAsync()
+    public async Task<IEnumerable<RouteExecution>> GetCompletedWithoutReceptionAsync(int? driverId = null)
     {
         // Fetch receptions to find which RouteExecutions are already processed
         var linkedRouteIds = await _context.WasteReceptions
@@ -30,11 +30,16 @@ public class RouteExecutionRepository : Repository<RouteExecution>, IRouteExecut
             .Select(r => r.RouteExecutionId!.Value)
             .ToListAsync();
 
-        return await _dbSet
+        var query = _dbSet
             .Include(e => e.Route)
             .Include(e => e.Driver)
-            .Where(e => e.Status == RouteExecutionStatus.Completed && !linkedRouteIds.Contains(e.Id))
-            .OrderByDescending(e => e.EndTime)
-            .ToListAsync();
+            .Where(e => e.Status == RouteExecutionStatus.Completed && !linkedRouteIds.Contains(e.Id));
+
+        if (driverId.HasValue)
+        {
+            query = query.Where(e => e.DriverId == driverId.Value);
+        }
+
+        return await query.OrderByDescending(e => e.EndTime).ToListAsync();
     }
 }

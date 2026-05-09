@@ -142,9 +142,9 @@ public class WasteManagementService : IWasteManagementService
         return reception == null ? null : MapReceptionToDto(reception);
     }
 
-    public async Task<IEnumerable<RouteExecutionSummaryDto>> GetRotasAguardandoRecepcaoAsync()
+    public async Task<IEnumerable<RouteExecutionSummaryDto>> GetRotasAguardandoRecepcaoAsync(int? driverId = null)
     {
-        var pendingRoutes = await _routeRepo.GetCompletedWithoutReceptionAsync();
+        var pendingRoutes = await _routeRepo.GetCompletedWithoutReceptionAsync(driverId);
 
         return pendingRoutes.Select(r => new RouteExecutionSummaryDto
         {

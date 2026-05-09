@@ -17,7 +17,7 @@ public interface IWasteManagementService
     Task<IEnumerable<WasteReceptionDto>> GetRecepcoesPorPeriodoAsync(DateTime start, DateTime end);
     Task<IEnumerable<WasteReceptionDto>> GetRecepcoesPendentesAsync();
     Task<WasteReceptionDto?> GetRecepcaoByIdAsync(int id);
-    Task<IEnumerable<RouteExecutionSummaryDto>> GetRotasAguardandoRecepcaoAsync();
+    Task<IEnumerable<RouteExecutionSummaryDto>> GetRotasAguardandoRecepcaoAsync(int? driverId = null);
 
     // Triagens
     Task<SortingBatchDto> IniciarTriagemAsync(CreateSortingBatchDto dto);

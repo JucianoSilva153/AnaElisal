@@ -210,7 +210,12 @@ public class GestaoResiduosController : ControllerBase
     [HttpGet("rotas-aguardando")]
     public async Task<IActionResult> GetRotasAguardando()
     {
-        var result = await _service.GetRotasAguardandoRecepcaoAsync();
+        int? driverId = null;
+        if (User.IsInRole("Driver"))
+        {
+            driverId = GetCurrentUserId();
+        }
+        var result = await _service.GetRotasAguardandoRecepcaoAsync(driverId);
         return Ok(result);
     }
 
