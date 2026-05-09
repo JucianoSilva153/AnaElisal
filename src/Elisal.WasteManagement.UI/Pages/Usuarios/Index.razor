@@ -2,6 +2,7 @@
 @attribute [Authorize(Roles = "Admin")]
 @inject HttpClient Http
 @inject AuthenticationStateProvider AuthStateProvider
+@inject Elisal.WasteManagement.UI.Services.NotificationService NotificationService
 @using Elisal.WasteManagement.Domain.Entities
 @using Elisal.WasteManagement.Domain.Enums
 @using Microsoft.AspNetCore.Authorization
@@ -174,14 +175,30 @@
 
     private async Task DeactivateUser(int id)
     {
-        await Http.DeleteAsync($"api/usuarios/{id}");
-        await LoadData();
+        var response = await Http.DeleteAsync($"api/usuarios/{id}");
+        if (response.IsSuccessStatusCode)
+        {
+            NotificationService.ShowSuccess("Utilizador desativado com sucesso.");
+            await LoadData();
+        }
+        else
+        {
+            NotificationService.ShowError("Erro ao desativar utilizador.");
+        }
     }
 
     private async Task ActivateUser(int id)
     {
-        await Http.PutAsync($"api/usuarios/{id}/ativar", null);
-        await LoadData();
+        var response = await Http.PutAsync($"api/usuarios/{id}/ativar", null);
+        if (response.IsSuccessStatusCode)
+        {
+            NotificationService.ShowSuccess("Utilizador ativado com sucesso.");
+            await LoadData();
+        }
+        else
+        {
+            NotificationService.ShowError("Erro ao ativar utilizador.");
+        }
     }
 
     private async Task ResetPassword(int id)
@@ -190,7 +207,11 @@
         if (response.IsSuccessStatusCode)
         {
             var result = await response.Content.ReadFromJsonAsync<dynamic>();
-            // Show notification with temporary password
+            NotificationService.ShowSuccess($"Senha redefinida com sucesso. Nova senha enviada para o e-mail.");
+        }
+        else
+        {
+            NotificationService.ShowError("Erro ao redefinir a senha do utilizador.");
         }
     }
 
